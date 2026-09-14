@@ -1,0 +1,30 @@
+[tools]
+tuist = "4.208.0"
+swiftformat = "0.63.0"
+swiftlint = "0.65.1"
+
+[tasks.generate]
+description = "Resolve dependencies and generate the Xcode workspace"
+run = [
+    "tuist install",
+    "tuist generate --no-open",
+]
+
+[tasks.build]
+description = "Build the app and bundled CLI"
+run = "tuist xcodebuild build -workspace Moy.xcworkspace -scheme Moy -destination 'platform=macOS,arch=arm64' -derivedDataPath build"
+
+[tasks.test]
+description = "Run all module tests"
+run = "tuist xcodebuild test -workspace Moy.xcworkspace -scheme Moy -destination 'platform=macOS,arch=arm64' -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO"
+
+[tasks.format]
+description = "Format Swift sources and manifests"
+run = [
+    "swiftformat Sources Tests Project.swift Tuist.swift Tuist/Package.swift",
+    "swiftlint lint --autocorrect",
+]
+
+[tasks.lint]
+description = "Lint Swift sources and manifests"
+run = "swiftlint lint --strict"

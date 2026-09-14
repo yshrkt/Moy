@@ -1,0 +1,178 @@
+# Moy：macOS 26向けlaunchdジョブ管理アプリ
+
+## 1. 技術構成とモジュール
+
+macOS 26以降を対象に、Xcode 27・Swift 6.4・SwiftUI・NanoReduxで実装する。Swiftの言語モードはSwift 6とする。Moyで登録したユーザー単位のLaunchAgentを管理し、メニューバーから状態確認・操作、管理ウィンドウから登録・編集を行う。
+
+MiroCalの責務分離・命名規則・Tuist設定を参考に、以下の3モジュールに分ける。
+
+```text
+Sources/
+  MoyApp/
+    Core/<機能名>/       # Action・State・Reducer・Dependencies
+    Views/              # SwiftUIの画面
+    MoyApp.swift        # アプリのエントリーポイント
+  MoyCLI/               # 引数解析・表示・エントリーポイント
+  MoyKit/
+    Domain/
+      Models/
+      Repositories/
+      UseCases/
+    Platform/
+      Repositories/
+      UseCases/
+
+Resources/
+  MoyApp/
+    ja.lproj/
+    en.lproj/
+
+Tests/
+  MoyAppTests/
+  MoyCLITests/
+  MoyKitTests/
+```
+
+- 依存関係は`MoyApp → MoyKit`、`MoyCLI → MoyKit`とする。
+- NanoReduxはMoyAppのみで使用し、確認済みの`0.1.2`をSPM経由で導入する。
+- Domainにはモデルとprotocol、PlatformにはJSON保存・launchd操作などの具体実装を置く。
+- Actionは`enableService`などの動詞＋対象、UseCaseは`...UseCase`、既定実装は`Default...UseCase`とする。
+- 機能ごとにAction／State／Reducer／Dependenciesを別ファイルにする。
+- 製品名は`Moy.app`と`moy`。CLIをアプリに同梱する。
+- mise＋Tuistで依存解決・プロジェクト生成を管理し、`generate`、`build`、`test`、`format`、`lint`を用意する。フォーマット設定もMiroCalを基準にする。
+- アプリは`LSUIElement`を有効にし、ユーザーのLaunchAgentsを操作するためApp Sandboxを無効にする。
+
+## 2. サービス定義とJSON保存
+
+### 設定項目
+
+初期版で扱うplist項目は次の9つとする。
+
+| 項目 | 扱い |
+|---|---|
+| `Label` | 自動生成・変更不可。内部IDを兼ねる |
+| `ProgramArguments` | UIでは実行ファイルと順序付き引数を分け、plistでは配列にする |
+| `WorkingDirectory` | 任意指定。フォルダ選択に対応 |
+| `EnvironmentVariables` | 任意の文字列キー／値を一覧で編集 |
+| `RunAtLoad` | Boolean。初期値OFF |
+| `KeepAlive` | 初期版はBooleanのみ。初期値OFF |
+| `ThrottleInterval` | 任意の秒数。未指定ならキーを省略する |
+| `StandardOutPath` | Moyの標準出力ログ保存先を初期入力し、変更可能 |
+| `StandardErrorPath` | Moyの標準エラーログ保存先を初期入力し、変更可能 |
+
+実行ファイルは絶対パスで指定し、暗黙のシェル実行・シェル初期化は行わない。KeepAliveが読み込み時の起動も伴うこと、ThrottleIntervalが定期実行の間隔ではないことをUIで説明する。
+
+### Labelとメタデータ
+
+Labelは作成時に以下の形式で生成する。
+
+```text
+com.sputnik-apps.moy.<小文字英数字8桁>
+例：com.sputnik-apps.moy.k7m2x9qa
+```
+
+- 末尾は`a–z`と`0–9`からランダム生成した8桁固定とする。
+- 共通層で既存定義・plist・launchdのLabelとの重複を検査し、衝突したら再生成する。検査不能時は登録エラーとする。
+- 生成から保存までをロック内で行い、GUI／CLIの同時登録に対応する。
+- Labelを唯一の内部IDとし、別のIDフィールドは保存しない。Swiftの`Identifiable.id`もLabelを返す。
+- 無効化・再有効化や設定変更でもLabelを維持する。
+- plist名は`<Label>.plist`とする。
+- 表示名とdescriptionは任意の編集可能なメタデータとして保存し、plistには含めない。
+- 一覧は表示名を優先し、未設定ならLabelを表示する。詳細画面ではLabelをコピーできる。
+- メタデータだけの変更では再読み込み・再実行を行わない。
+- 既定のログ保存先にはLabelを使い、表示名変更で変わらないようにする。
+
+### 永続化
+
+全サービスを次のJSONファイルにまとめる。
+
+```text
+~/Library/Application Support/Moy/
+  services.json
+  services.lock
+```
+
+JSONは`schemaVersion`とサービス一覧を持ち、各サービスに表示名・description・9項目のlaunchd設定を保存する。
+
+- JSONを編集用データの正本とし、有効なサービスのplistだけをユーザーのLaunchAgentsに配置する。
+- 無効化してもJSONの定義は残す。
+- 有効／無効はplistの有無から判定し、launchdの読み込み状態と照合する。PIDなどの実行状態は永続化しない。
+- GUI／CLI共通のファイルロックで、最新データの読み込み・変更・原子的な保存を直列化する。
+- 古い編集内容による上書きを防ぎ、競合時は再取得を促す。
+- JSON破損や未対応バージョンを空データとして扱わず、上書きを防ぐ。
+- 設定ディレクトリとファイルは所有ユーザーだけがアクセスできる権限にする。
+
+## 3. 操作・状態・GUI
+
+### 基本操作
+
+| 操作 | 動作 |
+|---|---|
+| 有効化／Enable | JSONからplistを生成し、`bootstrap`する |
+| 無効化／Disable | `bootout`で終了・登録解除し、plistを削除する。定義とログは残す |
+| 再実行／Restart | `kickstart -k`で、待機中なら起動、実行中なら再起動する |
+
+- `stop`の事前実行や、launchctlの`enable`／`disable`による別の管理状態は設けない。
+- 有効なサービスは次回ログイン時にも読み込まれ、実行するかはRunAtLoad／KeepAliveに従う。
+- 再実行は有効で読み込み済みのサービスに提供する。「今すぐ実行」は設けない。
+- 無効化は登録解除を確認してからplistを削除する。
+- 操作失敗時は成功扱いせず、実際の状態と再試行可能な操作を表示する。
+
+状態は有効／無効と、待機中／実行中（PID）を分離する。前回の終了コード・シグナルを併記し、plistとlaunchdが一致しない場合は「要確認」、取得できない場合は「取得失敗」とする。
+
+### 登録・編集・削除
+
+- 新規登録は「保存」「保存して有効化」を用意する。保存のみではplistを作成しない。
+- 無効なサービスの編集はJSON保存のみ。
+- 有効なサービスのlaunchd設定変更は保存時に再読み込みする。実行中だった場合は再実行し、待機中だった場合は実行条件に委ねる。ボタン名で反映動作を示す。
+- 設定反映に失敗した場合は旧定義・plist・管理状態の復元を試み、結果を表示する。
+- 削除は確認後に無効化し、JSONからも削除する。ログは残す。
+
+### 画面と状態管理
+
+- メニューバーに一覧、状態、基本操作、ログへのリンク、管理ウィンドウを開く操作を配置する。
+- 管理ウィンドウで一覧・詳細・登録・編集・削除を提供する。
+- 標準出力・標準エラーに「開く」「Finderで表示」を提供する。
+- Moyを終了しても、launchdによるサービス管理は継続する。
+
+メニューバーと管理ウィンドウでStoreを共有し、機能ごとにscopeする。一覧、選択、編集内容、処理中状態、エラーをAction／Reducerで管理する。保存・launchd操作・状態更新はEffectから依存注入したUseCaseを呼び出し、操作の重複実行を防ぐ。
+
+## 4. ローカライズと同梱CLI
+
+### GUIの日本語・英語対応
+
+- MiroCal同様、`Localizable.strings`とTuistの文字列生成を利用し、`L10n`経由で参照する。
+- メニュー、フォーム、説明、状態、確認ダイアログ、エラー、アクセシビリティラベルを日英で用意する。
+- macOSの優先言語に従い、未対応言語では英語にフォールバックする。
+- ユーザー入力の表示名・descriptionは翻訳しない。
+- 文字列変更時は`mise run generate`を実行する。開発ドキュメントは日本語を基本とする。
+- MoyKitは型付きエラーを返し、MoyAppで日英の表示メッセージに変換する。
+
+### CLI
+
+CLIは**ヘルプ・メッセージとも英語のみ**とし、ローカライズ用リソースbundleは使用しない。
+
+| 分類 | コマンド |
+|---|---|
+| 定義管理 | `add`、`edit`、`remove`、`list`、`show` |
+| 操作 | `enable`、`disable`、`restart` |
+| 状態・ログ | `status`、`logs` |
+
+- Labelでサービスを識別し、新規登録時はGUIと同じ生成処理を使う。
+- 同じ9項目、表示名、descriptionを扱い、MoyKitのUseCase／Repositoryを共通利用する。
+- 一覧・詳細・状態の`--json`出力、ヘルプ、明確な終了コードを提供する。
+- MoyKitのエラーをCLI側で英語メッセージに変換する。
+- コマンド名、オプション、JSONキー・状態値、plistキーはロケールに依存させない。
+- 管理画面から`~/.local/bin/moy`へのリンクを作成できるようにし、既存ファイルを上書きせず、必要なPATH設定を案内する。
+
+## 5. 検証と完成条件
+
+- **識別子・保存**：8桁英数字の生成、衝突時の再生成、同時登録、Labelの不変性、9項目とメタデータの保存・復元、JSON破損・競合・未対応バージョン。
+- **実行**：スペース・空文字・引用符を含む引数、環境変数、作業ディレクトリ、指定ログ出力先。
+- **ライフサイクル**：RunAtLoad／KeepAliveの組み合わせ、待機中・実行中の再実行、KeepAlive有効時の無効化、設定反映失敗時の復元。
+- **状態管理**：NanoReduxのReducer／Effect、CLI変更の反映、メタデータ変更でプロセスを再起動しないこと。
+- **ローカライズ・CLI**：日英のキーと書式引数の一致、英語表示でのレイアウト、CLIがロケールによらず英語になること、JSON出力の安定性、リンク経由のCLI実行。
+- **実機・ビルド**：専用テストジョブでPID・終了結果・ログを確認し、登録を撤去する。アプリと同梱CLIのDebug／Releaseビルド、format／lintを確認する。
+- **ドキュメント**：READMEに構成、ビルド方法、操作の意味、保存場所、設定項目、CLI例、PATH・環境変数設定、ローカライズ更新手順を記載する。
+
+初期版の完成条件は、日英対応GUIと英語CLIをローカルでビルド・利用できること。既存plistの取り込み、システムDaemon、定期実行・監視設定、ログビューアー・ローテーション、配布・自動更新は次段階とする。

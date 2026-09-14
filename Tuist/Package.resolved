@@ -1,0 +1,15 @@
+{
+  "originHash" : "cdc0e3e10729f1c608babb1952f363d3a3bbd5963429dc1d6eca18e39c28fc56",
+  "pins" : [
+    {
+      "identity" : "nanoredux",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yshrkt/NanoRedux",
+      "state" : {
+        "revision" : "50cfa0d7c29615a5de790c10386e11a7a5154987",
+        "version" : "0.1.2"
+      }
+    }
+  ],
+  "version" : 3
+}

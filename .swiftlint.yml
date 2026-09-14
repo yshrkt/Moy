@@ -1,0 +1,13 @@
+included:
+  - Sources
+  - Tests
+  - Project.swift
+  - Tuist.swift
+  - Tuist/Package.swift
+
+disabled_rules:
+  - trailing_comma # Managed by SwiftFormat.
+  - opening_brace # Managed by SwiftFormat.
+
+redundant_discardable_let:
+  ignore_swiftui_view_bodies: true

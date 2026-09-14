@@ -60,3 +60,21 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Tuist-generated projects, sources, and dependencies
+*.xcodeproj/
+*.xcworkspace/
+Derived/
+Tuist/.build/
+graph.dot
+
+# Build output and local tool state
+build/
+DerivedData/
+.swiftpm/
+.swiftlint_cache/
+.jj/
+
+# macOS
+.DS_Store
+._*

@@ -1,0 +1,3 @@
+# Match MiroCal's formatting rules.
+--disable redundantLet
+--disable redundantLetError
