@@ -36,6 +36,9 @@ Tests/
 - 依存関係は`MoyApp → MoyKit`、`MoyCLI → MoyKit`とする。
 - NanoReduxはMoyAppのみで使用し、確認済みの`0.1.2`をSPM経由で導入する。
 - Domainにはモデルとprotocol、PlatformにはJSON保存・launchd操作などの具体実装を置く。
+- 作成時の入力は`ServiceDraft`、保存済みの完全な定義は`ServiceDefinition`で表現する。
+- RepositoryとUseCaseの公開メソッドは`async throws`とし、NanoReduxのEffectから`await`で呼び出す。
+- JSON保存とlaunchd操作の実装にはactorを使用し、同一プロセス内の操作を直列化する。
 - Actionは`enableService`などの動詞＋対象、UseCaseは`...UseCase`、既定実装は`Default...UseCase`とする。
 - 機能ごとにAction／State／Reducer／Dependenciesを別ファイルにする。
 - 製品名は`Moy.app`と`moy`。CLIをアプリに同梱する。
@@ -50,7 +53,7 @@ Tests/
 
 | 項目 | 扱い |
 |---|---|
-| `Label` | 自動生成・変更不可。内部IDを兼ねる |
+| `Label` | 固定prefixとIdentifierから生成し、直接編集させない |
 | `ProgramArguments` | UIでは実行ファイルと順序付き引数を分け、plistでは配列にする |
 | `WorkingDirectory` | 任意指定。フォルダ選択に対応 |
 | `EnvironmentVariables` | 任意の文字列キー／値を一覧で編集 |
@@ -62,23 +65,24 @@ Tests/
 
 実行ファイルは絶対パスで指定し、暗黙のシェル実行・シェル初期化は行わない。KeepAliveが読み込み時の起動も伴うこと、ThrottleIntervalが定期実行の間隔ではないことをUIで説明する。
 
-### Labelとメタデータ
+### Identifier、Label、メタデータ
 
-Labelは作成時に以下の形式で生成する。
+サービス作成時にユーザーがIdentifierを指定し、Labelは以下の形式で生成する。
 
 ```text
-com.sputnik-apps.moy.<小文字英数字8桁>
-例：com.sputnik-apps.moy.k7m2x9qa
+Identifier: api-server
+Label:      com.sputnik-apps.moy.api-server
 ```
 
-- 末尾は`a–z`と`0–9`からランダム生成した8桁固定とする。
-- 共通層で既存定義・plist・launchdのLabelとの重複を検査し、衝突したら再生成する。検査不能時は登録エラーとする。
-- 生成から保存までをロック内で行い、GUI／CLIの同時登録に対応する。
-- Labelを唯一の内部IDとし、別のIDフィールドは保存しない。Swiftの`Identifiable.id`もLabelを返す。
-- 無効化・再有効化や設定変更でもLabelを維持する。
+- Identifierは1〜64文字のASCII小文字英数字・ハイフン・アンダースコアとし、先頭・末尾は英数字に限定する。
+- IdentifierはMoy内で一意かつ作成後は変更不可とする。Swiftの`Identifiable.id`もIdentifierを返す。
+- 共通層で既存定義・plist・launchdとの重複を検査し、衝突時は登録エラーとする。検査不能時も登録エラーとする。
+- 重複検査から保存までをロック内で行い、GUI／CLIの同時登録に対応する。
+- Labelは`com.sputnik-apps.moy.<Identifier>`として算出し、JSONには保存しない。
+- 無効化・再有効化や設定変更でもIdentifierとLabelを維持する。
 - plist名は`<Label>.plist`とする。
 - 表示名とdescriptionは任意の編集可能なメタデータとして保存し、plistには含めない。
-- 一覧は表示名を優先し、未設定ならLabelを表示する。詳細画面ではLabelをコピーできる。
+- 一覧は表示名を優先し、未設定ならIdentifierを表示する。詳細画面ではIdentifierとLabelを確認・コピーできる。
 - メタデータだけの変更では再読み込み・再実行を行わない。
 - 既定のログ保存先にはLabelを使い、表示名変更で変わらないようにする。
 
@@ -97,7 +101,8 @@ JSONは`schemaVersion`とサービス一覧を持ち、各サービスに表示�
 - JSONを編集用データの正本とし、有効なサービスのplistだけをユーザーのLaunchAgentsに配置する。
 - 無効化してもJSONの定義は残す。
 - 有効／無効はplistの有無から判定し、launchdの読み込み状態と照合する。PIDなどの実行状態は永続化しない。
-- GUI／CLI共通のファイルロックで、最新データの読み込み・変更・原子的な保存を直列化する。
+- App／CLI間はactorを共有できないため、共通の`flock`でJSONの読み込み・変更・原子的な保存を直列化する。
+- ファイルロックを保持したまま`await`せず、ロック内は同期的なJSON操作だけに限定する。
 - 古い編集内容による上書きを防ぎ、競合時は再取得を促す。
 - JSON破損や未対応バージョンを空データとして扱わず、上書きを防ぐ。
 - 設定ディレクトリとファイルは所有ユーザーだけがアクセスできる権限にする。
@@ -158,7 +163,7 @@ CLIは**ヘルプ・メッセージとも英語のみ**とし、ローカライ�
 | 操作 | `enable`、`disable`、`restart` |
 | 状態・ログ | `status`、`logs` |
 
-- Labelでサービスを識別し、新規登録時はGUIと同じ生成処理を使う。
+- CLIではIdentifierでサービスを識別し、新規登録時に`--identifier`で指定する。
 - 同じ9項目、表示名、descriptionを扱い、MoyKitのUseCase／Repositoryを共通利用する。
 - 一覧・詳細・状態の`--json`出力、ヘルプ、明確な終了コードを提供する。
 - MoyKitのエラーをCLI側で英語メッセージに変換する。
@@ -167,7 +172,7 @@ CLIは**ヘルプ・メッセージとも英語のみ**とし、ローカライ�
 
 ## 5. 検証と完成条件
 
-- **識別子・保存**：8桁英数字の生成、衝突時の再生成、同時登録、Labelの不変性、9項目とメタデータの保存・復元、JSON破損・競合・未対応バージョン。
+- **識別子・保存**：Identifierの形式・一意性・不変性、同時登録、Label算出、9項目とメタデータの保存・復元、JSON破損・競合・未対応バージョン。
 - **実行**：スペース・空文字・引用符を含む引数、環境変数、作業ディレクトリ、指定ログ出力先。
 - **ライフサイクル**：RunAtLoad／KeepAliveの組み合わせ、待機中・実行中の再実行、KeepAlive有効時の無効化、設定反映失敗時の復元。
 - **状態管理**：NanoReduxのReducer／Effect、CLI変更の反映、メタデータ変更でプロセスを再起動しないこと。

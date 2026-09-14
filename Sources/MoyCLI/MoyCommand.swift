@@ -1,8 +1,22 @@
-import MoyKit
+import ArgumentParser
 
 @main
-enum MoyCommand {
-    static func main() {
-        print("Moy CLI is not implemented yet.")
-    }
+struct MoyCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "moy",
+        abstract: "Manage user LaunchAgents created by Moy.",
+        version: "0.1.0",
+        subcommands: [
+            AddCommand.self,
+            EditCommand.self,
+            RemoveCommand.self,
+            ListCommand.self,
+            ShowCommand.self,
+            EnableCommand.self,
+            DisableCommand.self,
+            RestartCommand.self,
+            StatusCommand.self,
+            LogsCommand.self,
+        ],
+    )
 }

@@ -65,7 +65,10 @@ let project = Project(
             deploymentTargets: .macOS("26.0"),
             infoPlist: nil,
             buildableFolders: ["Sources/MoyCLI"],
-            dependencies: [.target(name: "MoyKit")],
+            dependencies: [
+                .target(name: "MoyKit"),
+                .external(name: "ArgumentParser"),
+            ],
             settings: .settings(base: [
                 "PRODUCT_MODULE_NAME": "MoyCLI",
                 "CODE_SIGN_IDENTITY": "-",
@@ -79,17 +82,7 @@ let project = Project(
             bundleId: "com.sputnik-apps.MoyKit",
             deploymentTargets: .macOS("26.0"),
             infoPlist: .default,
-            buildableFolders: [
-                .folder("Sources/MoyKit", exceptions: [
-                    .exception(excluded: [
-                        "Domain/Models/.gitkeep",
-                        "Domain/Repositories/.gitkeep",
-                        "Domain/UseCases/.gitkeep",
-                        "Platform/Repositories/.gitkeep",
-                        "Platform/UseCases/.gitkeep",
-                    ]),
-                ]),
-            ],
+            buildableFolders: ["Sources/MoyKit"],
         ),
         .target(
             name: "MoyAppTests",

@@ -37,4 +37,38 @@ mise run generate
 - `MoyCLI`: 英語のCLI。製品名は`moy`。
 - `MoyKit`: GUIとCLIで共通利用するDomain・Platform層。
 
-現時点ではプロジェクトの土台のみです。アプリとCLIはプレースホルダーで、サービス管理機能とテストケースは今後追加します。
+MoyKitとMoyCLIには、サービス定義のJSON保存、plist生成、`launchctl`による有効化・無効化・再実行、状態取得を実装しています。RepositoryとUseCaseは`async throws`で、同一プロセス内はactor、App／CLI間はファイルロックで直列化します。MoyAppの管理画面は今後実装します。
+
+## CLI
+
+ビルド後のCLIは`build/Build/Products/Debug/moy`に生成され、`Moy.app/Contents/Helpers/moy`にも同梱されます。
+
+```bash
+# 定義を保存する（plistの作成やbootstrapはまだ行わない）
+build/Build/Products/Debug/moy add \
+  --identifier web-server \
+  --name "Local web server" \
+  --description "Serves the public directory" \
+  --program /usr/bin/python3 \
+  --arg -m \
+  --arg http.server \
+  --working-directory "$PWD/public" \
+  --env PORT=8080 \
+  --run-at-load
+
+# Identifierを指定して操作する
+build/Build/Products/Debug/moy enable web-server
+build/Build/Products/Debug/moy status web-server
+build/Build/Products/Debug/moy restart web-server
+build/Build/Products/Debug/moy logs web-server
+build/Build/Products/Debug/moy disable web-server
+```
+
+`add --enable`では保存と有効化を一度に行えます。`list`、`show`、`status`、`logs`は`--json`に対応しています。すべてのコマンドとオプションは`moy --help`および`moy <command> --help`で確認できます。CLIのヘルプとメッセージは英語です。
+
+定義は`~/Library/Application Support/Moy/services.json`、有効なサービスのplistは`~/Library/LaunchAgents/<Label>.plist`、既定のログは`~/Library/Logs/Moy/`に保存されます。Identifierは1〜64文字の小文字英数字・ハイフン・アンダースコアで指定し、作成後は変更できません。Labelは`com.sputnik-apps.moy.<Identifier>`として生成されます。表示名は任意で、未設定の場合はIdentifierを表示します。
+
+- `enable`: plistを作成してユーザーのGUIドメインへ`bootstrap`する
+- `disable`: `bootout`を確認してplistを削除する。定義とログは残す
+- `restart`: 読み込み済みのサービスを`kickstart -k`する
+- `remove`: 必要なら無効化してから定義を削除する。ログは残す

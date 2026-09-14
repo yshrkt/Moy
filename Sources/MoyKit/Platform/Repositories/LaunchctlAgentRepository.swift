@@ -1,0 +1,169 @@
+import Darwin
+import Foundation
+
+public actor LaunchctlAgentRepository: LaunchAgentRepository {
+    private struct LoadedState {
+        let isLoaded: Bool
+        let pid: Int32?
+        let lastExitStatus: Int32?
+    }
+
+    private let paths: MoyPaths
+    private let fileManager: FileManager
+    private let processRunner: any ProcessRunning
+    private let plistWriter: LaunchAgentPlistWriter
+    private let userID: uid_t
+
+    public init(
+        paths: MoyPaths = .defaults(),
+        fileManager: FileManager = .default,
+        processRunner: any ProcessRunning = DefaultProcessRunner(),
+        plistWriter: LaunchAgentPlistWriter = .init(),
+        userID: uid_t = getuid(),
+    ) {
+        self.paths = paths
+        self.fileManager = fileManager
+        self.processRunner = processRunner
+        self.plistWriter = plistWriter
+        self.userID = userID
+    }
+
+    public func status(identifier: ServiceIdentifier) async throws -> ServiceStatus {
+        let hasPlist = fileManager.fileExists(atPath: paths.plistFile(identifier: identifier).path)
+        let loaded = try await loadedState(identifier: identifier)
+        let registration: ServiceStatus.Registration = switch (hasPlist, loaded.isLoaded) {
+        case (false, false): .disabled
+        case (true, true): .enabled
+        case (true, false): .plistOnly
+        case (false, true): .loadedOnly
+        }
+        let runtime: ServiceStatus.Runtime = if let pid = loaded.pid {
+            .running(pid: pid)
+        } else if loaded.isLoaded {
+            .waiting
+        } else {
+            .notLoaded
+        }
+        return ServiceStatus(
+            identifier: identifier,
+            registration: registration,
+            runtime: runtime,
+            lastExitStatus: loaded.lastExitStatus,
+        )
+    }
+
+    public func enable(_ service: ServiceDefinition) async throws {
+        let identifier = service.identifier
+        let current = try await status(identifier: identifier)
+        switch current.registration {
+        case .disabled:
+            break
+        case .enabled:
+            throw MoyError.alreadyEnabled(identifier.rawValue)
+        case .plistOnly, .loadedOnly:
+            throw MoyError.inconsistentState(identifier.rawValue)
+        }
+
+        try prepareOutputDirectories(for: service)
+        let plistURL = paths.plistFile(identifier: identifier)
+        try plistWriter.write(service, to: plistURL)
+        let arguments = ["bootstrap", domainTarget, plistURL.path]
+        do {
+            let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
+            guard result.status == 0 else {
+                throw launchctlError(arguments: arguments, result: result)
+            }
+            guard try await status(identifier: identifier).registration == .enabled else {
+                throw MoyError.inconsistentState(identifier.rawValue)
+            }
+        } catch {
+            _ = try? await processRunner.run(
+                executable: "/bin/launchctl",
+                arguments: ["bootout", serviceTarget(identifier: identifier)],
+            )
+            try? fileManager.removeItem(at: plistURL)
+            throw error
+        }
+    }
+
+    public func disable(identifier: ServiceIdentifier) async throws {
+        let current = try await status(identifier: identifier)
+        switch current.registration {
+        case .disabled:
+            throw MoyError.notEnabled(identifier.rawValue)
+        case .enabled, .loadedOnly:
+            let arguments = ["bootout", serviceTarget(identifier: identifier)]
+            let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
+            guard result.status == 0 else {
+                throw launchctlError(arguments: arguments, result: result)
+            }
+            guard try await !(loadedState(identifier: identifier).isLoaded) else {
+                throw MoyError.inconsistentState(identifier.rawValue)
+            }
+        case .plistOnly:
+            break
+        }
+
+        let plistURL = paths.plistFile(identifier: identifier)
+        guard fileManager.fileExists(atPath: plistURL.path) else { return }
+        do {
+            try fileManager.removeItem(at: plistURL)
+        } catch {
+            throw MoyError.fileOperation(path: plistURL.path, reason: error.localizedDescription)
+        }
+    }
+
+    public func restart(identifier: ServiceIdentifier) async throws {
+        guard try await loadedState(identifier: identifier).isLoaded else {
+            throw MoyError.notEnabled(identifier.rawValue)
+        }
+        let arguments = ["kickstart", "-k", serviceTarget(identifier: identifier)]
+        let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
+        guard result.status == 0 else {
+            throw launchctlError(arguments: arguments, result: result)
+        }
+    }
+}
+
+private extension LaunchctlAgentRepository {
+    var domainTarget: String {
+        "gui/\(userID)"
+    }
+
+    func serviceTarget(identifier: ServiceIdentifier) -> String {
+        "\(domainTarget)/\(identifier.launchdLabel)"
+    }
+
+    private func loadedState(identifier: ServiceIdentifier) async throws -> LoadedState {
+        let arguments = ["print", serviceTarget(identifier: identifier)]
+        let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
+        if result.status != 0 {
+            if LaunchctlOutputParser.isMissingService(result.output) {
+                return LoadedState(isLoaded: false, pid: nil, lastExitStatus: nil)
+            }
+            throw launchctlError(arguments: arguments, result: result)
+        }
+        let state = LaunchctlOutputParser().parse(result.output)
+        return LoadedState(isLoaded: true, pid: state.pid, lastExitStatus: state.lastExitStatus)
+    }
+
+    func prepareOutputDirectories(for service: ServiceDefinition) throws {
+        let directories = [service.standardOutPath, service.standardErrorPath]
+            .map { URL(filePath: $0).deletingLastPathComponent() }
+        do {
+            for directory in Set(directories) {
+                try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            }
+        } catch {
+            throw MoyError.fileOperation(path: paths.logDirectory.path, reason: error.localizedDescription)
+        }
+    }
+
+    func launchctlError(arguments: [String], result: ProcessResult) -> MoyError {
+        MoyError.launchctlFailed(
+            arguments: arguments,
+            status: result.status,
+            message: result.output.isEmpty ? "No error message" : result.output,
+        )
+    }
+}
