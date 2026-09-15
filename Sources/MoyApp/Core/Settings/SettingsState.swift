@@ -1,0 +1,37 @@
+import Foundation
+import NanoRedux
+import Observation
+
+typealias SettingsStore = Store<SettingsState, SettingsAction>
+
+enum SettingsTab: Hashable, Sendable {
+    case settings
+    case information
+}
+
+enum CLIInstallationStatus: Equatable, Sendable {
+    case notInstalled
+    case installed
+    case conflict
+}
+
+@Observable
+final class SettingsState {
+    var selectedTab: SettingsTab = .settings
+    var cliStatus: CLIInstallationStatus?
+    var isCheckingCLI = false
+    var isInstallingCLI = false
+    var failure: SettingsFailure?
+}
+
+enum SettingsFailure: Error, Equatable, Sendable {
+    case cliNotBundled
+    case cliDestinationExists
+    case cliInstallationFailed
+    case cliAuthorizationFailed(String)
+    case unexpected(String)
+
+    static func from(_ error: any Error) -> Self {
+        error as? Self ?? .unexpected(error.localizedDescription)
+    }
+}

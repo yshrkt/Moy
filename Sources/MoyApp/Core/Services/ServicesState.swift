@@ -13,8 +13,6 @@ final class ServicesState {
     var operatingIdentifiers: Set<ServiceIdentifier> = []
     var isLoading = false
     var isSaving = false
-    var isInstallingCLI = false
-    var cliInstallationPath: String?
     var failure: ServicesFailure?
 
     var selectedService: ServiceDefinition? {
@@ -168,8 +166,6 @@ enum ServicesFailure: Error, Equatable, Sendable {
     case emptyEnvironmentKey
     case duplicateEnvironmentKey(String)
     case fileNotFound(String)
-    case cliNotBundled
-    case cliDestinationExists(String)
     case unexpected(String)
 
     static func from(_ error: any Error) -> Self {
@@ -178,10 +174,6 @@ enum ServicesFailure: Error, Equatable, Sendable {
         }
         if let error = error as? AppOperationError {
             switch error {
-            case .cliNotBundled:
-                return .cliNotBundled
-            case let .cliDestinationExists(path):
-                return .cliDestinationExists(path)
             case let .fileNotFound(path):
                 return .fileNotFound(path)
             case let .fileOperation(message):

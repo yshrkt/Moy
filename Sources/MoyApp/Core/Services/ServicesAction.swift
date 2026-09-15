@@ -36,7 +36,5 @@ enum ServicesAction: Sendable {
     case openLog(String)
     case revealLog(String)
     case receiveFileOperation(Result<Void, ServicesFailure>)
-    case installCLI
-    case receiveCLIInstallation(Result<String, ServicesFailure>)
     case dismissFailure
 }

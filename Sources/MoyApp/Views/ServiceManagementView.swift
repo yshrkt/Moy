@@ -1,8 +1,11 @@
+import AppKit
 import NanoRedux
 import SwiftUI
 
 @MainActor
 struct ServiceManagementView: View {
+    @Environment(\.openWindow) private var openWindow
+
     let store: ServicesStore
 
     var body: some View {
@@ -121,30 +124,23 @@ struct ServiceManagementView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            cliInstaller
+            settingsButton
         }
     }
 
-    private var cliInstaller: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if store.state.cliInstallationPath != nil {
-                Label(L10n.Services.cliInstalled, systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                    .font(.caption)
-            } else {
-                Button {
-                    store.send(.installCLI)
-                } label: {
-                    if store.state.isInstallingCLI {
-                        Label(L10n.Services.installingCLI, systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
-                    } else {
-                        Label(L10n.Services.installCLI, systemImage: "terminal")
-                    }
-                }
-                .disabled(store.state.isInstallingCLI)
+    private var settingsButton: some View {
+        HStack {
+            Button {
+                openWindow(id: MoyWindow.settings)
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            } label: {
+                Image(systemName: "gearshape")
             }
+            .buttonStyle(.borderless)
+            .help(L10n.Settings.title)
+            .accessibilityLabel(L10n.Settings.title)
+            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(.bar)
     }

@@ -2,6 +2,23 @@ import MoyKit
 
 typealias L10n = MoyStrings
 
+extension SettingsFailure {
+    var localizedMessage: String {
+        switch self {
+        case .cliNotBundled:
+            L10n.Error.cliNotBundled
+        case .cliDestinationExists:
+            L10n.Error.cliDestinationExists
+        case .cliInstallationFailed:
+            L10n.Error.cliInstallationFailed
+        case let .cliAuthorizationFailed(message):
+            "\(L10n.Error.cliAuthorizationFailed)\n\(message)"
+        case let .unexpected(message):
+            "\(L10n.Error.unexpected)\n\(message)"
+        }
+    }
+}
+
 extension ServicesFailure {
     var localizedMessage: String {
         switch self {
@@ -15,10 +32,6 @@ extension ServicesFailure {
             "\(L10n.Error.duplicateEnvironmentKey) \(key)"
         case let .fileNotFound(path):
             "\(L10n.Error.fileNotFound)\n\(path)"
-        case .cliNotBundled:
-            L10n.Error.cliNotBundled
-        case let .cliDestinationExists(path):
-            "\(L10n.Error.cliDestinationExists)\n\(path)"
         case let .unexpected(message):
             "\(L10n.Error.unexpected)\n\(message)"
         }

@@ -4,11 +4,13 @@ import SwiftUI
 
 enum MoyWindow {
     static let management = "management"
+    static let settings = "settings"
 }
 
 @main
 struct MoyApp: App {
     @State private var store: ServicesStore
+    @State private var settingsStore: SettingsStore
 
     init() {
         let store = Store.reducer(
@@ -18,6 +20,10 @@ struct MoyApp: App {
             )),
         )
         _store = State(initialValue: store)
+        _settingsStore = State(initialValue: Store.reducer(
+            initialState: SettingsState(),
+            reducer: SettingsReducer(dependencies: SettingsDependencies()),
+        ))
     }
 
     var body: some Scene {
@@ -27,6 +33,13 @@ struct MoyApp: App {
         }
         .defaultLaunchBehavior(.suppressed)
         .defaultSize(width: 980, height: 680)
+
+        Window(L10n.Settings.title, id: MoyWindow.settings) {
+            SettingsView(store: settingsStore)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultLaunchBehavior(.suppressed)
 
         MenuBarExtra(L10n.App.name, systemImage: "terminal") {
             MenuBarServicesView(store: store)

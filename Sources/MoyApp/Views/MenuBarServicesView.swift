@@ -128,6 +128,18 @@ struct MenuBarServicesView: View {
             .padding(.vertical, 10)
 
             Button {
+                openWindow(id: MoyWindow.settings)
+                NSApplication.shared.activate(ignoringOtherApps: true)
+            } label: {
+                Label(L10n.Settings.open, systemImage: "gearshape")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+
+            Button {
                 NSApplication.shared.terminate(nil)
             } label: {
                 Text(L10n.Common.quit)

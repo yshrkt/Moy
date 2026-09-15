@@ -310,28 +310,6 @@ struct ServicesReducer: InjectableReducer {
             state.failure = failure
             return .none
 
-        case .installCLI:
-            guard !state.isInstallingCLI else { return .none }
-            state.isInstallingCLI = true
-            let cliInstallerClient = dependencies.cliInstallerClient
-            return .run {
-                do {
-                    return try await .receiveCLIInstallation(.success(cliInstallerClient.install()))
-                } catch {
-                    return .receiveCLIInstallation(.failure(.from(error)))
-                }
-            }
-
-        case let .receiveCLIInstallation(.success(path)):
-            state.isInstallingCLI = false
-            state.cliInstallationPath = path
-            return .none
-
-        case let .receiveCLIInstallation(.failure(failure)):
-            state.isInstallingCLI = false
-            state.failure = failure
-            return .none
-
         case .dismissFailure:
             state.failure = nil
             return .none

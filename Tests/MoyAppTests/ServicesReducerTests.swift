@@ -85,7 +85,6 @@ struct ServicesReducerTests {
             serviceManagementUseCase: useCase,
             filePanelClient: FilePanelClient(choosePath: { _ in nil }),
             workspaceClient: WorkspaceClient(open: { _ in }, reveal: { _ in }),
-            cliInstallerClient: CLIInstallerClient(install: { "/tmp/moy" }),
         ))
     }
 
