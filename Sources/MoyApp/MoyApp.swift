@@ -41,7 +41,7 @@ struct MoyApp: App {
         .windowResizability(.contentSize)
         .defaultLaunchBehavior(.suppressed)
 
-        MenuBarExtra(L10n.App.name, systemImage: "terminal") {
+        MenuBarExtra(L10n.App.name, image: ImageResource.menuIcon) {
             MenuBarServicesView(store: store)
                 .alert(
                     L10n.Common.error,
