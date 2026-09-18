@@ -103,3 +103,11 @@
 "settings.cliAuthorizationHelp" = "macOS will ask for administrator authentication if needed to install the command.";
 "error.cliInstallationFailed" = "The installed command could not be verified. Refresh the status and try again.";
 "error.cliAuthorizationFailed" = "The command could not be installed with administrator privileges.";
+
+"services.noArguments" = "No Arguments";
+"services.noEnvironmentVariables" = "No Environment Variables";
+"services.removeArgument" = "Remove Selected Argument";
+"services.removeEnvironment" = "Remove Selected Variable";
+"services.moveArgumentUp" = "Move Argument Up";
+"services.moveArgumentDown" = "Move Argument Down";
+"services.argumentsHelp" = "Each row is one argument. Spaces, quotes, and values such as $PORT are passed literally, without variable expansion.";

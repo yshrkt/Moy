@@ -103,3 +103,11 @@
 "settings.cliAuthorizationHelp" = "インストールに必要な場合、macOSの管理者認証ダイアログが表示されます。";
 "error.cliInstallationFailed" = "インストールしたコマンドを確認できませんでした。状態を更新してから再試行してください。";
 "error.cliAuthorizationFailed" = "管理者権限でコマンドをインストールできませんでした。";
+
+"services.noArguments" = "引数なし";
+"services.noEnvironmentVariables" = "環境変数なし";
+"services.removeArgument" = "選択した引数を削除";
+"services.removeEnvironment" = "選択した環境変数を削除";
+"services.moveArgumentUp" = "引数を上へ移動";
+"services.moveArgumentDown" = "引数を下へ移動";
+"services.argumentsHelp" = "1行が1引数です。空白・引用符・$PORT などは入力どおりに渡され、変数展開は行いません。";

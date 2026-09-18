@@ -24,6 +24,12 @@ let project = Project(
                 "CFBundleShortVersionString": "0.1.0",
                 "CFBundleVersion": "1",
                 "LSUIElement": true,
+                "UTExportedTypeDeclarations": .array([
+                    .dictionary([
+                        "UTTypeIdentifier": "com.sputnik-apps.moy.editor-argument",
+                        "UTTypeConformsTo": .array(["public.data"]),
+                    ]),
+                ]),
                 "LSApplicationCategoryType": "public.app-category.developer-tools",
             ]),
             buildableFolders: [

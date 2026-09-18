@@ -111,31 +111,7 @@ private extension ServiceEditorView {
                 store.send(.chooseEditorPath(.executable))
             }
 
-            ForEach(editor.arguments) { argument in
-                HStack {
-                    TextField(
-                        L10n.Services.argument,
-                        text: Binding(
-                            get: { argumentValue(argument.id) },
-                            set: { store.send(.updateArgument(argument.id, $0)) },
-                        ),
-                    )
-                    Button(role: .destructive) {
-                        store.send(.removeArgument(argument.id))
-                    } label: {
-                        Image(systemName: "minus.circle")
-                    }
-                    .buttonStyle(.borderless)
-                    .help(L10n.Common.remove)
-                    .accessibilityLabel(L10n.Common.remove)
-                }
-            }
-
-            Button {
-                store.send(.addArgument)
-            } label: {
-                Label(L10n.Services.addArgument, systemImage: "plus")
-            }
+            ServiceArgumentsList(store: store, editor: editor)
 
             PathField(
                 title: L10n.Services.workingDirectory,
@@ -153,38 +129,7 @@ private extension ServiceEditorView {
 
     private func environmentSection(_ editor: ServiceEditorState) -> some View {
         Section {
-            ForEach(editor.environmentVariables) { variable in
-                HStack {
-                    TextField(
-                        L10n.Services.environmentKey,
-                        text: Binding(
-                            get: { environmentKey(variable.id) },
-                            set: { store.send(.updateEnvironmentKey(variable.id, $0)) },
-                        ),
-                    )
-                    TextField(
-                        L10n.Services.environmentValue,
-                        text: Binding(
-                            get: { environmentValue(variable.id) },
-                            set: { store.send(.updateEnvironmentValue(variable.id, $0)) },
-                        ),
-                    )
-                    Button(role: .destructive) {
-                        store.send(.removeEnvironmentVariable(variable.id))
-                    } label: {
-                        Image(systemName: "minus.circle")
-                    }
-                    .buttonStyle(.borderless)
-                    .help(L10n.Common.remove)
-                    .accessibilityLabel(L10n.Common.remove)
-                }
-            }
-
-            Button {
-                store.send(.addEnvironmentVariable)
-            } label: {
-                Label(L10n.Services.addEnvironment, systemImage: "plus")
-            }
+            ServiceEnvironmentList(store: store, editor: editor)
         } header: {
             Text(L10n.Services.environment)
         }
@@ -271,18 +216,6 @@ private extension ServiceEditorView {
             get: { value },
             set: { store.send(.updateEditor(field($0))) },
         )
-    }
-
-    private func argumentValue(_ id: UUID) -> String {
-        store.state.editor?.arguments.first(where: { $0.id == id })?.value ?? ""
-    }
-
-    private func environmentKey(_ id: UUID) -> String {
-        store.state.editor?.environmentVariables.first(where: { $0.id == id })?.key ?? ""
-    }
-
-    private func environmentValue(_ id: UUID) -> String {
-        store.state.editor?.environmentVariables.first(where: { $0.id == id })?.value ?? ""
     }
 
     private func editorTitle(_ editor: ServiceEditorState) -> String {

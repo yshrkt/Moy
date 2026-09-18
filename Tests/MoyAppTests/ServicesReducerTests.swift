@@ -98,7 +98,7 @@ struct ServicesReducerTests {
     }
 }
 
-private actor TestServiceManagementUseCase: ServiceManagementUseCase {
+actor TestServiceManagementUseCase: ServiceManagementUseCase {
     struct CreateRequest: Sendable {
         let draft: ServiceDraft
         let enable: Bool

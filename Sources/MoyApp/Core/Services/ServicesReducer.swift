@@ -2,8 +2,7 @@ import Foundation
 import MoyKit
 import NanoRedux
 
-// The central reducer intentionally keeps the exhaustive action routing in one switch.
-// swiftlint:disable:next type_body_length
+/// The central reducer intentionally keeps the exhaustive action routing in one switch.
 struct ServicesReducer: InjectableReducer {
     private enum EffectID {
         static let refresh = "services.refresh"
@@ -111,58 +110,10 @@ struct ServicesReducer: InjectableReducer {
             state.editor = editor
             return .none
 
-        case .addArgument:
-            guard var editor = state.editor else { return .none }
-            editor.arguments.append(.init())
-            state.editor = editor
-            return .none
-
-        case let .updateArgument(id, value):
-            guard var editor = state.editor,
-                  let index = editor.arguments.firstIndex(where: { $0.id == id })
-            else {
-                return .none
-            }
-            editor.arguments[index].value = value
-            state.editor = editor
-            return .none
-
-        case let .removeArgument(id):
-            guard var editor = state.editor else { return .none }
-            editor.arguments.removeAll { $0.id == id }
-            state.editor = editor
-            return .none
-
-        case .addEnvironmentVariable:
-            guard var editor = state.editor else { return .none }
-            editor.environmentVariables.append(.init())
-            state.editor = editor
-            return .none
-
-        case let .updateEnvironmentKey(id, value):
-            guard var editor = state.editor,
-                  let index = editor.environmentVariables.firstIndex(where: { $0.id == id })
-            else {
-                return .none
-            }
-            editor.environmentVariables[index].key = value
-            state.editor = editor
-            return .none
-
-        case let .updateEnvironmentValue(id, value):
-            guard var editor = state.editor,
-                  let index = editor.environmentVariables.firstIndex(where: { $0.id == id })
-            else {
-                return .none
-            }
-            editor.environmentVariables[index].value = value
-            state.editor = editor
-            return .none
-
-        case let .removeEnvironmentVariable(id):
-            guard var editor = state.editor else { return .none }
-            editor.environmentVariables.removeAll { $0.id == id }
-            state.editor = editor
+        case .selectArgument, .moveArgument, .dropArgument, .addArgument, .updateArgument, .removeArgument,
+             .selectEnvironmentVariable, .addEnvironmentVariable, .updateEnvironmentKey,
+             .updateEnvironmentValue, .removeEnvironmentVariable:
+            reduceEditorList(into: &state, action: action)
             return .none
 
         case let .chooseEditorPath(path):

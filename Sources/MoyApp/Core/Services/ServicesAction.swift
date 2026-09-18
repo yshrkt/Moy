@@ -11,9 +11,13 @@ enum ServicesAction: Sendable {
     case presentEditService(ServiceIdentifier)
     case dismissEditor
     case updateEditor(ServiceEditorField)
+    case selectArgument(UUID?)
+    case moveArgument(UUID, toIndex: Int)
+    case dropArgument(UUID, insertionIndex: Int)
     case addArgument
     case updateArgument(UUID, String)
     case removeArgument(UUID)
+    case selectEnvironmentVariable(UUID?)
     case addEnvironmentVariable
     case updateEnvironmentKey(UUID, String)
     case updateEnvironmentValue(UUID, String)

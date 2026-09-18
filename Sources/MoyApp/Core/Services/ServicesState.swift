@@ -65,8 +65,10 @@ struct ServiceEditorState: Equatable, Sendable {
     var serviceDescription: String
     var executable: String
     var arguments: [Argument]
+    var selectedArgumentID: UUID?
     var workingDirectory: String
     var environmentVariables: [EnvironmentVariable]
+    var selectedEnvironmentVariableID: UUID?
     var runAtLoad: Bool
     var keepAlive: Bool
     var throttleInterval: String
