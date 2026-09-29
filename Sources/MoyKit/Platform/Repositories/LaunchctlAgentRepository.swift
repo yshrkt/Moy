@@ -13,6 +13,8 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
     private let processRunner: any ProcessRunning
     private let plistWriter: LaunchAgentPlistWriter
     private let userID: uid_t
+    private let unloadVerificationAttempts: Int
+    private let unloadVerificationDelay: Duration
 
     public init(
         paths: MoyPaths = .defaults(),
@@ -26,6 +28,26 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
         self.processRunner = processRunner
         self.plistWriter = plistWriter
         self.userID = userID
+        unloadVerificationAttempts = 20
+        unloadVerificationDelay = .milliseconds(100)
+    }
+
+    init(
+        paths: MoyPaths,
+        fileManager: FileManager,
+        processRunner: any ProcessRunning,
+        plistWriter: LaunchAgentPlistWriter,
+        userID: uid_t,
+        unloadVerificationAttempts: Int,
+        unloadVerificationDelay: Duration,
+    ) {
+        self.paths = paths
+        self.fileManager = fileManager
+        self.processRunner = processRunner
+        self.plistWriter = plistWriter
+        self.userID = userID
+        self.unloadVerificationAttempts = max(1, unloadVerificationAttempts)
+        self.unloadVerificationDelay = unloadVerificationDelay
     }
 
     public func status(identifier: ServiceIdentifier) async throws -> ServiceStatus {
@@ -97,7 +119,7 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
             guard result.status == 0 else {
                 throw launchctlError(arguments: arguments, result: result)
             }
-            guard try await !(loadedState(identifier: identifier).isLoaded) else {
+            guard try await waitUntilUnloaded(identifier: identifier) else {
                 throw MoyError.inconsistentState(identifier.rawValue)
             }
         case .plistOnly:
@@ -145,6 +167,16 @@ private extension LaunchctlAgentRepository {
         }
         let state = LaunchctlOutputParser().parse(result.output)
         return LoadedState(isLoaded: true, pid: state.pid, lastExitStatus: state.lastExitStatus)
+    }
+
+    func waitUntilUnloaded(identifier: ServiceIdentifier) async throws -> Bool {
+        for attempt in 0 ..< unloadVerificationAttempts {
+            guard try await loadedState(identifier: identifier).isLoaded else { return true }
+            if attempt + 1 < unloadVerificationAttempts {
+                try await Task.sleep(for: unloadVerificationDelay)
+            }
+        }
+        return false
     }
 
     func prepareOutputDirectories(for service: ServiceDefinition) throws {
