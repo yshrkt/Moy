@@ -4,6 +4,8 @@ import SwiftUI
 
 @MainActor
 struct ServiceDetailView: View {
+    @Environment(\.openWindow) private var openWindow
+    
     let store: ServicesStore
     let service: ServiceDefinition
 
@@ -34,6 +36,19 @@ struct ServiceDetailView: View {
                     Label(L10n.Common.delete, systemImage: "trash")
                 }
                 .disabled(store.state.isOperating(service.identifier))
+            }
+            
+            ToolbarSpacer(.fixed)
+            
+            ToolbarItemGroup {
+                Button {
+                    openWindow(id: MoyWindow.settings)
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                } label: {
+                    Label(L10n.Settings.title, systemImage: "gearshape")
+                }
+                .help(L10n.Settings.title)
+                .accessibilityLabel(L10n.Settings.title)
             }
         }
     }

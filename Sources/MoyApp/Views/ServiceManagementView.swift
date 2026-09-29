@@ -4,8 +4,6 @@ import SwiftUI
 
 @MainActor
 struct ServiceManagementView: View {
-    @Environment(\.openWindow) private var openWindow
-
     let store: ServicesStore
 
     var body: some View {
@@ -23,23 +21,7 @@ struct ServiceManagementView: View {
                 )
             }
         }
-        .navigationTitle(L10n.Services.title)
-        .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    store.send(.refreshServices)
-                } label: {
-                    Label(L10n.Common.refresh, systemImage: "arrow.clockwise")
-                }
-                .disabled(store.state.isLoading)
-
-                Button {
-                    store.send(.presentCreateService)
-                } label: {
-                    Label(L10n.Common.add, systemImage: "plus")
-                }
-            }
-        }
+        .navigationTitle("")
         .sheet(
             isPresented: Binding(
                 get: { store.state.editor != nil },
@@ -124,22 +106,32 @@ struct ServiceManagementView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            settingsButton
+            sidebarBottomBar
         }
     }
 
-    private var settingsButton: some View {
-        HStack {
+    private var sidebarBottomBar: some View {
+        HStack(spacing: 12) {
             Button {
-                openWindow(id: MoyWindow.settings)
-                NSApplication.shared.activate(ignoringOtherApps: true)
+                store.send(.refreshServices)
             } label: {
-                Image(systemName: "gearshape")
+                Image(systemName: "arrow.clockwise")
             }
             .buttonStyle(.borderless)
-            .help(L10n.Settings.title)
-            .accessibilityLabel(L10n.Settings.title)
+            .disabled(store.state.isLoading)
+            .help(L10n.Common.refresh)
+            .accessibilityLabel(L10n.Common.refresh)
+
             Spacer()
+
+            Button {
+                store.send(.presentCreateService)
+            } label: {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(.borderless)
+            .help(L10n.Common.add)
+            .accessibilityLabel(L10n.Common.add)
         }
         .padding(10)
         .background(.bar)
