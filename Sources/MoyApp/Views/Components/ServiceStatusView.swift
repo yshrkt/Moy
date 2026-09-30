@@ -3,60 +3,83 @@ import SwiftUI
 
 struct ServiceStatusView: View {
     let status: ServiceStatus?
-    var statusUnavailable = false
-    var showsRuntime = true
+    var hasStatusError = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(title)
-                .foregroundStyle(.secondary)
-            if showsRuntime, let runtimeTitle {
-                Text("·")
-                    .foregroundStyle(.tertiary)
-                Text(runtimeTitle)
+        let presentation = ServiceStatusPresentation(status: status, hasError: hasStatusError)
+        if presentation == .loading {
+            ProgressView()
+                .controlSize(.small)
+                .accessibilityLabel(L10n.Services.loading)
+        } else {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(presentation.color)
+                    .frame(width: 8, height: 8)
+                Text(presentation.title)
                     .foregroundStyle(.secondary)
             }
-        }
-        .font(.caption)
-    }
-
-    private var title: String {
-        if statusUnavailable {
-            return L10n.Services.statusUnavailable
-        }
-        guard let status else { return L10n.Services.unknown }
-        return switch status.registration {
-        case .disabled: L10n.Services.disabled
-        case .enabled: L10n.Services.enabled
-        case .plistOnly, .loadedOnly: L10n.Services.needsAttention
+            .font(.caption)
+            .help(presentation.help)
         }
     }
+}
 
-    private var runtimeTitle: String? {
-        guard let status else { return nil }
-        return switch status.runtime {
-        case .notLoaded: L10n.Services.notLoaded
-        case .waiting: L10n.Services.waiting
-        case let .running(pid): "\(L10n.Services.running) (\(pid))"
-        }
-    }
+enum ServiceStatusPresentation: Equatable {
+    case loading
+    case running
+    case waiting
+    case disabled
+    case needsAttention
+    case error
 
-    private var color: Color {
-        if statusUnavailable {
-            return .red
+    init(status: ServiceStatus?, hasError: Bool) {
+        if hasError {
+            self = .error
+            return
         }
-        guard let status else { return .secondary }
+        guard let status else {
+            self = .loading
+            return
+        }
         switch status.registration {
-        case .disabled: return .secondary
-        case .plistOnly, .loadedOnly: return .orange
+        case .disabled:
+            self = .disabled
+        case .plistOnly, .loadedOnly:
+            self = .needsAttention
         case .enabled:
-            if case .running = status.runtime {
-                return .green
+            self = switch status.runtime {
+            case .running: .running
+            case .waiting: .waiting
+            case .notLoaded: .needsAttention
             }
-            return .blue
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .loading: L10n.Services.loading
+        case .running: L10n.Services.running
+        case .waiting: L10n.Services.waiting
+        case .disabled: L10n.Services.disabled
+        case .needsAttention: L10n.Services.needsAttention
+        case .error: L10n.Common.error
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .loading, .disabled: .secondary
+        case .running: .green
+        case .waiting: .yellow
+        case .needsAttention, .error: .red
+        }
+    }
+
+    var help: String {
+        switch self {
+        case .error: L10n.Services.statusErrorHelp
+        default: title
         }
     }
 }

@@ -90,7 +90,7 @@ struct ServiceManagementView: View {
                         .foregroundStyle(.secondary)
                     ServiceStatusView(
                         status: store.state.statuses[service.identifier],
-                        statusUnavailable: store.state.statusFailures.contains(service.identifier),
+                        hasStatusError: store.state.statusFailures.contains(service.identifier),
                     )
                 }
                 .padding(.vertical, 3)

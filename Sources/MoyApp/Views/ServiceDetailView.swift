@@ -5,7 +5,7 @@ import SwiftUI
 @MainActor
 struct ServiceDetailView: View {
     @Environment(\.openWindow) private var openWindow
-    
+
     let store: ServicesStore
     let service: ServiceDefinition
 
@@ -37,9 +37,9 @@ struct ServiceDetailView: View {
                 }
                 .disabled(store.state.isOperating(service.identifier))
             }
-            
+
             ToolbarSpacer(.fixed)
-            
+
             ToolbarItemGroup {
                 Button {
                     openWindow(id: MoyWindow.settings)
@@ -71,12 +71,10 @@ struct ServiceDetailView: View {
     private var statusSection: some View {
         DetailSection(title: L10n.Services.status) {
             let status = store.state.statuses[service.identifier]
-            LabeledContent(L10n.Services.status) {
-                ServiceStatusView(
-                    status: status,
-                    statusUnavailable: store.state.statusFailures.contains(service.identifier),
-                )
-            }
+            ServiceStatusView(
+                status: status,
+                hasStatusError: store.state.statusFailures.contains(service.identifier),
+            )
             if let status {
                 if case let .running(pid) = status.runtime {
                     LabeledContent(L10n.Services.pid, value: String(pid))

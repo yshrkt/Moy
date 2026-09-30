@@ -63,7 +63,7 @@
 "services.pid" = "PID";
 "services.lastExitStatus" = "前回の終了コード";
 "services.unknown" = "不明";
-"services.statusUnavailable" = "取得失敗";
+"services.statusErrorHelp" = "launchdから状態を取得できませんでした。";
 "services.editReloadHelp" = "有効なサービスのlaunchd設定を保存すると再読み込みします。実行中の場合は再起動します。";
 "error.invalidIdentifier" = "Identifierが正しくありません。1〜64文字の半角小文字英数字・ハイフン・アンダースコアを使用し、先頭と末尾は英数字にしてください。";
 "error.serviceNotFound" = "サービスが見つかりませんでした。";

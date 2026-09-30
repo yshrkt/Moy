@@ -63,7 +63,7 @@
 "services.pid" = "PID";
 "services.lastExitStatus" = "Last Exit Status";
 "services.unknown" = "Unknown";
-"services.statusUnavailable" = "Status Unavailable";
+"services.statusErrorHelp" = "Moy could not retrieve the service status from launchd.";
 "services.editReloadHelp" = "Saving launchd setting changes reloads an enabled service. A running service is restarted.";
 "error.invalidIdentifier" = "The identifier is invalid. Use 1–64 lowercase letters, digits, hyphens, or underscores, and start and end with a letter or digit.";
 "error.serviceNotFound" = "The service was not found.";
