@@ -11,6 +11,8 @@ struct MenuBarServicesView: View {
     }
 
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var refreshAnimationTrigger = false
 
     let store: ServicesStore
 
@@ -44,14 +46,13 @@ struct MenuBarServicesView: View {
             Text(L10n.Menu.title)
                 .font(.headline)
             Spacer()
-            if store.state.isLoading {
-                ProgressView()
-                    .controlSize(.small)
-            }
             Button {
+                refreshAnimationTrigger.toggle()
                 store.send(.refreshServices)
             } label: {
                 Image(systemName: "arrow.clockwise")
+                    .symbolEffect(.rotate.clockwise, options: .nonRepeating, value: refreshAnimationTrigger)
+                    .symbolEffectsRemoved(reduceMotion)
             }
             .buttonStyle(.plain)
             .help(L10n.Common.refresh)
