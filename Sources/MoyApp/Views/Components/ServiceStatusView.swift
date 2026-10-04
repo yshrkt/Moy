@@ -13,14 +13,30 @@ struct ServiceStatusView: View {
                 .accessibilityLabel(L10n.Services.loading)
         } else {
             HStack(spacing: 6) {
-                Circle()
-                    .fill(presentation.color)
-                    .frame(width: 8, height: 8)
+                ServiceStatusIndicator(presentation: presentation)
                 Text(presentation.title)
                     .foregroundStyle(.secondary)
             }
             .font(.caption)
             .help(presentation.help)
+        }
+    }
+}
+
+struct ServiceStatusIndicator: View {
+    let presentation: ServiceStatusPresentation
+
+    var body: some View {
+        if presentation == .loading {
+            ProgressView()
+                .controlSize(.small)
+                .accessibilityLabel(L10n.Services.loading)
+        } else {
+            Circle()
+                .fill(presentation.color)
+                .frame(width: 8, height: 8)
+                .help(presentation.help)
+                .accessibilityLabel(presentation.title)
         }
     }
 }

@@ -3,6 +3,7 @@
 "common.cancel" = "キャンセル";
 "common.choose" = "選択…";
 "common.delete" = "削除";
+"common.details" = "詳細";
 "common.disable" = "無効化";
 "common.edit" = "編集";
 "common.enable" = "有効化";

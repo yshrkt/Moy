@@ -1,9 +1,15 @@
 import AppKit
+import MoyKit
 import NanoRedux
 import SwiftUI
 
 @MainActor
 struct MenuBarServicesView: View {
+    private enum Layout {
+        static let maximumVisibleServiceCount = 8
+        static let serviceRowHeight: CGFloat = 40
+    }
+
     @Environment(\.openWindow) private var openWindow
 
     let store: ServicesStore
@@ -70,47 +76,114 @@ struct MenuBarServicesView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(store.state.services) { service in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(alignment: .firstTextBaseline) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(service.name)
-                                    .fontWeight(.medium)
-                                Text(service.identifier.rawValue)
-                                    .font(.caption.monospaced())
-                                    .foregroundStyle(.secondary)
-                                ServiceStatusView(
-                                    status: store.state.statuses[service.identifier],
-                                    hasStatusError: store.state.statusFailures.contains(service.identifier),
-                                )
-                            }
-                            Spacer()
-                            ServiceActionsView(store: store, service: service, compact: true)
-                        }
-
-                        Menu(L10n.Services.logs) {
-                            Button("\(L10n.Services.standardOut) — \(L10n.Common.open)") {
-                                store.send(.openLog(service.standardOutPath))
-                            }
-                            Button("\(L10n.Services.standardOut) — \(L10n.Common.reveal)") {
-                                store.send(.revealLog(service.standardOutPath))
-                            }
-                            Divider()
-                            Button("\(L10n.Services.standardError) — \(L10n.Common.open)") {
-                                store.send(.openLog(service.standardErrorPath))
-                            }
-                            Button("\(L10n.Services.standardError) — \(L10n.Common.reveal)") {
-                                store.send(.revealLog(service.standardErrorPath))
-                            }
-                        }
-                        .menuStyle(.borderlessButton)
-                        .fixedSize()
-                    }
-                    .padding(12)
-                    Divider()
+                    serviceMenu(service)
                 }
             }
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxHeight: 420)
+        .frame(height: serviceListHeight)
+        .scrollIndicators(.visible)
+        .scrollIndicatorsFlash(onAppear: true)
+        .scrollIndicatorsFlash(trigger: store.state.services.count > Layout.maximumVisibleServiceCount)
+    }
+
+    private func serviceMenu(_ service: ServiceDefinition) -> some View {
+        let status = store.state.statuses[service.identifier]
+        let presentation = ServiceStatusPresentation(
+            status: status,
+            hasError: store.state.statusFailures.contains(service.identifier),
+        )
+        let isOperating = store.state.isOperating(service.identifier)
+
+        return Menu {
+            Button(L10n.Common.details) {
+                showDetails(for: service)
+            }
+
+            Divider()
+            serviceOperations(service, status: status, isOperating: isOperating)
+            logsMenu(service)
+        } label: {
+            HStack(spacing: 10) {
+                ServiceStatusIndicator(presentation: presentation)
+                Text(service.name)
+                    .lineLimit(1)
+                Spacer()
+                if isOperating {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: Layout.serviceRowHeight, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .menuIndicator(.hidden)
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .overlay(alignment: .bottom) {
+            Divider()
+        }
+    }
+
+    @ViewBuilder
+    private func serviceOperations(
+        _ service: ServiceDefinition,
+        status: ServiceStatus?,
+        isOperating: Bool,
+    ) -> some View {
+        if status?.allowsEnable == true {
+            Button(L10n.Common.enable) {
+                store.send(.enableService(service.identifier))
+            }
+            .disabled(isOperating)
+        }
+
+        if status?.allowsDisable == true {
+            Button(L10n.Common.disable) {
+                store.send(.disableService(service.identifier))
+            }
+            .disabled(isOperating)
+        }
+
+        if status?.allowsRestart == true {
+            Button(L10n.Common.restart) {
+                store.send(.restartService(service.identifier))
+            }
+            .disabled(isOperating)
+        }
+    }
+
+    private func logsMenu(_ service: ServiceDefinition) -> some View {
+        Section(L10n.Services.logs) {
+            logMenu(L10n.Services.standardOut, path: service.standardOutPath)
+            logMenu(L10n.Services.standardError, path: service.standardErrorPath)
+        }
+    }
+
+    private func logMenu(_ title: String, path: String) -> some View {
+        Menu(title) {
+            Button(L10n.Common.open) {
+                store.send(.openLog(path))
+            }
+            Button(L10n.Common.reveal) {
+                store.send(.revealLog(path))
+            }
+        }
+    }
+
+    private var serviceListHeight: CGFloat {
+        CGFloat(min(store.state.services.count, Layout.maximumVisibleServiceCount)) * Layout.serviceRowHeight
+    }
+
+    private func showDetails(for service: ServiceDefinition) {
+        store.send(.selectService(service.identifier))
+        openWindow(id: MoyWindow.management)
+        NSApplication.shared.activate(ignoringOtherApps: true)
     }
 
     private var footer: some View {
