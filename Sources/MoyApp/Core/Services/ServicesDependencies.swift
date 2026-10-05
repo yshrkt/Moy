@@ -6,15 +6,29 @@ struct ServicesDependencies: Sendable {
     let serviceManagementUseCase: any ServiceManagementUseCase
     let filePanelClient: FilePanelClient
     let workspaceClient: WorkspaceClient
+    let clipboardClient: ClipboardClient
+    let sleepForCopyToast: @Sendable (Duration) async throws -> Void
 
     init(
         serviceManagementUseCase: any ServiceManagementUseCase,
         filePanelClient: FilePanelClient = .live,
         workspaceClient: WorkspaceClient = .live,
+        clipboardClient: ClipboardClient = .live,
+        sleepForCopyToast: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
     ) {
         self.serviceManagementUseCase = serviceManagementUseCase
         self.filePanelClient = filePanelClient
         self.workspaceClient = workspaceClient
+        self.clipboardClient = clipboardClient
+        self.sleepForCopyToast = sleepForCopyToast
+    }
+}
+
+struct ClipboardClient: Sendable {
+    var copy: @Sendable (String) async -> Bool
+
+    static let live = Self { value in
+        await MainActor.run { CommandClipboard.copy(value) }
     }
 }
 

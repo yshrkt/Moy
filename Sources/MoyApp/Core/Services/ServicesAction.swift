@@ -41,4 +41,8 @@ enum ServicesAction: Sendable {
     case revealLog(String)
     case receiveFileOperation(Result<Void, ServicesFailure>)
     case dismissFailure
+    case copyValue(String, item: String, identifier: ServiceIdentifier)
+    case receiveCopyValue(CopyToast)
+    case dismissCopyToast(UUID)
+    case clearCopyFeedback
 }

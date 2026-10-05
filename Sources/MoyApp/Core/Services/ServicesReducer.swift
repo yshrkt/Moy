@@ -55,6 +55,8 @@ struct ServicesReducer: InjectableReducer {
                 return .none
             }
             state.selectedIdentifier = snapshot.services.first?.identifier
+            state.copyRequestID = nil
+            state.copyToast = nil
             return .none
 
         case let .receiveServices(.failure(failure)):
@@ -63,6 +65,10 @@ struct ServicesReducer: InjectableReducer {
             return .none
 
         case let .selectService(identifier):
+            if state.selectedIdentifier != identifier {
+                state.copyRequestID = nil
+                state.copyToast = nil
+            }
             state.selectedIdentifier = identifier
             return .none
 
@@ -264,6 +270,9 @@ struct ServicesReducer: InjectableReducer {
         case .dismissFailure:
             state.failure = nil
             return .none
+
+        case .copyValue, .receiveCopyValue, .dismissCopyToast, .clearCopyFeedback:
+            return reduceCopyFeedback(into: &state, action: action)
         }
     }
 }

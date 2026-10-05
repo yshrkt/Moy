@@ -15,7 +15,7 @@ struct ServiceActionsView: View {
                 .buttonStyle(.borderless)
         } else {
             actions
-                .buttonStyle(.bordered)
+                .buttonStyle(OpaqueServiceButtonStyle())
         }
     }
 
@@ -50,5 +50,25 @@ struct ServiceActionsView: View {
                 .disabled(isOperating)
             }
         }
+    }
+}
+
+private struct OpaqueServiceButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        let isPressed = configuration.isPressed && isEnabled
+        let background = Color(white: colorScheme == .dark
+            ? (isPressed ? 0.30 : 0.24)
+            : (isPressed ? 0.84 : 0.92))
+
+        configuration.label
+            .foregroundStyle(isEnabled ? .primary : .secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 3)
+            .frame(minHeight: 22)
+            .background(background, in: RoundedRectangle(cornerRadius: 5))
+            .shadow(color: .black.opacity(0.1), radius: 2.0, x: 0, y: 1)
     }
 }

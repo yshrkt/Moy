@@ -88,6 +88,31 @@ struct ServicesReducerTests {
         ))
     }
 
+    @Test
+    func `log operations forward the original paths`() async throws {
+        let requests = LogOperationRequests()
+        let reducer = ServicesReducer(dependencies: ServicesDependencies(
+            serviceManagementUseCase: TestServiceManagementUseCase(),
+            workspaceClient: WorkspaceClient(
+                open: { await requests.recordOpen($0) },
+                reveal: { await requests.recordReveal($0) },
+            ),
+        ))
+        var state = ServicesState()
+        let paths = ["/tmp/standard out.log", "/tmp/standard 'error'.log"]
+        for path in paths {
+            let open = reducer.reduce(into: &state, action: .openLog(path))
+            let openResponse = try #require(await open.execute())
+            _ = reducer.reduce(into: &state, action: openResponse)
+            let reveal = reducer.reduce(into: &state, action: .revealLog(path))
+            let revealResponse = try #require(await reveal.execute())
+            _ = reducer.reduce(into: &state, action: revealResponse)
+        }
+        #expect(await requests.opened == paths)
+        #expect(await requests.revealed == paths)
+        #expect(state.failure == nil)
+    }
+
     private func makeService(identifier: String) throws -> ServiceDefinition {
         try ServiceDefinition(
             identifier: ServiceIdentifier(identifier),
@@ -95,6 +120,19 @@ struct ServicesReducerTests {
             standardOutPath: "/tmp/\(identifier).out.log",
             standardErrorPath: "/tmp/\(identifier).err.log",
         )
+    }
+}
+
+private actor LogOperationRequests {
+    var opened: [String] = []
+    var revealed: [String] = []
+
+    func recordOpen(_ path: String) {
+        opened.append(path)
+    }
+
+    func recordReveal(_ path: String) {
+        revealed.append(path)
     }
 }
 

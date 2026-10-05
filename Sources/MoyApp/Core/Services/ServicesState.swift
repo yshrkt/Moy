@@ -14,6 +14,8 @@ final class ServicesState {
     var isLoading = false
     var isSaving = false
     var failure: ServicesFailure?
+    var copyRequestID: UUID?
+    var copyToast: CopyToast?
 
     var selectedService: ServiceDefinition? {
         guard let selectedIdentifier else { return nil }
@@ -23,6 +25,13 @@ final class ServicesState {
     func isOperating(_ identifier: ServiceIdentifier) -> Bool {
         operatingIdentifiers.contains(identifier)
     }
+}
+
+struct CopyToast: Equatable, Sendable, Identifiable {
+    let id: UUID
+    let identifier: ServiceIdentifier
+    let item: String
+    let succeeded: Bool
 }
 
 struct ServicesSnapshot: Equatable, Sendable {

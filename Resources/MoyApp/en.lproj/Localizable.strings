@@ -2,6 +2,7 @@
 "common.add" = "Add";
 "common.cancel" = "Cancel";
 "common.choose" = "Choose…";
+"common.copy" = "Copy";
 "common.delete" = "Delete";
 "common.details" = "Details";
 "common.disable" = "Disable";
@@ -28,6 +29,11 @@
 "services.deleteMessage" = "The service will be disabled and removed from Moy. Log files will remain.";
 "services.loading" = "Loading services…";
 "services.configuration" = "Configuration";
+"services.executionSettings" = "Execution Settings";
+"services.copyCommand" = "Copy Command";
+"services.copyItem" = "Copy %1$@";
+"services.copiedItem" = "Copied %1$@";
+"services.copyItemFailed" = "Could not copy %1$@";
 "services.identity" = "Identity";
 "services.behavior" = "Behavior";
 "services.logs" = "Logs";
