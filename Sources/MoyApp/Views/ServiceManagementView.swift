@@ -134,6 +134,5 @@ struct ServiceManagementView: View {
             .accessibilityLabel(L10n.Common.add)
         }
         .padding(10)
-        .background(.bar)
     }
 }
