@@ -112,15 +112,11 @@ struct ServiceManagementView: View {
 
     private var sidebarBottomBar: some View {
         HStack(spacing: 12) {
-            Button {
+            RefreshButton {
                 store.send(.refreshServices)
-            } label: {
-                Image(systemName: "arrow.clockwise")
             }
             .buttonStyle(.borderless)
             .disabled(store.state.isLoading)
-            .help(L10n.Common.refresh)
-            .accessibilityLabel(L10n.Common.refresh)
 
             Spacer()
 
