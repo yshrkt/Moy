@@ -224,6 +224,7 @@ private extension ServiceEditorView {
         Section {
             PathField(
                 title: "StandardOutPath",
+                placeholder: defaultLogPlaceholder(editor, standardError: false),
                 value: fieldBinding(
                     value: editor.standardOutPath,
                     field: ServiceEditorField.standardOutPath,
@@ -232,21 +233,21 @@ private extension ServiceEditorView {
                 store.send(.chooseEditorPath(.standardOut))
             }
             .padding(.vertical, 4)
-            VStack(alignment: .leading, spacing: 8) {
-                PathField(
-                    title: "StandardErrorPath",
-                    value: fieldBinding(
-                        value: editor.standardErrorPath,
-                        field: ServiceEditorField.standardErrorPath,
-                    ),
-                ) {
-                    store.send(.chooseEditorPath(.standardError))
-                }
-                if case .create = editor.mode {
-                    fieldHelp(L10n.Services.defaultLogHelp)
-                }
+            PathField(
+                title: "StandardErrorPath",
+                placeholder: defaultLogPlaceholder(editor, standardError: true),
+                value: fieldBinding(
+                    value: editor.standardErrorPath,
+                    field: ServiceEditorField.standardErrorPath,
+                ),
+            ) {
+                store.send(.chooseEditorPath(.standardError))
             }
             .padding(.vertical, 4)
+            if case .create = editor.mode {
+                fieldHelp(L10n.Services.defaultLogHelp)
+                    .padding(.vertical, 4)
+            }
         } header: {
             Text(L10n.Services.logs)
         } footer: {
@@ -254,6 +255,16 @@ private extension ServiceEditorView {
                 fieldHelp(L10n.Services.editReloadHelp)
             }
         }
+    }
+
+    private func defaultLogPlaceholder(_ editor: ServiceEditorState, standardError: Bool) -> String? {
+        guard case .create = editor.mode else { return nil }
+        let paths = MoyPaths.defaults()
+        let identifier = try? ServiceIdentifier(editor.identifier)
+        let url = standardError
+            ? paths.standardErrorFilePreview(identifier: identifier)
+            : paths.standardOutFilePreview(identifier: identifier)
+        return url.path
     }
 
     private func fieldHelp(_ text: String) -> some View {
@@ -308,6 +319,7 @@ private struct PathField: View {
     let title: String
     var labelFont: Font = .body
     var isInline = false
+    var placeholder: String?
     @Binding var value: String
     let choose: () -> Void
 
@@ -330,7 +342,7 @@ private struct PathField: View {
 
     private var pathInput: some View {
         HStack(spacing: 8) {
-            TextField(title, text: $value)
+            TextField(title, text: $value, prompt: placeholder.map { Text($0) })
                 .labelsHidden()
                 .font(.body.monospaced())
                 .frame(maxWidth: .infinity)

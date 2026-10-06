@@ -60,11 +60,11 @@
 "services.keepAlive" = "Keep Alive";
 "services.keepAliveHelp" = "KeepAlive can also start the service when its LaunchAgent is loaded.";
 "services.throttleInterval" = "Throttle Interval";
-"services.throttleHelp" = "Minimum delay in seconds after a process exits. This is not a recurring schedule.";
+"services.throttleHelp" = "Set the minimum interval between launches in seconds to prevent repeated rapid restarts. If omitted, the OS default is used. This is not a recurring schedule.";
 "services.seconds" = "seconds";
 "services.standardOut" = "Standard Output";
 "services.standardError" = "Standard Error";
-"services.defaultLogHelp" = "Leave blank to use Moy's default log path.";
+"services.defaultLogHelp" = "Leave blank to use the displayed default paths.";
 "services.enabled" = "Enabled";
 "services.disabled" = "Disabled";
 "services.needsAttention" = "Needs Attention";

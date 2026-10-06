@@ -60,11 +60,11 @@
 "services.keepAlive" = "常時維持";
 "services.keepAliveHelp" = "KeepAliveを有効にすると、LaunchAgentの読み込み時にもサービスが起動することがあります。";
 "services.throttleInterval" = "再起動抑制時間";
-"services.throttleHelp" = "プロセス終了後に置く最小間隔（秒）です。定期実行の間隔ではありません。";
+"services.throttleHelp" = "短時間での再起動の繰り返しを抑えるため、最小起動間隔（秒）を指定します。未指定の場合はOSの既定値を使用します。定期実行の間隔ではありません。";
 "services.seconds" = "秒";
 "services.standardOut" = "標準出力";
 "services.standardError" = "標準エラー";
-"services.defaultLogHelp" = "空欄の場合はMoyの既定ログパスを使用します。";
+"services.defaultLogHelp" = "空欄の場合は表示されている既定パスを使用します。";
 "services.enabled" = "有効";
 "services.disabled" = "無効";
 "services.needsAttention" = "要確認";

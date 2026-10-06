@@ -42,10 +42,28 @@ public struct MoyPaths: Equatable, Sendable {
     }
 
     public func standardOutFile(identifier: ServiceIdentifier) -> URL {
-        logDirectory.appending(path: "\(identifier.launchdLabel).stdout.log")
+        logFile(label: identifier.launchdLabel, suffix: "stdout")
     }
 
     public func standardErrorFile(identifier: ServiceIdentifier) -> URL {
-        logDirectory.appending(path: "\(identifier.launchdLabel).stderr.log")
+        logFile(label: identifier.launchdLabel, suffix: "stderr")
+    }
+
+    public func standardOutFilePreview(identifier: ServiceIdentifier?) -> URL {
+        logFile(
+            label: identifier?.launchdLabel ?? "\(ServiceIdentifier.launchdLabelPrefix)<Identifier>",
+            suffix: "stdout",
+        )
+    }
+
+    public func standardErrorFilePreview(identifier: ServiceIdentifier?) -> URL {
+        logFile(
+            label: identifier?.launchdLabel ?? "\(ServiceIdentifier.launchdLabelPrefix)<Identifier>",
+            suffix: "stderr",
+        )
+    }
+
+    private func logFile(label: String, suffix: String) -> URL {
+        logDirectory.appending(path: "\(label).\(suffix).log")
     }
 }
