@@ -32,6 +32,10 @@ struct CopyToast: Equatable, Sendable, Identifiable {
     let identifier: ServiceIdentifier
     let item: String
     let succeeded: Bool
+
+    func showsSuccess(for identifier: ServiceIdentifier, item: String) -> Bool {
+        succeeded && self.identifier == identifier && self.item == item
+    }
 }
 
 struct ServicesSnapshot: Equatable, Sendable {

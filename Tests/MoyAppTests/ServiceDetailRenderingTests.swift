@@ -27,7 +27,10 @@ struct ServiceDetailRenderingTests {
         )
         let state = ServicesState()
         state.statuses[service.identifier] = ServiceStatus(
-            identifier: service.identifier, registration: .enabled, runtime: .running(pid: 42),
+            identifier: service.identifier, registration: .enabled, runtime: .running(pid: 1952),
+        )
+        state.copyToast = CopyToast(
+            id: UUID(), identifier: service.identifier, item: "ProgramArguments", succeeded: true,
         )
         let store = Store.reducer(
             initialState: state,
@@ -59,7 +62,7 @@ struct ServiceDetailRenderingTests {
     }
 
     private func renderToast(identifier: ServiceIdentifier, dark: Bool, output: URL) throws {
-        let toast = CopyToast(id: UUID(), identifier: identifier, item: "PID", succeeded: true)
+        let toast = CopyToast(id: UUID(), identifier: identifier, item: "PID", succeeded: false)
         let toastRenderer = ImageRenderer(content: CopyToastView(toast: toast)
             .padding(20)
             .background(dark ? Color(white: 0.14) : .white)
@@ -71,5 +74,27 @@ struct ServiceDetailRenderingTests {
         let toastData = try #require(toastBitmap.representation(using: .png, properties: [:]))
         let language = Bundle.main.preferredLocalizations.first ?? "unknown"
         try toastData.write(to: output.appendingPathComponent("\(language)-toast-\(dark ? "dark" : "light").png"))
+    }
+
+    @Test(arguments: [false, true], [false, true])
+    func `renders copy success with reduced motion and both appearances`(dark: Bool, reduceMotion: Bool) throws {
+        let renderer = ImageRenderer(content: CopyValueButtonLabel(isCopied: true, reduceMotion: reduceMotion)
+            .padding(.top, 60)
+            .padding(.horizontal, 180)
+            .padding(.bottom, 20)
+            .background(dark ? Color(white: 0.14) : .white)
+            .environment(\.colorScheme, dark ? .dark : .light))
+        renderer.scale = 2
+        let image = try #require(renderer.nsImage)
+        let tiff = try #require(image.tiffRepresentation)
+        let bitmap = try #require(NSBitmapImageRep(data: tiff))
+        let data = try #require(bitmap.representation(using: .png, properties: [:]))
+        let language = Bundle.main.preferredLocalizations.first ?? "unknown"
+        let name = "\(language)-copy-\(dark ? "dark" : "light")-reduced-\(reduceMotion).png"
+        let output = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("build/detail-layout-qa", isDirectory: true)
+        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        try data.write(to: output.appendingPathComponent(name))
     }
 }

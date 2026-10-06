@@ -3,6 +3,8 @@
 "common.cancel" = "Cancel";
 "common.choose" = "Choose…";
 "common.copy" = "Copy";
+/* Brief feedback above the button after a successful copy. */
+"common.copied" = "Copied!";
 "common.delete" = "Delete";
 "common.details" = "Details";
 "common.disable" = "Disable";

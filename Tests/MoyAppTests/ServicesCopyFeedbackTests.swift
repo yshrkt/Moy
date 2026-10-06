@@ -5,6 +5,18 @@ import Testing
 
 @Suite("Services copy feedback")
 struct ServicesCopyFeedbackTests {
+    @Test
+    func `success feedback belongs only to the copied item and service`() throws {
+        let identifier = try ServiceIdentifier("worker")
+        let other = try ServiceIdentifier("other")
+        let success = CopyToast(id: UUID(), identifier: identifier, item: "PID", succeeded: true)
+        #expect(success.showsSuccess(for: identifier, item: "PID"))
+        #expect(!success.showsSuccess(for: identifier, item: "Label"))
+        #expect(!success.showsSuccess(for: other, item: "PID"))
+        let failure = CopyToast(id: UUID(), identifier: identifier, item: "PID", succeeded: false)
+        #expect(!failure.showsSuccess(for: identifier, item: "PID"))
+    }
+
     @Test(arguments: [true, false])
     func `feedback reflects clipboard result and expires after one and a half seconds`(succeeded: Bool) async throws {
         let requests = CopyRequests(succeeded: succeeded)

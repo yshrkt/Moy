@@ -15,7 +15,7 @@ struct ServiceDetailView: View {
             detailContent
         }
         .overlay(alignment: .bottom) {
-            if let toast = store.state.copyToast, toast.identifier == service.identifier {
+            if let toast = store.state.copyToast, !toast.succeeded, toast.identifier == service.identifier {
                 CopyToastView(toast: toast)
                     .padding(16)
                     .allowsHitTesting(false)
@@ -158,11 +158,12 @@ struct ServiceDetailView: View {
         if presentation != .loading, presentation != .error {
             if let status {
                 if case let .running(pid) = status.runtime {
+                    let pidValue = String(pid)
                     HStack(spacing: 5) {
-                        Text("\(L10n.Services.pid) \(pid)")
+                        Text("\(L10n.Services.pid) \(pidValue)")
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
-                        copyButton(item: "PID", value: String(pid))
+                        copyButton(item: "PID", value: pidValue)
                     }
                 }
                 let exitStatus = status.lastExitStatus.map(String.init) ?? L10n.Services.unknown

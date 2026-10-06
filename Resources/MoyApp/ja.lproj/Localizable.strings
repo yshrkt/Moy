@@ -3,6 +3,8 @@
 "common.cancel" = "キャンセル";
 "common.choose" = "選択…";
 "common.copy" = "コピー";
+/* コピー成功時にボタンの上へ短時間表示する文言。 */
+"common.copied" = "コピーしました";
 "common.delete" = "削除";
 "common.details" = "詳細";
 "common.disable" = "無効化";
