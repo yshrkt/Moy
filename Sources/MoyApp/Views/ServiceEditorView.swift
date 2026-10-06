@@ -12,19 +12,12 @@ struct ServiceEditorView: View {
                 Form {
                     identitySection(editor)
                     commandSection(editor)
-                    environmentSection(editor)
                     behaviorSection(editor)
                     logsSection(editor)
-
-                    if case .edit = editor.mode {
-                        Section {
-                            Text(L10n.Services.editReloadHelp)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
                 }
                 .formStyle(.grouped)
+                .textFieldStyle(.roundedBorder)
+                .disabled(store.state.isSaving)
                 .navigationTitle(editorTitle(editor))
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -68,53 +61,83 @@ struct ServiceEditorView: View {
 private extension ServiceEditorView {
     private func identitySection(_ editor: ServiceEditorState) -> some View {
         Section {
-            TextField(L10n.Services.identifier, text: fieldBinding(
-                value: editor.identifier,
-                field: ServiceEditorField.identifier,
-            ))
-            .disabled(isEditing(editor))
-            Text(L10n.Services.identifierHelp)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            if !editor.identifier.isEmpty {
-                LabeledContent(L10n.Services.label) {
-                    Text("\(ServiceIdentifier.launchdLabelPrefix)\(editor.identifier)")
-                        .font(.caption.monospaced())
-                        .textSelection(.enabled)
-                }
+            labelField(editor)
+            LabeledContent(L10n.Services.displayName) {
+                TextField(L10n.Services.displayName, text: fieldBinding(
+                    value: editor.displayName,
+                    field: ServiceEditorField.displayName,
+                ))
+                .labelsHidden()
             }
-            TextField(L10n.Services.displayName, text: fieldBinding(
-                value: editor.displayName,
-                field: ServiceEditorField.displayName,
-            ))
-            VStack(alignment: .leading, spacing: 6) {
+            .padding(.vertical, 4)
+            VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.Services.description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
                 TextEditor(text: fieldBinding(
                     value: editor.serviceDescription,
                     field: ServiceEditorField.description,
                 ))
-                .frame(minHeight: 58)
+                .font(.body)
+                .scrollContentBackground(.hidden)
+                .padding(5)
+                .frame(minHeight: 70)
+                .background(.background, in: RoundedRectangle(cornerRadius: 5))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 5)
+                        .strokeBorder(.quaternary, lineWidth: 1)
+                }
+                .accessibilityLabel(L10n.Services.description)
             }
+            .padding(.vertical, 4)
         } header: {
             Text(L10n.Services.identity)
         }
     }
 
+    private func labelField(_ editor: ServiceEditorState) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 20) {
+                Text("Label")
+                Spacer(minLength: 0)
+                HStack(spacing: 4) {
+                    Text(ServiceIdentifier.launchdLabelPrefix)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .fixedSize()
+                    TextField(L10n.Services.identifier, text: fieldBinding(
+                        value: editor.identifier,
+                        field: ServiceEditorField.identifier,
+                    ))
+                    .labelsHidden()
+                    .accessibilityLabel(L10n.Services.identifier)
+                    .frame(width: 120)
+                    .disabled(isEditing(editor))
+                }
+                .font(.body.monospaced())
+            }
+            fieldHelp(L10n.Services.identifierHelp)
+        }
+        .padding(.vertical, 4)
+    }
+
     private func commandSection(_ editor: ServiceEditorState) -> some View {
         Section {
-            PathField(
-                title: L10n.Services.executable,
-                value: fieldBinding(value: editor.executable, field: ServiceEditorField.executable),
-            ) {
-                store.send(.chooseEditorPath(.executable))
+            VStack(alignment: .leading, spacing: 12) {
+                Text("ProgramArguments")
+                VStack(alignment: .leading, spacing: 12) {
+                    PathField(
+                        title: L10n.Services.executable,
+                        labelFont: .callout,
+                        isInline: true,
+                        value: fieldBinding(value: editor.executable, field: ServiceEditorField.executable),
+                    ) {
+                        store.send(.chooseEditorPath(.executable))
+                    }
+                    ServiceArgumentsList(store: store, editor: editor)
+                }
             }
-
-            ServiceArgumentsList(store: store, editor: editor)
-
+            .padding(.vertical, 4)
             PathField(
-                title: L10n.Services.workingDirectory,
+                title: "WorkingDirectory",
                 value: fieldBinding(
                     value: editor.workingDirectory,
                     field: ServiceEditorField.workingDirectory,
@@ -122,56 +145,85 @@ private extension ServiceEditorView {
             ) {
                 store.send(.chooseEditorPath(.workingDirectory))
             }
+            .padding(.vertical, 4)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("EnvironmentVariables")
+                ServiceEnvironmentList(store: store, editor: editor)
+            }
+            .padding(.vertical, 4)
         } header: {
-            Text(L10n.Services.configuration)
-        }
-    }
-
-    private func environmentSection(_ editor: ServiceEditorState) -> some View {
-        Section {
-            ServiceEnvironmentList(store: store, editor: editor)
-        } header: {
-            Text(L10n.Services.environment)
+            Text(L10n.Services.executionSettings)
         }
     }
 
     private func behaviorSection(_ editor: ServiceEditorState) -> some View {
         Section {
-            Toggle(
-                L10n.Services.runAtLoad,
-                isOn: boolBinding(value: editor.runAtLoad, field: ServiceEditorField.runAtLoad),
-            )
-            Toggle(
-                L10n.Services.keepAlive,
-                isOn: boolBinding(value: editor.keepAlive, field: ServiceEditorField.keepAlive),
-            )
-            Text(L10n.Services.keepAliveHelp)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            HStack {
-                TextField(
-                    L10n.Services.throttleInterval,
-                    text: fieldBinding(
-                        value: editor.throttleInterval,
-                        field: ServiceEditorField.throttleInterval,
-                    ),
+            behaviorRow("RunAtLoad", help: L10n.Services.runAtLoadHelp) {
+                behaviorToggle(
+                    "RunAtLoad",
+                    isOn: boolBinding(value: editor.runAtLoad, field: ServiceEditorField.runAtLoad),
+                    help: L10n.Services.runAtLoad,
                 )
-                .frame(maxWidth: 160)
-                Text(L10n.Services.seconds)
-                    .foregroundStyle(.secondary)
             }
-            Text(L10n.Services.throttleHelp)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            behaviorRow("KeepAlive", help: L10n.Services.keepAliveHelp) {
+                behaviorToggle(
+                    "KeepAlive",
+                    isOn: boolBinding(value: editor.keepAlive, field: ServiceEditorField.keepAlive),
+                    help: L10n.Services.keepAlive,
+                )
+            }
+            behaviorRow("ThrottleInterval", help: L10n.Services.throttleHelp) {
+                HStack(spacing: 8) {
+                    TextField(
+                        "ThrottleInterval",
+                        text: fieldBinding(
+                            value: editor.throttleInterval,
+                            field: ServiceEditorField.throttleInterval,
+                        ),
+                    )
+                    .labelsHidden()
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 100)
+                    Text(L10n.Services.seconds)
+                        .foregroundStyle(.secondary)
+                }
+            }
         } header: {
             Text(L10n.Services.behavior)
         }
     }
 
+    private func behaviorRow(
+        _ title: String,
+        help: String? = nil,
+        @ViewBuilder control: () -> some View,
+    ) -> some View {
+        HStack(alignment: .center, spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                if let help {
+                    fieldHelp(help)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            control()
+                .fixedSize()
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func behaviorToggle(_ title: String, isOn: Binding<Bool>, help: String) -> some View {
+        Toggle(title, isOn: isOn)
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .fixedSize()
+            .help(help)
+    }
+
     private func logsSection(_ editor: ServiceEditorState) -> some View {
         Section {
             PathField(
-                title: L10n.Services.standardOut,
+                title: "StandardOutPath",
                 value: fieldBinding(
                     value: editor.standardOutPath,
                     field: ServiceEditorField.standardOutPath,
@@ -179,23 +231,36 @@ private extension ServiceEditorView {
             ) {
                 store.send(.chooseEditorPath(.standardOut))
             }
-            PathField(
-                title: L10n.Services.standardError,
-                value: fieldBinding(
-                    value: editor.standardErrorPath,
-                    field: ServiceEditorField.standardErrorPath,
-                ),
-            ) {
-                store.send(.chooseEditorPath(.standardError))
+            .padding(.vertical, 4)
+            VStack(alignment: .leading, spacing: 8) {
+                PathField(
+                    title: "StandardErrorPath",
+                    value: fieldBinding(
+                        value: editor.standardErrorPath,
+                        field: ServiceEditorField.standardErrorPath,
+                    ),
+                ) {
+                    store.send(.chooseEditorPath(.standardError))
+                }
+                if case .create = editor.mode {
+                    fieldHelp(L10n.Services.defaultLogHelp)
+                }
             }
-            if case .create = editor.mode {
-                Text(L10n.Services.defaultLogHelp)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            .padding(.vertical, 4)
         } header: {
             Text(L10n.Services.logs)
+        } footer: {
+            if case .edit = editor.mode {
+                fieldHelp(L10n.Services.editReloadHelp)
+            }
         }
+    }
+
+    private func fieldHelp(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private func fieldBinding(
@@ -241,13 +306,36 @@ private extension ServiceEditorView {
 
 private struct PathField: View {
     let title: String
+    var labelFont: Font = .body
+    var isInline = false
     @Binding var value: String
     let choose: () -> Void
 
     var body: some View {
-        HStack {
+        if isInline {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(labelFont)
+                    .fixedSize()
+                pathInput
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(labelFont)
+                pathInput
+            }
+        }
+    }
+
+    private var pathInput: some View {
+        HStack(spacing: 8) {
             TextField(title, text: $value)
+                .labelsHidden()
+                .font(.body.monospaced())
+                .frame(maxWidth: .infinity)
             Button(L10n.Common.choose, action: choose)
+                .fixedSize()
         }
     }
 }

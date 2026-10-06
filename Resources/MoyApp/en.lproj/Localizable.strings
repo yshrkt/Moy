@@ -42,7 +42,7 @@
 "services.logs" = "Logs";
 "services.status" = "Status";
 "services.identifier" = "Identifier";
-"services.identifierHelp" = "1–64 lowercase letters, digits, hyphens, or underscores. It cannot be changed later.";
+"services.identifierHelp" = "The entered value is used as a unique identifier in Moy.\nUse 1–64 lowercase ASCII letters, digits, hyphens, or underscores. It cannot be changed after creation.";
 "services.label" = "Launchd Label";
 "services.displayName" = "Display Name";
 "services.description" = "Description";
@@ -56,8 +56,9 @@
 "services.environmentValue" = "Value";
 "services.addEnvironment" = "Add Variable";
 "services.runAtLoad" = "Run at Load";
+"services.runAtLoadHelp" = "Enabling RunAtLoad starts the service when its LaunchAgent is loaded.";
 "services.keepAlive" = "Keep Alive";
-"services.keepAliveHelp" = "Keep Alive can also start the service when its LaunchAgent is loaded.";
+"services.keepAliveHelp" = "KeepAlive can also start the service when its LaunchAgent is loaded.";
 "services.throttleInterval" = "Throttle Interval";
 "services.throttleHelp" = "Minimum delay in seconds after a process exits. This is not a recurring schedule.";
 "services.seconds" = "seconds";

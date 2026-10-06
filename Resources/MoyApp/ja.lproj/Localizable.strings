@@ -42,7 +42,7 @@
 "services.logs" = "ログ";
 "services.status" = "状態";
 "services.identifier" = "Identifier";
-"services.identifierHelp" = "1〜64文字の半角小文字英数字・ハイフン・アンダースコア。作成後は変更できません。";
+"services.identifierHelp" = "入力した値はMoy内で一意の識別子として利用します。\n1〜64文字の半角小文字英数字・ハイフン・アンダースコアを使用します。作成後は変更できません。";
 "services.label" = "Launchd Label";
 "services.displayName" = "表示名";
 "services.description" = "説明";
@@ -56,8 +56,9 @@
 "services.environmentValue" = "値";
 "services.addEnvironment" = "環境変数を追加";
 "services.runAtLoad" = "読み込み時に起動";
+"services.runAtLoadHelp" = "RunAtLoadを有効にすると、LaunchAgentの読み込み時にサービスを起動します。";
 "services.keepAlive" = "常時維持";
-"services.keepAliveHelp" = "常時維持を有効にすると、LaunchAgentの読み込み時にもサービスが起動することがあります。";
+"services.keepAliveHelp" = "KeepAliveを有効にすると、LaunchAgentの読み込み時にもサービスが起動することがあります。";
 "services.throttleInterval" = "再起動抑制時間";
 "services.throttleHelp" = "プロセス終了後に置く最小間隔（秒）です。定期実行の間隔ではありません。";
 "services.seconds" = "秒";
