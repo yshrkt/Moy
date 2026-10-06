@@ -1,4 +1,5 @@
 "app.name" = "Moy";
+"common.actions" = "操作";
 "common.add" = "追加";
 "common.cancel" = "キャンセル";
 "common.choose" = "選択…";

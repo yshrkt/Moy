@@ -6,8 +6,10 @@ import SwiftUI
 @MainActor
 struct MenuBarServicesView: View {
     private enum Layout {
+        static let menuWidth: CGFloat = 280
         static let maximumVisibleServiceCount = 8
         static let serviceRowHeight: CGFloat = 40
+        static let actionButtonSize: CGFloat = 24
     }
 
     @Environment(\.openWindow) private var openWindow
@@ -30,7 +32,7 @@ struct MenuBarServicesView: View {
             Divider()
             footer
         }
-        .frame(width: 380)
+        .frame(width: Layout.menuWidth)
         .task {
             store.send(.appear)
             while !Task.isCancelled {
@@ -96,36 +98,44 @@ struct MenuBarServicesView: View {
         )
         let isOperating = store.state.isOperating(service.identifier)
 
-        return Menu {
-            Button(L10n.Common.details) {
-                showDetails(for: service)
+        return HStack(spacing: 10) {
+            ServiceStatusIndicator(presentation: presentation)
+            Text(service.name)
+                .lineLimit(1)
+            Spacer()
+            if isOperating {
+                ProgressView()
+                    .controlSize(.small)
             }
 
-            Divider()
-            serviceOperations(service, status: status, isOperating: isOperating)
-            logsMenu(service)
-        } label: {
-            HStack(spacing: 10) {
-                ServiceStatusIndicator(presentation: presentation)
-                Text(service.name)
-                    .lineLimit(1)
-                Spacer()
-                if isOperating {
-                    ProgressView()
-                        .controlSize(.small)
+            Menu {
+                Button(L10n.Common.details) {
+                    showDetails(for: service)
                 }
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
+
+                Divider()
+                serviceOperations(service, status: status, isOperating: isOperating)
+                logsMenu(service)
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(.secondary)
+                    .frame(width: Layout.actionButtonSize, height: Layout.actionButtonSize)
+                    .background {
+                        Circle()
+                            .fill(.quaternary)
+                    }
+                    .contentShape(Circle())
             }
-            .padding(.horizontal, 12)
-            .frame(maxWidth: .infinity, minHeight: Layout.serviceRowHeight, alignment: .leading)
-            .contentShape(Rectangle())
+            .menuStyle(.button)
+            .menuIndicator(.hidden)
+            .buttonStyle(.plain)
+            .fixedSize()
+            .help(L10n.Common.actions)
+            .accessibilityLabel(L10n.Common.actions)
         }
-        .menuStyle(.button)
-        .menuIndicator(.hidden)
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 12)
+        .frame(maxWidth: .infinity, minHeight: Layout.serviceRowHeight, alignment: .leading)
         .overlay(alignment: .bottom) {
             Divider()
         }
