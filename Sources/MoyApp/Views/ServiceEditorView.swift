@@ -55,6 +55,23 @@ struct ServiceEditorView: View {
             }
         }
         .frame(minWidth: 680, minHeight: 680)
+        .alert(
+            L10n.Common.error,
+            isPresented: Binding(
+                get: { store.state.editor != nil && store.state.failure != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        store.send(.dismissFailure)
+                    }
+                },
+            ),
+        ) {
+            Button(L10n.Common.ok) {
+                store.send(.dismissFailure)
+            }
+        } message: {
+            Text(store.state.failure?.localizedMessage ?? "")
+        }
     }
 }
 

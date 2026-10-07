@@ -80,6 +80,8 @@
 "error.serviceNotFound" = "The service was not found.";
 "error.duplicateService" = "A service with this identifier already exists.";
 "error.invalidService" = "The service settings are invalid.";
+"error.executableNotFound" = "Executable not found. Specify an absolute path and check the path and filename.";
+"error.executableNotRunnable" = "The specified file cannot be executed. Select an executable file and check its execute permission.";
 "error.corruptStorage" = "Moy could not read the saved service data. The file was left unchanged.";
 "error.unsupportedSchema" = "The service data was created by an unsupported version of Moy.";
 "error.fileOperation" = "A file operation failed.";

@@ -46,9 +46,9 @@ struct MoyApp: App {
                 .alert(
                     L10n.Common.error,
                     isPresented: Binding(
-                        get: { store.state.failure != nil },
+                        get: { store.state.editor == nil && store.state.failure != nil },
                         set: { isPresented in
-                            if !isPresented {
+                            if !isPresented, store.state.editor == nil {
                                 store.send(.dismissFailure)
                             }
                         },

@@ -73,6 +73,7 @@ struct ServicesReducer: InjectableReducer {
             return .none
 
         case .presentCreateService:
+            state.failure = nil
             state.editor = .create()
             return .none
 
@@ -80,12 +81,14 @@ struct ServicesReducer: InjectableReducer {
             guard let service = state.services.first(where: { $0.identifier == identifier }) else {
                 return .none
             }
+            state.failure = nil
             state.editor = ServiceEditorState(service: service)
             return .none
 
         case .dismissEditor:
             guard !state.isSaving else { return .none }
             state.editor = nil
+            state.failure = nil
             return .none
 
         case let .updateEditor(field):
@@ -141,6 +144,7 @@ struct ServicesReducer: InjectableReducer {
 
         case let .saveService(enable):
             guard !state.isSaving, let editor = state.editor else { return .none }
+            state.failure = nil
             let payload: ServiceEditorPayload
             do {
                 payload = try ServiceEditorPayload(editor: editor)

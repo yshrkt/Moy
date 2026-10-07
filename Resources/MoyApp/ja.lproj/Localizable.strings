@@ -80,6 +80,8 @@
 "error.serviceNotFound" = "サービスが見つかりませんでした。";
 "error.duplicateService" = "同じIdentifierのサービスがすでに存在します。";
 "error.invalidService" = "サービス設定が正しくありません。";
+"error.executableNotFound" = "実行ファイルが見つかりません。絶対パスで指定し、パスとファイル名を確認してください。";
+"error.executableNotRunnable" = "指定したファイルは実行できません。実行可能なファイルを選択し、実行権限を確認してください。";
 "error.corruptStorage" = "保存済みのサービスデータを読み込めませんでした。ファイルは変更していません。";
 "error.unsupportedSchema" = "このバージョンのMoyではサービスデータを読み込めません。";
 "error.fileOperation" = "ファイル操作に失敗しました。";

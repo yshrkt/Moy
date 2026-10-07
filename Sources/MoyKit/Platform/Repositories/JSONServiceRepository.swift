@@ -45,6 +45,7 @@ public actor JSONServiceRepository: ServiceRepository {
     }
 
     public func create(_ newService: ServiceDraft) async throws -> ServiceDefinition {
+        try validateExecutable(newService.programArguments)
         if try await labelChecker.isLoaded(label: newService.identifier.launchdLabel) {
             throw MoyError.duplicateService(newService.identifier.rawValue)
         }
@@ -76,6 +77,7 @@ public actor JSONServiceRepository: ServiceRepository {
     }
 
     public func update(_ service: ServiceDefinition) async throws {
+        try validateExecutable(service.programArguments)
         try ServiceValidator.validate(service)
         try withLock {
             var store = try readStore()
@@ -100,6 +102,17 @@ public actor JSONServiceRepository: ServiceRepository {
 }
 
 private extension JSONServiceRepository {
+    func validateExecutable(_ arguments: [String]) throws {
+        let path = arguments.first ?? ""
+        var isDirectory: ObjCBool = false
+        guard path.hasPrefix("/"), fileManager.fileExists(atPath: path, isDirectory: &isDirectory) else {
+            throw MoyError.executableNotFound(path)
+        }
+        guard !isDirectory.boolValue, fileManager.isExecutableFile(atPath: path) else {
+            throw MoyError.executableNotRunnable(path)
+        }
+    }
+
     func prepareDataDirectory() throws {
         do {
             try fileManager.createDirectory(at: paths.dataDirectory, withIntermediateDirectories: true)

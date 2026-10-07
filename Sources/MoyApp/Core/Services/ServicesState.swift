@@ -184,6 +184,9 @@ enum ServicesFailure: Error, Equatable, Sendable {
     case unexpected(String)
 
     static func from(_ error: any Error) -> Self {
+        if let error = error as? Self {
+            return error
+        }
         if let error = error as? MoyError {
             return .moy(error)
         }

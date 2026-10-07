@@ -48,7 +48,11 @@ private extension MoyError {
         case let .duplicateService(identifier):
             "\(L10n.Error.duplicateService)\n\(identifier)"
         case let .invalidService(messages):
-            "\(L10n.Error.invalidService)\n\(messages.joined(separator: "\n"))"
+            "\(L10n.Error.invalidService)\n\(messages.map(localizedValidationMessage).joined(separator: "\n"))"
+        case let .executableNotFound(path):
+            "\(L10n.Error.executableNotFound)\n\(path)"
+        case let .executableNotRunnable(path):
+            "\(L10n.Error.executableNotRunnable)\n\(path)"
         case let .corruptStorage(path, reason):
             "\(L10n.Error.corruptStorage)\n\(path)\n\(reason)"
         case let .unsupportedSchema(found, supported):
@@ -66,5 +70,9 @@ private extension MoyError {
         case let .launchctlFailed(arguments, status, message):
             "\(L10n.Error.launchctlFailed)\nlaunchctl \(arguments.joined(separator: " "))\n\(status): \(message)"
         }
+    }
+
+    func localizedValidationMessage(_ message: String) -> String {
+        message == "The executable path must be absolute" ? L10n.Error.executableNotFound : message
     }
 }
