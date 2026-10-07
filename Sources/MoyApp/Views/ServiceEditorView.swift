@@ -72,10 +72,9 @@ private extension ServiceEditorView {
             .padding(.vertical, 4)
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.Services.description)
-                TextEditor(text: fieldBinding(
-                    value: editor.serviceDescription,
-                    field: ServiceEditorField.description,
-                ))
+                ServiceDescriptionEditor(value: editor.serviceDescription) { value in
+                    store.send(.updateEditor(.description(value)))
+                }
                 .font(.body)
                 .scrollContentBackground(.hidden)
                 .padding(5)

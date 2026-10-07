@@ -173,7 +173,7 @@ Label・ProgramArguments・WorkingDirectory・EnvironmentVariables・StandardOut
 - 標準出力・標準エラーに「開く」「Finderで表示」を提供する。
 - Moyを終了しても、launchdによるサービス管理は継続する。
 
-メニューバーと管理ウィンドウでStoreを共有し、機能ごとにscopeする。一覧、選択、編集内容、処理中状態、エラーをAction／Reducerで管理する。保存・launchd操作・状態更新はEffectから依存注入したUseCaseを呼び出し、操作の重複実行を防ぐ。
+メニューバーと管理ウィンドウでStoreを共有し、機能ごとにscopeする。一覧、選択、編集内容、処理中状態、エラーをAction／Reducerで管理する。保存・launchd操作・状態更新はEffectから依存注入したUseCaseを呼び出し、操作の重複実行を防ぐ。説明の複数行入力欄は即時更新するView内の入力状態にバインドし、変更内容をAction経由で編集状態に反映する。非同期のStore更新によって入力途中の古い文字列を読み戻さず、かな漢字変換と途中位置での追記時もカーソル位置を維持する。
 
 ## 4. ローカライズと同梱CLI
 
