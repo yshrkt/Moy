@@ -17,6 +17,11 @@ struct JSONServiceRepositoryTests {
             ServiceDraft(identifier: identifier, programArguments: ["/usr/bin/true"]),
         )
         #expect(created.identifier == identifier)
+        #expect(created.kind == .launchAgent)
+        let storedData = try Data(contentsOf: fixture.paths.servicesFile)
+        let store = try #require(JSONSerialization.jsonObject(with: storedData) as? [String: Any])
+        let services = try #require(store["services"] as? [[String: Any]])
+        #expect(services.first?["kind"] as? String == "launchAgent")
         #expect(created.standardOutPath.hasSuffix("com.sputnik-apps.moy.true-service.stdout.log"))
         #expect(created.name == "true-service")
         #expect(try await repository.list() == [created])
@@ -25,6 +30,7 @@ struct JSONServiceRepositoryTests {
         updated.displayName = "Updated"
         try await repository.update(updated)
         #expect(try await repository.find(identifier: identifier).displayName == "Updated")
+        #expect(try await repository.find(identifier: identifier).kind == .launchAgent)
 
         try await repository.remove(identifier: identifier)
         #expect(try await repository.list().isEmpty)
@@ -45,6 +51,34 @@ struct JSONServiceRepositoryTests {
                 ServiceDraft(identifier: identifier, programArguments: ["/usr/bin/true"]),
             )
         }
+    }
+
+    @Test(arguments: [nil, "unknown", "launchDaemon"] as [String?])
+    func `rejects missing or unsupported kind without overwriting JSON`(
+        kind: String?,
+    ) async throws {
+        let fixture = try TemporaryPaths()
+        defer { fixture.remove() }
+        try FileManager.default.createDirectory(at: fixture.paths.dataDirectory, withIntermediateDirectories: true)
+        let encoded = try JSONEncoder().encode(fixtureService())
+        var service = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        service["kind"] = kind
+        let storedData = try JSONSerialization.data(withJSONObject: ["schemaVersion": 1, "services": [service]])
+        try storedData.write(to: fixture.paths.servicesFile)
+        let repository = JSONServiceRepository(
+            paths: fixture.paths,
+            labelChecker: StubLabelChecker(isLoaded: false),
+        )
+
+        await #expect(throws: MoyError.self) {
+            _ = try await repository.list()
+        }
+        await #expect(throws: MoyError.self) {
+            _ = try await repository.create(
+                ServiceDraft(identifier: ServiceIdentifier("new-service"), programArguments: ["/usr/bin/true"]),
+            )
+        }
+        #expect(try Data(contentsOf: fixture.paths.servicesFile) == storedData)
     }
 
     @Test

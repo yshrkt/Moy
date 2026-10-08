@@ -88,6 +88,8 @@ build/Build/Products/Debug/moy disable web-server
 
 `add --enable`では保存と有効化を一度に行えます。`list`、`show`、`status`、`logs`は`--json`に対応しています。すべてのコマンドとオプションは`moy --help`および`moy <command> --help`で確認できます。CLIのヘルプとメッセージは英語です。
 
+各サービス定義の`kind`は必須で、現在は`launchAgent`を保存します。開発中のため`kind`がないJSONの互換読み込みは行いません。
+
 定義は`~/Library/Application Support/Moy/services.json`、有効なサービスのplistは`~/Library/LaunchAgents/<Label>.plist`、既定のログは`~/Library/Logs/Moy/`に保存されます。Identifierは1〜64文字の小文字英数字・ハイフン・アンダースコアで指定し、作成後は変更できません。Labelは`com.sputnik-apps.moy.<Identifier>`として生成されます。表示名は任意で、未設定の場合はIdentifierを表示します。
 
 - `enable`: plistを作成してユーザーのGUIドメインへ`bootstrap`する

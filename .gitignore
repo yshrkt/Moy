@@ -74,6 +74,7 @@ DerivedData/
 .swiftpm/
 .swiftlint_cache/
 .jj/
+.pi/
 
 # macOS
 .DS_Store

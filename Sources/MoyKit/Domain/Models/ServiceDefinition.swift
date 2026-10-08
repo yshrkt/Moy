@@ -2,6 +2,7 @@ import Foundation
 
 public struct ServiceDefinition: Codable, Equatable, Identifiable, Sendable {
     public let identifier: ServiceIdentifier
+    public let kind: ServiceKind
     public var displayName: String?
     public var description: String?
     public var programArguments: [String]
@@ -19,6 +20,7 @@ public struct ServiceDefinition: Codable, Equatable, Identifiable, Sendable {
 
     public init(
         identifier: ServiceIdentifier,
+        kind: ServiceKind = .launchAgent,
         displayName: String? = nil,
         description: String? = nil,
         programArguments: [String],
@@ -31,6 +33,7 @@ public struct ServiceDefinition: Codable, Equatable, Identifiable, Sendable {
         standardErrorPath: String,
     ) {
         self.identifier = identifier
+        self.kind = kind
         self.displayName = displayName
         self.description = description
         self.programArguments = programArguments
@@ -49,7 +52,8 @@ public struct ServiceDefinition: Codable, Equatable, Identifiable, Sendable {
     }
 
     public func hasSameLaunchConfiguration(as other: Self) -> Bool {
-        programArguments == other.programArguments
+        kind == other.kind
+            && programArguments == other.programArguments
             && workingDirectory == other.workingDirectory
             && environmentVariables == other.environmentVariables
             && runAtLoad == other.runAtLoad

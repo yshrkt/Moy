@@ -96,7 +96,7 @@ Label:      com.sputnik-apps.moy.api-server
   services.lock
 ```
 
-JSONは`schemaVersion`とサービス一覧を持ち、各サービスに表示名・description・9項目のlaunchd設定を保存する。
+JSONは`schemaVersion`とサービス一覧を持ち、各サービスに必須の`kind`・表示名・description・9項目のlaunchd設定を保存する。現在の`kind`は`launchAgent`のみを扱い、GUI／CLIからの新規登録にも保存する。`kind`はplistには含めない。
 
 - JSONを編集用データの正本とし、有効なサービスのplistだけをユーザーのLaunchAgentsに配置する。
 - 無効化してもJSONの定義は残す。
@@ -106,6 +106,14 @@ JSONは`schemaVersion`とサービス一覧を持ち、各サービスに表示�
 - 古い編集内容による上書きを防ぎ、競合時は再取得を促す。
 - JSON破損や未対応バージョンを空データとして扱わず、上書きを防ぐ。
 - 設定ディレクトリとファイルは所有ユーザーだけがアクセスできる権限にする。
+
+### LaunchDaemon対応に向けた保存形式の方針
+
+- 将来LaunchDaemonに対応しても、編集用の定義は共通の`services.json`内の`services`配列で管理する。Agent／Daemon別のファイルや配列には分割しない。
+- IdentifierはLaunchAgent／LaunchDaemonを通して一意とし、既存のLabel生成規則を維持する。
+- 種別は各サービスの`kind`で表し、機械可読な値を`launchAgent`／`launchDaemon`とする。
+- Daemonの操作対応に先行して、必須項目`kind`を追加する。現在は`launchAgent`のみを受け付け、`launchDaemon`はDaemon対応時に追加する。開発中のため`kind`がない定義の互換読み込み・自動移行は用意せず、既存の開発用JSONには直接`launchAgent`を追加する。`schemaVersion`は1を維持する。欠落・未対応の`kind`は読み込みエラーとし、JSONを上書きしない。
+- 編集用JSONはユーザーの設定ディレクトリに保存できる。Daemonのシステムへの反映は必要な権限を取得して行い、JSONの編集だけではrootで実行する設定が変更されないようにする。認証・反映・未反映状態の詳細はDaemon対応時に定める。
 
 ## 3. 操作・状態・GUI
 
