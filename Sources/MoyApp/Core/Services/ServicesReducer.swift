@@ -123,6 +123,12 @@ struct ServicesReducer: InjectableReducer {
                 state.selectedIdentifier = identifier
                 return .run { .refreshServices }
             }
+            if case let .failure(.moy(error)) = result, case .serviceUpdateNotApplied = error {
+                state.editor = nil
+                state.selectedIdentifier = identifier
+                state.failure = .moy(error)
+                return .run { .refreshServices }
+            }
             return .none
 
         case let .enableService(identifier):

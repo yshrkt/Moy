@@ -58,6 +58,42 @@ struct ServiceEditorSaveTests {
     }
 
     @Test
+    func `saved but unapplied update closes editor and refreshes with recovery notice`() async throws {
+        let service = try ServiceDefinition(
+            identifier: ServiceIdentifier("update-notice"),
+            programArguments: ["/usr/bin/true"],
+            standardOutPath: "/tmp/update-notice.out",
+            standardErrorPath: "/tmp/update-notice.err",
+        )
+        var updated = service
+        updated.programArguments = ["/usr/bin/true", "argument"]
+        let reducer = ServicesReducer(dependencies: ServicesDependencies(
+            serviceManagementUseCase: TestServiceManagementUseCase(services: [updated]),
+        ))
+        var state = ServicesState()
+        state.services = [service]
+        _ = reducer.reduce(into: &state, action: .presentEditService(service.identifier))
+        let editor = try #require(state.editor)
+        editor.isSaving = true
+        let error = MoyError.serviceUpdateNotApplied(identifier: service.identifier.rawValue, reason: "forced failure")
+        let effect = reducer.reduce(into: &state, action: .receiveSave(
+            editor.id, service.identifier, .failure(.moy(error)),
+        ))
+        #expect(state.editor == nil)
+        #expect(state.failure == .moy(error))
+        #expect(state.selectedIdentifier == service.identifier)
+        let expectedMessage = "\(L10n.Error.serviceUpdateNotApplied)\nupdate-notice\nforced failure"
+        #expect(state.failure?.localizedMessage == expectedMessage)
+        let refresh = try #require(await effect.execute())
+        let snapshotEffect = reducer.reduce(into: &state, action: refresh)
+        let snapshot = try #require(await snapshotEffect.execute())
+        _ = reducer.reduce(into: &state, action: snapshot)
+        #expect(state.selectedService == updated)
+        #expect(state.statuses[service.identifier]?.registration == .disabled)
+        #expect(state.failure == .moy(error))
+    }
+
+    @Test
     func `editor presents its own error alert`() async throws {
         let state = ServicesState()
         state.editor = .create()

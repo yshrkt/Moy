@@ -14,6 +14,7 @@ public enum MoyError: Error, Equatable, Sendable {
     case alreadyEnabled(String)
     case notEnabled(String)
     case inconsistentState(String)
+    case serviceUpdateNotApplied(identifier: String, reason: String)
     case launchctlFailed(arguments: [String], status: Int32, message: String)
 }
 
@@ -47,6 +48,10 @@ extension MoyError: LocalizedError {
             "Service is not enabled: \(label)"
         case let .inconsistentState(label):
             "Service has an inconsistent launchd state: \(label)"
+        case let .serviceUpdateNotApplied(identifier, reason):
+            "Settings were saved, but could not be applied to the service. "
+                + "Check the service status. If enabled, disable it, then enable it again.\n"
+                + "\(identifier)\n\(reason)"
         case let .launchctlFailed(arguments, status, message):
             "launchctl \(arguments.joined(separator: " ")) failed with status \(status): \(message)"
         }

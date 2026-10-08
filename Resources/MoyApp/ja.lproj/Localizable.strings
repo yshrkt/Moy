@@ -133,3 +133,5 @@
 "validation.invalidStandardOutPath" = "StandardOutPathには空欄ではなく絶対パスを指定してください。";
 "validation.invalidStandardErrorPath" = "StandardErrorPathには空欄ではなく絶対パスを指定してください。";
 "validation.invalidEnvironmentName" = "環境変数の名前は空欄にせず、「=」を含めないでください。";
+
+"error.serviceUpdateNotApplied" = "設定は保存しましたが、サービスへの反映に失敗しました。サービスの状態を確認し、有効な場合は一度無効化してから、再度有効化してください。";

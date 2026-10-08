@@ -67,6 +67,8 @@ private extension MoyError {
             "\(L10n.Error.notEnabled)\n\(label)"
         case let .inconsistentState(label):
             "\(L10n.Error.inconsistentState)\n\(label)"
+        case let .serviceUpdateNotApplied(identifier, reason):
+            "\(L10n.Error.serviceUpdateNotApplied)\n\(identifier)\n\(reason)"
         case let .launchctlFailed(arguments, status, message):
             "\(L10n.Error.launchctlFailed)\nlaunchctl \(arguments.joined(separator: " "))\n\(status): \(message)"
         }

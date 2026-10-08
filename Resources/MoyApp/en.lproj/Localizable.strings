@@ -133,3 +133,5 @@
 "validation.invalidStandardOutPath" = "StandardOutPath must be an absolute path";
 "validation.invalidStandardErrorPath" = "StandardErrorPath must be an absolute path";
 "validation.invalidEnvironmentName" = "Environment variable names must be non-empty and must not contain '='";
+
+"error.serviceUpdateNotApplied" = "Settings were saved, but could not be applied to the service. Check the service status. If enabled, disable it, then enable it again.";

@@ -47,6 +47,34 @@ struct CLIEndToEndTests {
     }
 
     @Test
+    func `failed update application reports saved settings and leaves new JSON`() throws {
+        try withTemporaryEnvironment { environment in
+            let identifier = "apply-failure-" + UUID().uuidString.lowercased()
+            let add = try runCLI(["add", "--identifier", identifier, "--program", "/usr/bin/true"],
+                                 environment: environment)
+            #expect(add.status == 0)
+            let agents = try URL(filePath: #require(environment["MOY_LAUNCH_AGENTS_DIRECTORY"]))
+            try FileManager.default.createDirectory(at: agents, withIntermediateDirectories: true)
+            let plist = agents.appending(path: "com.sputnik-apps.moy.\(identifier).plist")
+            try Data().write(to: plist)
+            let dataDirectory = try URL(filePath: #require(environment["MOY_DATA_DIRECTORY"]))
+            let blocked = dataDirectory.appending(path: "not-a-directory")
+            try Data().write(to: blocked)
+            let newLogPath = blocked.appending(path: "stdout.log").path
+
+            let edit = try runCLI(["edit", identifier, "--stdout", newLogPath], environment: environment)
+            #expect(edit.status != 0)
+            #expect(edit.standardError.contains("Settings were saved, but could not be applied to the service."))
+            #expect(edit.standardError.contains("disable it, then enable it again"))
+            #expect(edit.standardError.contains("File operation failed"))
+            let show = try runCLI(["show", identifier, "--json"], environment: environment)
+            let data = try #require(show.standardOutput.data(using: .utf8))
+            let service = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            #expect(service["standardOutPath"] as? String == newLogPath)
+        }
+    }
+
+    @Test
     func `rejects malformed environment values`() throws {
         try withTemporaryEnvironment { environment in
             let result = try runCLI(
