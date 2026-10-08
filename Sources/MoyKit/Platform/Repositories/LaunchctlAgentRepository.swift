@@ -99,11 +99,11 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
                 throw MoyError.inconsistentState(identifier.rawValue)
             }
         } catch {
-            _ = try? await processRunner.run(
-                executable: "/bin/launchctl",
-                arguments: ["bootout", serviceTarget(identifier: identifier)],
-            )
-            try? fileManager.removeItem(at: plistURL)
+            // A concurrent enable may own the loaded registration. Preserve it,
+            // including its plist, unless launchd confirms the service is absent.
+            if let loaded = try? await loadedState(identifier: identifier), !loaded.isLoaded {
+                try? fileManager.removeItem(at: plistURL)
+            }
             throw error
         }
     }
