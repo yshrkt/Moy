@@ -2,11 +2,9 @@ import Foundation
 import MoyKit
 import NanoRedux
 
-/// The central reducer intentionally keeps the exhaustive action routing in one switch.
 struct ServicesReducer: InjectableReducer {
     private enum EffectID {
         static let refresh = "services.refresh"
-        static let choosePath = "services.choosePath"
     }
 
     let dependencies: ServicesDependencies
@@ -73,11 +71,13 @@ struct ServicesReducer: InjectableReducer {
             return .none
 
         case .presentCreateService:
+            guard state.editor?.isSaving != true else { return .none }
             state.failure = nil
             state.editor = .create()
             return .none
 
         case let .presentEditService(identifier):
+            guard state.editor?.isSaving != true else { return .none }
             guard let service = state.services.first(where: { $0.identifier == identifier }) else {
                 return .none
             }
@@ -85,99 +85,44 @@ struct ServicesReducer: InjectableReducer {
             state.editor = ServiceEditorState(service: service)
             return .none
 
-        case .dismissEditor:
-            guard !state.isSaving else { return .none }
+        case let .editor(.delegate(.cancel(sessionID))):
+            guard let editor = state.editor, editor.id == sessionID, !editor.isSaving else { return .none }
             state.editor = nil
-            state.failure = nil
             return .none
 
-        case let .updateEditor(field):
-            guard var editor = state.editor else { return .none }
-            switch field {
-            case let .identifier(value):
-                guard case .create = editor.mode else { return .none }
-                editor.identifier = value
-            case let .displayName(value):
-                editor.displayName = value
-            case let .description(value):
-                editor.serviceDescription = value
-            case let .executable(value):
-                editor.executable = value
-            case let .workingDirectory(value):
-                editor.workingDirectory = value
-            case let .runAtLoad(value):
-                editor.runAtLoad = value
-            case let .keepAlive(value):
-                editor.keepAlive = value
-            case let .throttleInterval(value):
-                editor.throttleInterval = value
-            case let .standardOutPath(value):
-                editor.standardOutPath = value
-            case let .standardErrorPath(value):
-                editor.standardErrorPath = value
-            }
-            state.editor = editor
-            return .none
-
-        case .selectArgument, .moveArgument, .dropArgument, .addArgument, .updateArgument, .removeArgument,
-             .selectEnvironmentVariable, .addEnvironmentVariable, .updateEnvironmentKey,
-             .updateEnvironmentValue, .removeEnvironmentVariable:
-            reduceEditorList(into: &state, action: action)
-            return .none
-
-        case let .chooseEditorPath(path):
-            let filePanelClient = dependencies.filePanelClient
-            return .run(lifetime: .replaceable(EffectID.choosePath)) {
-                let selectedPath = await filePanelClient.choosePath(path)
-                return .receiveEditorPath(path, selectedPath)
-            }
-
-        case let .receiveEditorPath(path, selectedPath):
-            guard let selectedPath else { return .none }
-            let field: ServiceEditorField = switch path {
-            case .executable: .executable(selectedPath)
-            case .workingDirectory: .workingDirectory(selectedPath)
-            case .standardOut: .standardOutPath(selectedPath)
-            case .standardError: .standardErrorPath(selectedPath)
-            }
-            return .run { .updateEditor(field) }
-
-        case let .saveService(enable):
-            guard !state.isSaving, let editor = state.editor else { return .none }
-            state.failure = nil
-            let payload: ServiceEditorPayload
-            do {
-                payload = try ServiceEditorPayload(editor: editor)
-            } catch {
-                state.failure = .from(error)
-                return .none
-            }
-            state.isSaving = true
+        case let .editor(.delegate(.save(sessionID, payload, enable))):
+            guard let editor = state.editor, editor.id == sessionID, editor.isSaving else { return .none }
             let serviceManagementUseCase = dependencies.serviceManagementUseCase
             return .run {
                 do {
                     switch payload {
                     case let .create(identifier, draft):
                         _ = try await serviceManagementUseCase.create(draft, enable: enable)
-                        return .receiveSave(identifier, .success(()))
+                        return .receiveSave(sessionID, identifier, .success(()))
                     case let .update(definition):
                         try await serviceManagementUseCase.update(definition)
-                        return .receiveSave(definition.identifier, .success(()))
+                        return .receiveSave(sessionID, definition.identifier, .success(()))
                     }
                 } catch {
-                    return .receiveSave(payload.identifier, .failure(.from(error)))
+                    return .receiveSave(sessionID, payload.identifier, .failure(.from(error)))
                 }
             }
 
-        case let .receiveSave(identifier, .success):
-            state.isSaving = false
-            state.editor = nil
-            state.selectedIdentifier = identifier
-            return .run { .refreshServices }
+        case let .editor(action):
+            guard var editor = state.editor else { return .none }
+            return ServiceEditorReducer(dependencies: dependencies.editor)
+                .reduce(into: &editor, action: action)
+                .map(namespace: Self.self) { .editor($0) }
 
-        case let .receiveSave(_, .failure(failure)):
-            state.isSaving = false
-            state.failure = failure
+        case let .receiveSave(sessionID, identifier, result):
+            guard var editor = state.editor, editor.id == sessionID else { return .none }
+            _ = ServiceEditorReducer(dependencies: dependencies.editor)
+                .reduce(into: &editor, action: .receiveSave(result))
+            if case .success = result {
+                state.editor = nil
+                state.selectedIdentifier = identifier
+                return .run { .refreshServices }
+            }
             return .none
 
         case let .enableService(identifier):

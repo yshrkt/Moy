@@ -11,25 +11,25 @@ struct ServiceEditorListTests {
         let reducer = makeReducer()
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         let first = try #require(state.editor?.selectedArgumentID)
-        _ = reducer.reduce(into: &state, action: .updateArgument(first, "first"))
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .editor(.updateArgument(first, "first")))
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         let last = try #require(state.editor?.selectedArgumentID)
-        _ = reducer.reduce(into: &state, action: .selectArgument(first))
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .editor(.selectArgument(first)))
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         let middle = try #require(state.editor?.selectedArgumentID)
         #expect(state.editor?.arguments.map(\.id) == [first, middle, last])
 
-        _ = reducer.reduce(into: &state, action: .moveArgument(first, toIndex: 2))
+        _ = reducer.reduce(into: &state, action: .editor(.moveArgument(first, toIndex: 2)))
         #expect(state.editor?.arguments.map(\.id) == [middle, last, first])
         #expect(state.editor?.arguments.last?.value == "first")
         #expect(state.editor?.selectedArgumentID == first)
-        _ = reducer.reduce(into: &state, action: .moveArgument(first, toIndex: 0))
+        _ = reducer.reduce(into: &state, action: .editor(.moveArgument(first, toIndex: 0)))
         #expect(state.editor?.arguments.map(\.id) == [first, middle, last])
 
-        _ = reducer.reduce(into: &state, action: .selectArgument(nil))
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .editor(.selectArgument(nil)))
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         #expect(state.editor?.arguments.prefix(3).map(\.id) == [first, middle, last])
         #expect(state.editor?.arguments.last?.id == state.editor?.selectedArgumentID)
     }
@@ -40,15 +40,15 @@ struct ServiceEditorListTests {
         var state = ServicesState()
         state.editor = .create()
         for _ in 0 ..< 3 {
-            _ = reducer.reduce(into: &state, action: .addArgument)
+            _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         }
         let ids = try #require(state.editor?.arguments.map(\.id))
-        _ = reducer.reduce(into: &state, action: .selectArgument(ids[1]))
-        _ = reducer.reduce(into: &state, action: .removeArgument(ids[1]))
+        _ = reducer.reduce(into: &state, action: .editor(.selectArgument(ids[1])))
+        _ = reducer.reduce(into: &state, action: .editor(.removeArgument(ids[1])))
         #expect(state.editor?.selectedArgumentID == ids[2])
-        _ = reducer.reduce(into: &state, action: .removeArgument(ids[2]))
+        _ = reducer.reduce(into: &state, action: .editor(.removeArgument(ids[2])))
         #expect(state.editor?.selectedArgumentID == ids[0])
-        _ = reducer.reduce(into: &state, action: .removeArgument(ids[0]))
+        _ = reducer.reduce(into: &state, action: .editor(.removeArgument(ids[0])))
         #expect(state.editor?.selectedArgumentID == nil)
         #expect(state.editor?.arguments.isEmpty == true)
     }
@@ -58,11 +58,15 @@ struct ServiceEditorListTests {
         let reducer = makeReducer()
         var state = ServicesState()
         state.editor = .create()
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         let id = try #require(state.editor?.selectedArgumentID)
-        let original = state.editor
+        let editor = try #require(state.editor)
+        let arguments = editor.arguments
+        let environment = editor.environmentVariables
+        let selectedArgument = editor.selectedArgumentID
+        let selectedEnvironment = editor.selectedEnvironmentVariableID
         let stale = UUID()
-        let actions: [ServicesAction] = [
+        let actions: [ServiceEditorAction] = [
             .moveArgument(id, toIndex: -1), .moveArgument(id, toIndex: 1),
             .moveArgument(id, toIndex: 0), .moveArgument(stale, toIndex: 0),
             .dropArgument(id, insertionIndex: -1), .dropArgument(id, insertionIndex: 2),
@@ -72,8 +76,11 @@ struct ServiceEditorListTests {
             .updateEnvironmentKey(stale, "lost"), .updateEnvironmentValue(stale, "lost"),
         ]
         for action in actions {
-            _ = reducer.reduce(into: &state, action: action)
-            #expect(state.editor == original)
+            _ = reducer.reduce(into: &state, action: .editor(action))
+            #expect(editor.arguments == arguments)
+            #expect(editor.environmentVariables == environment)
+            #expect(editor.selectedArgumentID == selectedArgument)
+            #expect(editor.selectedEnvironmentVariableID == selectedEnvironment)
         }
     }
 
@@ -98,11 +105,11 @@ struct ServiceEditorListTests {
         var state = ServicesState()
         state.editor = .create()
         for _ in 0 ..< 3 {
-            _ = reducer.reduce(into: &state, action: .addArgument)
+            _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         }
         let original = try #require(state.editor?.arguments)
         let dragged = original[scenario.source].id
-        _ = reducer.reduce(into: &state, action: .dropArgument(dragged, insertionIndex: scenario.insertion))
+        _ = reducer.reduce(into: &state, action: .editor(.dropArgument(dragged, insertionIndex: scenario.insertion)))
         #expect(state.editor?.arguments == scenario.expected.map { original[$0] })
         #expect(state.editor?.selectedArgumentID == dragged)
     }
@@ -112,22 +119,22 @@ struct ServiceEditorListTests {
         let reducer = makeReducer()
         var state = ServicesState()
         state.editor = .create()
-        _ = reducer.reduce(into: &state, action: .addEnvironmentVariable)
+        _ = reducer.reduce(into: &state, action: .editor(.addEnvironmentVariable))
         let first = try #require(state.editor?.selectedEnvironmentVariableID)
-        _ = reducer.reduce(into: &state, action: .updateEnvironmentKey(first, "Z"))
-        _ = reducer.reduce(into: &state, action: .addEnvironmentVariable)
+        _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentKey(first, "Z")))
+        _ = reducer.reduce(into: &state, action: .editor(.addEnvironmentVariable))
         let second = try #require(state.editor?.selectedEnvironmentVariableID)
-        _ = reducer.reduce(into: &state, action: .updateEnvironmentKey(second, "A"))
-        _ = reducer.reduce(into: &state, action: .selectEnvironmentVariable(first))
-        _ = reducer.reduce(into: &state, action: .addEnvironmentVariable)
+        _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentKey(second, "A")))
+        _ = reducer.reduce(into: &state, action: .editor(.selectEnvironmentVariable(first)))
+        _ = reducer.reduce(into: &state, action: .editor(.addEnvironmentVariable))
         let third = try #require(state.editor?.selectedEnvironmentVariableID)
         #expect(state.editor?.environmentVariables.map(\.id) == [first, second, third])
-        _ = reducer.reduce(into: &state, action: .selectEnvironmentVariable(second))
-        _ = reducer.reduce(into: &state, action: .removeEnvironmentVariable(second))
+        _ = reducer.reduce(into: &state, action: .editor(.selectEnvironmentVariable(second)))
+        _ = reducer.reduce(into: &state, action: .editor(.removeEnvironmentVariable(second)))
         #expect(state.editor?.selectedEnvironmentVariableID == third)
-        _ = reducer.reduce(into: &state, action: .removeEnvironmentVariable(third))
+        _ = reducer.reduce(into: &state, action: .editor(.removeEnvironmentVariable(third)))
         #expect(state.editor?.selectedEnvironmentVariableID == first)
-        _ = reducer.reduce(into: &state, action: .removeEnvironmentVariable(first))
+        _ = reducer.reduce(into: &state, action: .editor(.removeEnvironmentVariable(first)))
         #expect(state.editor?.selectedEnvironmentVariableID == nil)
     }
 
@@ -136,14 +143,18 @@ struct ServiceEditorListTests {
         let reducer = makeReducer()
         var state = ServicesState()
         state.editor = .create()
-        _ = reducer.reduce(into: &state, action: .addArgument)
-        _ = reducer.reduce(into: &state, action: .addArgument)
-        _ = reducer.reduce(into: &state, action: .addEnvironmentVariable)
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
+        _ = reducer.reduce(into: &state, action: .editor(.addEnvironmentVariable))
         let argument = try #require(state.editor?.selectedArgumentID)
         let variable = try #require(state.editor?.selectedEnvironmentVariableID)
-        state.isSaving = true
-        let original = state.editor
-        let actions: [ServicesAction] = [
+        state.editor?.isSaving = true
+        let editor = try #require(state.editor)
+        let arguments = editor.arguments
+        let environment = editor.environmentVariables
+        let selectedArgument = editor.selectedArgumentID
+        let selectedEnvironment = editor.selectedEnvironmentVariableID
+        let actions: [ServiceEditorAction] = [
             .selectArgument(nil), .addArgument, .updateArgument(argument, "changed"),
             .removeArgument(argument), .moveArgument(argument, toIndex: 0), .dropArgument(argument, insertionIndex: 0),
             .selectEnvironmentVariable(nil), .addEnvironmentVariable,
@@ -151,8 +162,11 @@ struct ServiceEditorListTests {
             .removeEnvironmentVariable(variable),
         ]
         for action in actions {
-            _ = reducer.reduce(into: &state, action: action)
-            #expect(state.editor == original)
+            _ = reducer.reduce(into: &state, action: .editor(action))
+            #expect(editor.arguments == arguments)
+            #expect(editor.environmentVariables == environment)
+            #expect(editor.selectedArgumentID == selectedArgument)
+            #expect(editor.selectedEnvironmentVariableID == selectedEnvironment)
         }
     }
 
@@ -169,7 +183,7 @@ struct ServiceEditorListTests {
         state.editor = ServiceEditorState(service: service)
         let reducer = makeReducer()
         let last = try #require(state.editor?.arguments.last?.id)
-        _ = reducer.reduce(into: &state, action: .moveArgument(last, toIndex: 0))
+        _ = reducer.reduce(into: &state, action: .editor(.moveArgument(last, toIndex: 0)))
         let editor = try #require(state.editor)
         guard case let .update(saved) = try ServiceEditorPayload(editor: editor) else {
             Issue.record("Expected an update payload")
@@ -199,7 +213,7 @@ struct ServiceEditorListTests {
     private func makeReducer() -> ServicesReducer {
         ServicesReducer(dependencies: ServicesDependencies(
             serviceManagementUseCase: TestServiceManagementUseCase(),
-            filePanelClient: FilePanelClient(choosePath: { _ in nil }),
+            editor: ServiceEditorDependencies(filePanelClient: FilePanelClient(choosePath: { _ in nil })),
             workspaceClient: WorkspaceClient(open: { _ in }, reveal: { _ in }),
         ))
     }

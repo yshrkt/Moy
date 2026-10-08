@@ -174,7 +174,7 @@ Label・ProgramArguments・WorkingDirectory・EnvironmentVariables・StandardOut
 - 標準出力・標準エラーに「開く」「Finderで表示」を提供する。
 - Moyを終了しても、launchdによるサービス管理は継続する。
 
-メニューバーと管理ウィンドウでStoreを共有し、機能ごとにscopeする。一覧、選択、編集内容、処理中状態、エラーをAction／Reducerで管理する。保存・launchd操作・状態更新はEffectから依存注入したUseCaseを呼び出し、操作の重複実行を防ぐ。説明の複数行入力欄は即時更新するView内の入力状態にバインドし、変更内容をAction経由で編集状態に反映する。非同期のStore更新によって入力途中の古い文字列を読み戻さず、かな漢字変換と途中位置での追記時もカーソル位置を維持する。
+メニューバーと管理ウィンドウでStoreを共有し、機能ごとにscopeする。一覧、選択、処理中状態、エラーをAction／Reducerで管理する。編集機能は`Core/ServiceEditor`のAction／State／Reducer／Dependenciesに分離し、Servicesの子機能として合成する。編集画面にはscopeしたStoreを渡し、入力内容・行選択・ファイル選択・入力検証・保存中状態・編集エラーは子機能が管理する。Servicesは編集の開始・終了と保存Effectを担当し、子から保存用payloadと有効化指定を受け取り、保存結果を子へ返す。成功時は編集画面を閉じて一覧を更新し、失敗時は入力を維持する。編集セッションのIDを照合し、古い非同期結果を次の編集へ反映しない。保存・launchd操作・状態更新はEffectから依存注入したUseCaseを呼び出し、操作の重複実行を防ぐ。説明の複数行入力欄は即時更新するView内の入力状態にバインドし、変更内容をAction経由で編集状態に反映する。非同期のStore更新によって入力途中の古い文字列を読み戻さず、かな漢字変換と途中位置での追記時もカーソル位置を維持する。
 
 ## 4. ローカライズと同梱CLI
 

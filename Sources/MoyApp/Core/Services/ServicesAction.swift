@@ -9,23 +9,8 @@ enum ServicesAction: Sendable {
 
     case presentCreateService
     case presentEditService(ServiceIdentifier)
-    case dismissEditor
-    case updateEditor(ServiceEditorField)
-    case selectArgument(UUID?)
-    case moveArgument(UUID, toIndex: Int)
-    case dropArgument(UUID, insertionIndex: Int)
-    case addArgument
-    case updateArgument(UUID, String)
-    case removeArgument(UUID)
-    case selectEnvironmentVariable(UUID?)
-    case addEnvironmentVariable
-    case updateEnvironmentKey(UUID, String)
-    case updateEnvironmentValue(UUID, String)
-    case removeEnvironmentVariable(UUID)
-    case chooseEditorPath(ServiceEditorPath)
-    case receiveEditorPath(ServiceEditorPath, String?)
-    case saveService(enable: Bool)
-    case receiveSave(ServiceIdentifier, Result<Void, ServicesFailure>)
+    case editor(ServiceEditorAction)
+    case receiveSave(UUID, ServiceIdentifier, Result<Void, ServicesFailure>)
 
     case enableService(ServiceIdentifier)
     case disableService(ServiceIdentifier)

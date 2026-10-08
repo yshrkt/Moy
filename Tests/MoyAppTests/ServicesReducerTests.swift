@@ -12,21 +12,23 @@ struct ServicesReducerTests {
         var state = ServicesState()
 
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .updateEditor(.identifier("api-server")))
-        _ = reducer.reduce(into: &state, action: .updateEditor(.displayName("API Server")))
-        _ = reducer.reduce(into: &state, action: .updateEditor(.executable("/usr/bin/python3")))
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("api-server"))))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.displayName("API Server"))))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/python3"))))
+        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
         let argumentID = try #require(state.editor?.arguments.first?.id)
-        _ = reducer.reduce(into: &state, action: .updateArgument(argumentID, ""))
-        _ = reducer.reduce(into: &state, action: .addEnvironmentVariable)
+        _ = reducer.reduce(into: &state, action: .editor(.updateArgument(argumentID, "")))
+        _ = reducer.reduce(into: &state, action: .editor(.addEnvironmentVariable))
         let variableID = try #require(state.editor?.environmentVariables.first?.id)
-        _ = reducer.reduce(into: &state, action: .updateEnvironmentKey(variableID, "MODE"))
-        _ = reducer.reduce(into: &state, action: .updateEnvironmentValue(variableID, "development"))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentKey(variableID, "MODE")))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentValue(variableID, "development")))
 
-        let effect = reducer.reduce(into: &state, action: .saveService(enable: true))
-        #expect(state.isSaving)
+        let effect = reducer.reduce(into: &state, action: .editor(.saveService(enable: true)))
+        #expect(state.editor?.isSaving == true)
         let response = try #require(await effect.execute())
-        _ = reducer.reduce(into: &state, action: response)
+        let saveEffect = reducer.reduce(into: &state, action: response)
+        let saveResult = try #require(await saveEffect.execute())
+        _ = reducer.reduce(into: &state, action: saveResult)
 
         let request = try #require(await useCase.lastCreateRequest())
         #expect(request.enable)
@@ -83,7 +85,7 @@ struct ServicesReducerTests {
     private func makeReducer(useCase: TestServiceManagementUseCase) -> ServicesReducer {
         ServicesReducer(dependencies: ServicesDependencies(
             serviceManagementUseCase: useCase,
-            filePanelClient: FilePanelClient(choosePath: { _ in nil }),
+            editor: ServiceEditorDependencies(filePanelClient: FilePanelClient(choosePath: { _ in nil })),
             workspaceClient: WorkspaceClient(open: { _ in }, reveal: { _ in }),
         ))
     }

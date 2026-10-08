@@ -20,7 +20,9 @@ struct ServiceDescriptionEditorTests {
                 serviceManagementUseCase: TestServiceManagementUseCase(),
             )),
         )
-        let host = NSHostingView(rootView: ServiceEditorView(store: store))
+        let editor = try #require(state.editor)
+        let editorStore = store.scope(state: { _ in editor }, action: ServicesAction.editor)
+        let host = NSHostingView(rootView: ServiceEditorView(store: editorStore))
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 680, height: 680),
             styleMask: [.titled], backing: .buffered, defer: false,

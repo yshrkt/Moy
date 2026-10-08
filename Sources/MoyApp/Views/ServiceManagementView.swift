@@ -27,12 +27,14 @@ struct ServiceManagementView: View {
                 get: { store.state.editor != nil },
                 set: { isPresented in
                     if !isPresented {
-                        store.send(.dismissEditor)
+                        store.send(.editor(.cancel))
                     }
                 },
             ),
         ) {
-            ServiceEditorView(store: store)
+            if let editor = store.state.editor {
+                ServiceEditorView(store: store.scope(state: { _ in editor }, action: ServicesAction.editor))
+            }
         }
         .alert(
             L10n.Services.deleteTitle,

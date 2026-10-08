@@ -1,10 +1,11 @@
 import Foundation
 
-extension ServicesReducer {
+extension ServiceEditorReducer {
     // All list mutations share the saving guard and preserve stable row identities.
     // swiftlint:disable:next cyclomatic_complexity
-    func reduceEditorList(into state: inout ServicesState, action: ServicesAction) {
-        guard !state.isSaving, var editor = state.editor else { return }
+    func reduceEditorList(into state: inout ServiceEditorState, action: ServiceEditorAction) {
+        guard !state.isSaving else { return }
+        let editor = state
         switch action {
         case let .selectArgument(id):
             guard id == nil || editor.arguments.contains(where: { $0.id == id }) else { return }
@@ -28,7 +29,7 @@ extension ServicesReducer {
             }
 
         case let .moveArgument(id, destination):
-            moveArgument(in: &editor, id: id, destination: destination)
+            moveArgument(in: editor, id: id, destination: destination)
 
         case let .dropArgument(id, insertion):
             guard (0 ... editor.arguments.count).contains(insertion),
@@ -36,7 +37,7 @@ extension ServicesReducer {
             else { return }
             // Table reports an insertion boundary before removing the dragged row.
             let destination = insertion > source ? insertion - 1 : insertion
-            moveArgument(in: &editor, id: id, destination: destination)
+            moveArgument(in: editor, id: id, destination: destination)
 
         case let .selectEnvironmentVariable(id):
             guard id == nil || editor.environmentVariables.contains(where: { $0.id == id }) else { return }
@@ -65,10 +66,9 @@ extension ServicesReducer {
         default:
             return
         }
-        state.editor = editor
     }
 
-    private func moveArgument(in editor: inout ServiceEditorState, id: UUID, destination: Int) {
+    private func moveArgument(in editor: ServiceEditorState, id: UUID, destination: Int) {
         guard editor.arguments.indices.contains(destination),
               let source = editor.arguments.firstIndex(where: { $0.id == id })
         else { return }

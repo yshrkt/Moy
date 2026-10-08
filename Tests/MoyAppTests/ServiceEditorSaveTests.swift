@@ -27,29 +27,33 @@ struct ServiceEditorSaveTests {
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .updateEditor(.identifier("invalid-command")))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("invalid-command"))))
         let invalidPath = commandOnly ? "unknown-command" : root.appending(path: "missing-tool").path
-        _ = reducer.reduce(into: &state, action: .updateEditor(.executable(invalidPath)))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable(invalidPath))))
 
-        let effect = reducer.reduce(into: &state, action: .saveService(enable: enable))
-        #expect(state.isSaving)
+        let effect = reducer.reduce(into: &state, action: .editor(.saveService(enable: enable)))
+        #expect(state.editor?.isSaving == true)
         let response = try #require(await effect.execute())
-        _ = reducer.reduce(into: &state, action: response)
-        let failure = try #require(state.failure)
+        let saveEffect = reducer.reduce(into: &state, action: response)
+        let saveResult = try #require(await saveEffect.execute())
+        _ = reducer.reduce(into: &state, action: saveResult)
+        let failure = try #require(state.editor?.failure)
         #expect(failure == .moy(.executableNotFound(invalidPath)))
         #expect(failure.localizedMessage.contains(L10n.Error.executableNotFound))
-        #expect(!state.isSaving)
+        #expect(state.editor?.isSaving != true)
         #expect(state.editor?.executable == invalidPath)
         #expect(try await repository.list().isEmpty)
         #expect(!FileManager.default.fileExists(atPath: paths.servicesFile.path))
 
-        _ = reducer.reduce(into: &state, action: .updateEditor(.executable("/usr/bin/true")))
-        let retry = reducer.reduce(into: &state, action: .saveService(enable: false))
-        #expect(state.failure == nil)
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
+        let retry = reducer.reduce(into: &state, action: .editor(.saveService(enable: false)))
+        #expect(state.editor?.failure == nil)
         let saved = try #require(await retry.execute())
-        _ = reducer.reduce(into: &state, action: saved)
+        let retryEffect = reducer.reduce(into: &state, action: saved)
+        let retryResult = try #require(await retryEffect.execute())
+        _ = reducer.reduce(into: &state, action: retryResult)
         #expect(state.editor == nil)
-        #expect(!state.isSaving)
+        #expect(state.editor?.isSaving != true)
         #expect(try await repository.list().first?.programArguments == ["/usr/bin/true"])
     }
 
@@ -63,7 +67,9 @@ struct ServiceEditorSaveTests {
                 serviceManagementUseCase: TestServiceManagementUseCase(),
             )),
         )
-        let host = NSHostingView(rootView: ServiceEditorView(store: store))
+        let editor = try #require(state.editor)
+        let editorStore = store.scope(state: { _ in editor }, action: ServicesAction.editor)
+        let host = NSHostingView(rootView: ServiceEditorView(store: editorStore))
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 680, height: 680),
             styleMask: [.titled], backing: .buffered, defer: false,
@@ -80,33 +86,35 @@ struct ServiceEditorSaveTests {
         window.makeKeyAndOrderFront(nil)
         host.layoutSubtreeIfNeeded()
         try await Task.sleep(for: .milliseconds(100))
-        state.failure = .moy(.executableNotFound("unknown-command"))
+        state.editor?.failure = .moy(.executableNotFound("unknown-command"))
         try await Task.sleep(for: .milliseconds(300))
 
         #expect(window.attachedSheet != nil)
         #expect(state.editor != nil)
-        state.failure = nil
+        state.editor?.failure = nil
         try await Task.sleep(for: .milliseconds(300))
         #expect(window.attachedSheet == nil)
     }
 
     @Test
-    func `payload validation failures retain input and clear when dismissed`() {
+    func `payload validation failures retain input and clear when dismissed`() async throws {
         let reducer = ServicesReducer(dependencies: ServicesDependencies(
             serviceManagementUseCase: TestServiceManagementUseCase(),
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .updateEditor(.identifier("worker")))
-        _ = reducer.reduce(into: &state, action: .updateEditor(.executable("/usr/bin/true")))
-        _ = reducer.reduce(into: &state, action: .updateEditor(.throttleInterval("abc")))
-        _ = reducer.reduce(into: &state, action: .saveService(enable: false))
-        #expect(state.failure == .invalidThrottleInterval)
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("worker"))))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
+        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.throttleInterval("abc"))))
+        _ = reducer.reduce(into: &state, action: .editor(.saveService(enable: false)))
+        #expect(state.editor?.failure == .invalidThrottleInterval)
         #expect(state.editor?.throttleInterval == "abc")
-        #expect(!state.isSaving)
+        #expect(state.editor?.isSaving != true)
 
-        _ = reducer.reduce(into: &state, action: .dismissEditor)
-        #expect(state.failure == nil)
+        let cancel = reducer.reduce(into: &state, action: .editor(.cancel))
+        let dismissal = try #require(await cancel.execute())
+        _ = reducer.reduce(into: &state, action: dismissal)
+        #expect(state.editor?.failure == nil)
         #expect(state.editor == nil)
         state.failure = .invalidThrottleInterval
         _ = reducer.reduce(into: &state, action: .presentCreateService)

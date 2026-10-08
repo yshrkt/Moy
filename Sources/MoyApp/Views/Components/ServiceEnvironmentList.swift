@@ -2,7 +2,7 @@ import NanoRedux
 import SwiftUI
 
 struct ServiceEnvironmentList: View {
-    let store: ServicesStore
+    let store: ServiceEditorStore
     let editor: ServiceEditorState
 
     var body: some View {

@@ -4,53 +4,52 @@ import SwiftUI
 
 @MainActor
 struct ServiceEditorView: View {
-    let store: ServicesStore
+    let store: ServiceEditorStore
 
     var body: some View {
         NavigationStack {
-            if let editor = store.state.editor {
-                Form {
-                    identitySection(editor)
-                    commandSection(editor)
-                    behaviorSection(editor)
-                    logsSection(editor)
+            let editor = store.state
+            Form {
+                identitySection(editor)
+                commandSection(editor)
+                behaviorSection(editor)
+                logsSection(editor)
+            }
+            .formStyle(.grouped)
+            .textFieldStyle(.roundedBorder)
+            .disabled(store.state.isSaving)
+            .navigationTitle(editorTitle(editor))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.Common.cancel) {
+                        store.send(.cancel)
+                    }
+                    .disabled(store.state.isSaving)
                 }
-                .formStyle(.grouped)
-                .textFieldStyle(.roundedBorder)
-                .disabled(store.state.isSaving)
-                .navigationTitle(editorTitle(editor))
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(L10n.Common.cancel) {
-                            store.send(.dismissEditor)
+                ToolbarItemGroup(placement: .confirmationAction) {
+                    if case .create = editor.mode {
+                        Button(L10n.Common.save) {
+                            store.send(.saveService(enable: false))
                         }
-                        .disabled(store.state.isSaving)
-                    }
-                    ToolbarItemGroup(placement: .confirmationAction) {
-                        if case .create = editor.mode {
-                            Button(L10n.Common.save) {
-                                store.send(.saveService(enable: false))
-                            }
-                            .disabled(!canSave(editor))
-                            Button(L10n.Common.saveAndEnable) {
-                                store.send(.saveService(enable: true))
-                            }
-                            .disabled(!canSave(editor))
-                        } else {
-                            Button(L10n.Common.save) {
-                                store.send(.saveService(enable: false))
-                            }
-                            .disabled(!canSave(editor))
+                        .disabled(!canSave(editor))
+                        Button(L10n.Common.saveAndEnable) {
+                            store.send(.saveService(enable: true))
                         }
+                        .disabled(!canSave(editor))
+                    } else {
+                        Button(L10n.Common.save) {
+                            store.send(.saveService(enable: false))
+                        }
+                        .disabled(!canSave(editor))
                     }
                 }
-                .overlay {
-                    if store.state.isSaving {
-                        ProgressView()
-                            .controlSize(.large)
-                            .padding(20)
-                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    }
+            }
+            .overlay {
+                if store.state.isSaving {
+                    ProgressView()
+                        .controlSize(.large)
+                        .padding(20)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
             }
         }
@@ -58,7 +57,7 @@ struct ServiceEditorView: View {
         .alert(
             L10n.Common.error,
             isPresented: Binding(
-                get: { store.state.editor != nil && store.state.failure != nil },
+                get: { store.state.failure != nil },
                 set: { isPresented in
                     if !isPresented {
                         store.send(.dismissFailure)

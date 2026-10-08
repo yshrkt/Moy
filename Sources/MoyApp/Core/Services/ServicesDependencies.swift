@@ -4,20 +4,20 @@ import MoyKit
 
 struct ServicesDependencies: Sendable {
     let serviceManagementUseCase: any ServiceManagementUseCase
-    let filePanelClient: FilePanelClient
+    let editor: ServiceEditorDependencies
     let workspaceClient: WorkspaceClient
     let clipboardClient: ClipboardClient
     let sleepForCopyToast: @Sendable (Duration) async throws -> Void
 
     init(
         serviceManagementUseCase: any ServiceManagementUseCase,
-        filePanelClient: FilePanelClient = .live,
+        editor: ServiceEditorDependencies = .init(),
         workspaceClient: WorkspaceClient = .live,
         clipboardClient: ClipboardClient = .live,
         sleepForCopyToast: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
     ) {
         self.serviceManagementUseCase = serviceManagementUseCase
-        self.filePanelClient = filePanelClient
+        self.editor = editor
         self.workspaceClient = workspaceClient
         self.clipboardClient = clipboardClient
         self.sleepForCopyToast = sleepForCopyToast
@@ -29,33 +29,6 @@ struct ClipboardClient: Sendable {
 
     static let live = Self { value in
         await MainActor.run { CommandClipboard.copy(value) }
-    }
-}
-
-struct FilePanelClient: Sendable {
-    var choosePath: @Sendable (ServiceEditorPath) async -> String?
-
-    static let live = Self { path in
-        await MainActor.run {
-            switch path {
-            case .executable:
-                let panel = NSOpenPanel()
-                panel.canChooseFiles = true
-                panel.canChooseDirectories = false
-                panel.allowsMultipleSelection = false
-                return panel.runModal() == .OK ? panel.url?.path : nil
-            case .workingDirectory:
-                let panel = NSOpenPanel()
-                panel.canChooseFiles = false
-                panel.canChooseDirectories = true
-                panel.allowsMultipleSelection = false
-                return panel.runModal() == .OK ? panel.url?.path : nil
-            case .standardOut, .standardError:
-                let panel = NSSavePanel()
-                panel.canCreateDirectories = true
-                return panel.runModal() == .OK ? panel.url?.path : nil
-            }
-        }
     }
 }
 
