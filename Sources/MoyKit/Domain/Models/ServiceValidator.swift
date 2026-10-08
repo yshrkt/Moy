@@ -2,39 +2,39 @@ import Foundation
 
 public enum ServiceValidator {
     public static func validate(_ service: ServiceDefinition) throws {
-        var messages: [String] = []
+        var issues: [ServiceValidationIssue] = []
 
         if let displayName = service.displayName,
            displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         {
-            messages.append("Display name must not be blank when provided")
+            issues.append(.blankDisplayName)
         }
         if service.programArguments.isEmpty || service.programArguments[0].isEmpty {
-            messages.append("ProgramArguments must start with an executable path")
+            issues.append(.missingExecutable)
         } else if !service.programArguments[0].hasPrefix("/") {
-            messages.append("The executable path must be absolute")
+            issues.append(.relativeExecutable)
         }
         if let workingDirectory = service.workingDirectory,
            !workingDirectory.isEmpty,
            !workingDirectory.hasPrefix("/")
         {
-            messages.append("WorkingDirectory must be an absolute path")
+            issues.append(.relativeWorkingDirectory)
         }
         if let throttleInterval = service.throttleInterval, throttleInterval < 1 {
-            messages.append("ThrottleInterval must be at least 1 second")
+            issues.append(.invalidThrottleInterval)
         }
         if service.standardOutPath.isEmpty || !service.standardOutPath.hasPrefix("/") {
-            messages.append("StandardOutPath must be an absolute path")
+            issues.append(.invalidStandardOutPath)
         }
         if service.standardErrorPath.isEmpty || !service.standardErrorPath.hasPrefix("/") {
-            messages.append("StandardErrorPath must be an absolute path")
+            issues.append(.invalidStandardErrorPath)
         }
         if service.environmentVariables.keys.contains(where: { $0.isEmpty || $0.contains("=") }) {
-            messages.append("Environment variable names must be non-empty and must not contain '='")
+            issues.append(.invalidEnvironmentName)
         }
 
-        if !messages.isEmpty {
-            throw MoyError.invalidService(messages)
+        if !issues.isEmpty {
+            throw MoyError.invalidService(issues)
         }
     }
 }

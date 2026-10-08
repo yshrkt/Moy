@@ -124,3 +124,12 @@
 "services.moveArgumentUp" = "Move Argument Up";
 "services.moveArgumentDown" = "Move Argument Down";
 "services.argumentsHelp" = "Each row is one argument. Spaces, quotes, and values such as $PORT are passed literally, without variable expansion.";
+
+"validation.blankDisplayName" = "Display name must not be blank when provided";
+"validation.missingExecutable" = "ProgramArguments must start with an executable path";
+"validation.relativeExecutable" = "The executable path must be absolute";
+"validation.relativeWorkingDirectory" = "WorkingDirectory must be an absolute path";
+"validation.invalidThrottleInterval" = "ThrottleInterval must be at least 1 second";
+"validation.invalidStandardOutPath" = "StandardOutPath must be an absolute path";
+"validation.invalidStandardErrorPath" = "StandardErrorPath must be an absolute path";
+"validation.invalidEnvironmentName" = "Environment variable names must be non-empty and must not contain '='";

@@ -124,3 +124,12 @@
 "services.moveArgumentUp" = "引数を上へ移動";
 "services.moveArgumentDown" = "引数を下へ移動";
 "services.argumentsHelp" = "1行が1引数です。空白・引用符・$PORT などは入力どおりに渡され、変数展開は行いません。";
+
+"validation.blankDisplayName" = "表示名を指定する場合は、空白だけにしないでください。";
+"validation.missingExecutable" = "ProgramArgumentsの先頭に実行ファイルのパスを指定してください。";
+"validation.relativeExecutable" = "実行ファイルが見つかりません。絶対パスで指定し、パスとファイル名を確認してください。";
+"validation.relativeWorkingDirectory" = "WorkingDirectoryには絶対パスを指定してください。";
+"validation.invalidThrottleInterval" = "ThrottleIntervalには1秒以上の整数を指定してください。";
+"validation.invalidStandardOutPath" = "StandardOutPathには空欄ではなく絶対パスを指定してください。";
+"validation.invalidStandardErrorPath" = "StandardErrorPathには空欄ではなく絶対パスを指定してください。";
+"validation.invalidEnvironmentName" = "環境変数の名前は空欄にせず、「=」を含めないでください。";

@@ -33,7 +33,14 @@ enum ServiceEditorPayload: Sendable {
             ))
         case .edit:
             guard let standardOutPath, let standardErrorPath else {
-                throw MoyError.invalidService(["StandardOutPath and StandardErrorPath are required."])
+                var issues: [ServiceValidationIssue] = []
+                if standardOutPath == nil {
+                    issues.append(.invalidStandardOutPath)
+                }
+                if standardErrorPath == nil {
+                    issues.append(.invalidStandardErrorPath)
+                }
+                throw MoyError.invalidService(issues)
             }
             self = .update(values.definition(
                 standardOutPath: standardOutPath,

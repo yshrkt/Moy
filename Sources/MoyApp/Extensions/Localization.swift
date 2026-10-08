@@ -47,8 +47,8 @@ private extension MoyError {
             "\(L10n.Error.serviceNotFound)\n\(identifier)"
         case let .duplicateService(identifier):
             "\(L10n.Error.duplicateService)\n\(identifier)"
-        case let .invalidService(messages):
-            "\(L10n.Error.invalidService)\n\(messages.map(localizedValidationMessage).joined(separator: "\n"))"
+        case let .invalidService(issues):
+            "\(L10n.Error.invalidService)\n\(issues.map(\.localizedMessage).joined(separator: "\n"))"
         case let .executableNotFound(path):
             "\(L10n.Error.executableNotFound)\n\(path)"
         case let .executableNotRunnable(path):
@@ -71,8 +71,27 @@ private extension MoyError {
             "\(L10n.Error.launchctlFailed)\nlaunchctl \(arguments.joined(separator: " "))\n\(status): \(message)"
         }
     }
+}
 
-    func localizedValidationMessage(_ message: String) -> String {
-        message == "The executable path must be absolute" ? L10n.Error.executableNotFound : message
+extension ServiceValidationIssue {
+    var localizedMessage: String {
+        switch self {
+        case .blankDisplayName:
+            L10n.Validation.blankDisplayName
+        case .missingExecutable:
+            L10n.Validation.missingExecutable
+        case .relativeExecutable:
+            L10n.Validation.relativeExecutable
+        case .relativeWorkingDirectory:
+            L10n.Validation.relativeWorkingDirectory
+        case .invalidThrottleInterval:
+            L10n.Validation.invalidThrottleInterval
+        case .invalidStandardOutPath:
+            L10n.Validation.invalidStandardOutPath
+        case .invalidStandardErrorPath:
+            L10n.Validation.invalidStandardErrorPath
+        case .invalidEnvironmentName:
+            L10n.Validation.invalidEnvironmentName
+        }
     }
 }

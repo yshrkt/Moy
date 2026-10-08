@@ -4,7 +4,7 @@ public enum MoyError: Error, Equatable, Sendable {
     case invalidIdentifier(String)
     case serviceNotFound(String)
     case duplicateService(String)
-    case invalidService([String])
+    case invalidService([ServiceValidationIssue])
     case executableNotFound(String)
     case executableNotRunnable(String)
     case corruptStorage(path: String, reason: String)
@@ -27,8 +27,8 @@ extension MoyError: LocalizedError {
             "Service not found: \(identifier)"
         case let .duplicateService(identifier):
             "A service with this identifier already exists: \(identifier)"
-        case let .invalidService(messages):
-            "Invalid service configuration: \(messages.joined(separator: "; "))"
+        case let .invalidService(issues):
+            "Invalid service configuration: \(issues.map(\.message).joined(separator: "; "))"
         case let .executableNotFound(path):
             "Executable not found: \(path). Specify an absolute path and check the path and filename."
         case let .executableNotRunnable(path):
