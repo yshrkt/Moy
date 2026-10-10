@@ -100,6 +100,9 @@
 "settings.title" = "Settings";
 "settings.open" = "Settings…";
 "settings.information" = "Information";
+"settings.repository" = "Repo";
+"settings.copyright" = "Copyright © 2026 Yoshihiro Kato. All rights reserved.";
+"settings.openRepository" = "Open GitHub repository";
 "settings.cliTitle" = "Command Line Tool";
 "settings.cliDescription" = "Use the moy command in Terminal to manage services.";
 "settings.cliCommand" = "moy command";

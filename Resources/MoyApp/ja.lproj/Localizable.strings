@@ -100,6 +100,9 @@
 "settings.title" = "設定";
 "settings.open" = "設定…";
 "settings.information" = "情報";
+"settings.repository" = "Repo";
+"settings.copyright" = "Copyright © 2026 Yoshihiro Kato. All rights reserved.";
+"settings.openRepository" = "GitHubリポジトリを開く";
 "settings.cliTitle" = "コマンドラインツール";
 "settings.cliDescription" = "ターミナルから moy コマンドでサービスを管理できます。";
 "settings.cliCommand" = "moy コマンド";
