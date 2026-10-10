@@ -3,10 +3,15 @@ import Foundation
 struct CLIInstallerAuthorizationClient: Sendable {
     var install: @Sendable (URL, URL) async throws -> Void
 
-    static let live = Self { source, destination in
+    var uninstall: @Sendable (URL, URL, String) async throws -> Void = { source, destination, target in
+        try await AuthorizedCLIInstaller(scriptClient: .live)
+            .uninstall(source: source, destination: destination, expectedTarget: target)
+    }
+
+    static let live = Self(install: { source, destination in
         try await AuthorizedCLIInstaller(scriptClient: .live)
             .install(source: source, destination: destination)
-    }
+    })
 }
 
 struct AuthorizedCLIInstaller: Sendable {
@@ -30,6 +35,34 @@ struct AuthorizedCLIInstaller: Sendable {
         default:
             throw SettingsFailure.cliAuthorizationFailed(output)
         }
+    }
+
+    func uninstall(source: URL, destination: URL, expectedTarget: String) async throws {
+        let output = try await scriptClient.execute(
+            Self.authorizationScript,
+            "uninstallcli",
+            [Self.unlinkCommand(source: source, destination: destination, expectedTarget: expectedTarget)],
+        )
+        switch output {
+        case "uninstalled": return
+        case "cancelled": throw CancellationError()
+        case "changed": throw SettingsFailure.cliLinkChanged
+        default: throw SettingsFailure.cliAuthorizationFailed(output)
+        }
+    }
+
+    static func unlinkCommand(source: URL, destination: URL, expectedTarget: String) -> String {
+        """
+        set -eu
+        source=\(shellQuote(source.path))
+        destination=\(shellQuote(destination.path))
+        expected=\(shellQuote(expectedTarget))
+        if [ ! -L "$destination" ] || [ ! -x "$source" ]; then exit 19; fi
+        actual=$(/usr/bin/readlink -n "$destination" && /usr/bin/printf x) || exit 19
+        expected="${expected}x"
+        if [ "$actual" != "$expected" ]; then exit 19; fi
+        /bin/rm "$destination"
+        """
     }
 
     static func linkCommand(source: URL, destination: URL) -> String {
@@ -60,5 +93,16 @@ struct AuthorizedCLIInstaller: Sendable {
             error errorMessage number errorNumber
         end try
     end installCLI
+
+    on uninstallCLI(command)
+        try
+            do shell script command with administrator privileges
+            return "uninstalled"
+        on error errorMessage number errorNumber
+            if errorNumber is -128 then return "cancelled"
+            if errorNumber is 19 then return "changed"
+            error errorMessage number errorNumber
+        end try
+    end uninstallCLI
     """
 }

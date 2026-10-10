@@ -37,6 +37,74 @@ struct AuthorizedCLIInstallerTests {
         #expect(invocation.arguments == [AuthorizedCLIInstaller.linkCommand(source: source, destination: destination)])
     }
 
+    @Test(arguments: ["uninstalled", "cancelled", "changed", "unexpected"])
+    func `uninstallation authorization results`(output: String) async throws {
+        let runner = RecordingAppleScriptRunner(output: output)
+        let installer = AuthorizedCLIInstaller(scriptClient: AppleScriptClient(execute: runner.execute))
+        let source = URL(fileURLWithPath: "/Applications/Moy.app/Contents/Helpers/moy")
+        let destination = URL(fileURLWithPath: CLIInstaller.installationPath)
+        switch output {
+        case "uninstalled": try await installer.uninstall(
+                source: source,
+                destination: destination,
+                expectedTarget: source.path,
+            )
+        case "cancelled":
+            await #expect(throws: CancellationError.self) { try await installer.uninstall(
+                source: source,
+                destination: destination,
+                expectedTarget: source.path,
+            ) }
+        case "changed":
+            await #expect(throws: SettingsFailure.cliLinkChanged) { try await installer.uninstall(
+                source: source,
+                destination: destination,
+                expectedTarget: source.path,
+            ) }
+        default:
+            await #expect(throws: SettingsFailure.cliAuthorizationFailed(output)) { try await installer.uninstall(
+                source: source,
+                destination: destination,
+                expectedTarget: source.path,
+            ) }
+        }
+        #expect(await runner.invocation?.handler == "uninstallcli")
+    }
+
+    @Test(arguments: ["moy", "Moy's $(printf unsafe) `printf unsafe`\nwith space", "moy\n", "moy\n\n"])
+    func `authorized unlink preserves replacements and literal source path`(name: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appending(path: "moy-unlink-test-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let source = root.appending(path: name)
+        let destination = root.appending(path: "bin/moy")
+        let installer = CLIInstaller(sourceURL: source, destinationURL: destination)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data("#!/bin/sh\nexit 0\n".utf8).write(to: source)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: source.path)
+        try await installer.install()
+        let script = AuthorizedCLIInstaller.authorizationScript.replacingOccurrences(
+            of: " with administrator privileges",
+            with: "",
+        )
+        let command = AuthorizedCLIInstaller.unlinkCommand(
+            source: source,
+            destination: destination,
+            expectedTarget: source.path,
+        )
+        let removed = try await AppleScriptClient.live.execute(script, "uninstallcli", [command])
+        #expect(removed == "uninstalled")
+        #expect(FileManager.default.isExecutableFile(atPath: source.path))
+        try FileManager.default.createSymbolicLink(atPath: destination.path, withDestinationPath: "/bin/sh")
+        let changed = try await AppleScriptClient.live.execute(script, "uninstallcli", [command])
+        #expect(changed == "changed")
+        #expect(try FileManager.default.destinationOfSymbolicLink(atPath: destination.path) == "/bin/sh")
+        try FileManager.default.removeItem(at: destination)
+        try Data("keep".utf8).write(to: destination)
+        let conflict = try await AppleScriptClient.live.execute(script, "uninstallcli", [command])
+        #expect(conflict == "changed")
+        #expect(try String(contentsOf: destination, encoding: .utf8) == "keep")
+    }
+
     @Test
     func `authorization script failure is reported`() async throws {
         let installer = AuthorizedCLIInstaller(scriptClient: AppleScriptClient { _, _, _ in

@@ -111,14 +111,14 @@
 "settings.checkingCLI" = "Checking…";
 "settings.cliInstalled" = "Installed";
 "settings.cliDestination" = "Install location";
-"settings.cliConflict" = "Another file or an unavailable link exists at this location. Move it before installing, then refresh. Moy will not overwrite it.";
+"settings.cliConflict" = "Another file, folder, or unavailable link exists at this location. Inspect it in Finder, move or remove it, then reopen settings. Moy will not remove or overwrite it.";
 "settings.cliPathTitle" = "Terminal setup";
 "settings.cliPathHelp" = "/usr/local/bin is usually already in PATH. After installation, open a new Terminal session and run:";
 "settings.cliVerifyHelp" = "If moy is not found, check that /usr/local/bin is included in your shell’s PATH.";
 "settings.versionFormat" = "Version: %1$@ (%2$@)";
-"settings.cliAuthorizationHelp" = "macOS will ask for administrator authentication if needed to install the command.";
+"settings.cliAuthorizationHelp" = "macOS will ask for administrator authentication if needed to install or uninstall the command.";
 "error.cliInstallationFailed" = "The installed command could not be verified. Refresh the status and try again.";
-"error.cliAuthorizationFailed" = "The command could not be installed with administrator privileges.";
+"error.cliAuthorizationFailed" = "The CLI operation could not be completed with administrator privileges.";
 
 "services.noArguments" = "No Arguments";
 "services.noEnvironmentVariables" = "No Environment Variables";
@@ -138,3 +138,10 @@
 "validation.invalidEnvironmentName" = "Environment variable names must be non-empty and must not contain '='";
 
 "error.serviceUpdateNotApplied" = "Settings were saved, but could not be applied to the service. Check the service status. If enabled, disable it, then enable it again.";
+"settings.uninstallCLI" = "Uninstall…";
+"settings.uninstallingCLI" = "Uninstalling…";
+"settings.uninstallCLITitle" = "Uninstall the command line tool?";
+"settings.confirmUninstallCLI" = "Uninstall";
+"settings.uninstallCLIMessage" = "The link at /usr/local/bin/moy will be removed. The bundled CLI, registered services, settings, and logs will be kept.";
+"error.cliUninstallationFailed" = "The removal of the CLI link could not be verified. Refresh the status and try again.";
+"error.cliLinkChanged" = "The CLI link changed or was removed after confirmation, so it could not be uninstalled.";

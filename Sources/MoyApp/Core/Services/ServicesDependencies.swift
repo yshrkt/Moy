@@ -51,8 +51,9 @@ struct WorkspaceClient: Sendable {
         reveal: { path in
             let fileManager = FileManager.default
             let url = URL(fileURLWithPath: path)
-            let target = fileManager.fileExists(atPath: path) ? url : url.deletingLastPathComponent()
-            guard fileManager.fileExists(atPath: target.path) else {
+            let exists = (try? fileManager.attributesOfItem(atPath: path)) != nil
+            let target = exists ? url : url.deletingLastPathComponent()
+            guard exists || fileManager.fileExists(atPath: target.path) else {
                 throw AppOperationError.fileNotFound(path)
             }
             await MainActor.run {

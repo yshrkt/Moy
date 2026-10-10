@@ -67,6 +67,23 @@ actor CLIInstaller {
         }
     }
 
+    func uninstall() async throws {
+        guard try status() == .installed else { throw SettingsFailure.cliLinkChanged }
+        let target = try FileManager.default.destinationOfSymbolicLink(atPath: destinationURL.path)
+        let targetURL = URL(fileURLWithPath: target, relativeTo: destinationURL.deletingLastPathComponent())
+        guard targetURL.standardizedFileURL == sourceURL.standardizedFileURL else {
+            throw SettingsFailure.cliLinkChanged
+        }
+        do {
+            guard try status() == .installed else { throw SettingsFailure.cliLinkChanged }
+            try FileManager.default.removeItem(at: destinationURL)
+        } catch {
+            guard Self.isPermissionError(error) else { throw error }
+            try await authorizationClient.uninstall(sourceURL, destinationURL, target)
+        }
+        guard try status() == .notInstalled else { throw SettingsFailure.cliUninstallationFailed }
+    }
+
     private static func isPermissionError(_ error: any Error) -> Bool {
         let error = error as NSError
         if error.domain == NSCocoaErrorDomain, error.code == CocoaError.fileWriteNoPermission.rawValue {

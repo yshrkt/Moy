@@ -1,3 +1,4 @@
+import AppKit
 import Carbon
 import Foundation
 
@@ -6,7 +7,17 @@ struct AppleScriptClient: Sendable {
 
     static let live = Self { source, handler, arguments in
         try await MainActor.run {
-            try AppleScriptExecutor.execute(source: source, handler: handler, arguments: arguments)
+            let keyWindow = NSApp.keyWindow
+            let window = keyWindow?.sheetParent ?? keyWindow ?? NSApp.mainWindow
+            // Administrator authentication can leave this menu bar app behind other apps.
+            // Restore the original window for success, cancellation and script errors alike.
+            defer {
+                if let window, !window.isMiniaturized {
+                    NSApp.activate()
+                    window.makeKeyAndOrderFront(nil)
+                }
+            }
+            return try AppleScriptExecutor.execute(source: source, handler: handler, arguments: arguments)
         }
     }
 }

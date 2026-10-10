@@ -111,14 +111,14 @@
 "settings.checkingCLI" = "確認中…";
 "settings.cliInstalled" = "インストール済み";
 "settings.cliDestination" = "インストール先";
-"settings.cliConflict" = "別のファイル、または利用できないリンクがあります。インストールするには移動してから更新してください。Moyは上書きしません。";
+"settings.cliConflict" = "別のファイル、フォルダ、または利用できないリンクがあります。Finderで確認して移動または削除してから、設定を開き直してください。Moyは削除・上書きしません。";
 "settings.cliPathTitle" = "ターミナルの設定";
 "settings.cliPathHelp" = "通常、/usr/local/bin はPATHに含まれています。インストール後、新しいターミナルで次のコマンドを実行してください。";
 "settings.cliVerifyHelp" = "moy が見つからない場合は、シェルのPATHに /usr/local/bin が含まれているか確認してください。";
 "settings.versionFormat" = "バージョン: %1$@ (%2$@)";
-"settings.cliAuthorizationHelp" = "インストールに必要な場合、macOSの管理者認証ダイアログが表示されます。";
+"settings.cliAuthorizationHelp" = "インストール・アンインストールに必要な場合、macOSの管理者認証ダイアログが表示されます。";
 "error.cliInstallationFailed" = "インストールしたコマンドを確認できませんでした。状態を更新してから再試行してください。";
-"error.cliAuthorizationFailed" = "管理者権限でコマンドをインストールできませんでした。";
+"error.cliAuthorizationFailed" = "管理者権限でCLIの操作を完了できませんでした。";
 
 "services.noArguments" = "引数なし";
 "services.noEnvironmentVariables" = "環境変数なし";
@@ -138,3 +138,10 @@
 "validation.invalidEnvironmentName" = "環境変数の名前は空欄にせず、「=」を含めないでください。";
 
 "error.serviceUpdateNotApplied" = "設定は保存しましたが、サービスへの反映に失敗しました。サービスの状態を確認し、有効な場合は一度無効化してから、再度有効化してください。";
+"settings.uninstallCLI" = "アンインストール…";
+"settings.uninstallingCLI" = "アンインストール中…";
+"settings.uninstallCLITitle" = "CLIをアンインストールしますか？";
+"settings.confirmUninstallCLI" = "アンインストール";
+"settings.uninstallCLIMessage" = "/usr/local/bin/moy のリンクを削除します。同梱CLI、登録済みサービス、設定、ログは残ります。";
+"error.cliUninstallationFailed" = "CLIのリンクが削除されたことを確認できませんでした。状態を更新してから再試行してください。";
+"error.cliLinkChanged" = "確認後にCLIのリンクが変更または削除されたため、アンインストールできませんでした。";

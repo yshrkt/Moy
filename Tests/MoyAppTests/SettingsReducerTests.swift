@@ -67,6 +67,7 @@ struct SettingsReducerTests {
             cliInstallerClient: CLIInstallerClient(
                 status: { .notInstalled },
                 install: { throw CancellationError() },
+                uninstall: {},
             ),
         ))
         var state = SettingsState()
@@ -88,6 +89,7 @@ struct SettingsReducerTests {
             cliInstallerClient: CLIInstallerClient(
                 status: { throw SettingsFailure.unexpected("Permission denied") },
                 install: {},
+                uninstall: {},
             ),
         ))
         var state = SettingsState()
@@ -99,11 +101,72 @@ struct SettingsReducerTests {
         #expect(state.failure == .unexpected("Permission denied"))
     }
 
+    @Test(arguments: ["success", "cancel", "failure"])
+    func `uninstall requires confirmation and refreshes after cancellation or failure`(outcome: String) async throws {
+        let reducer = SettingsReducer(dependencies: SettingsDependencies(cliInstallerClient: CLIInstallerClient(
+            status: { outcome == "failure" ? .conflict : .installed }, install: {}, uninstall: {
+                if outcome == "cancel" {
+                    throw CancellationError()
+                }
+                if outcome == "failure" {
+                    throw SettingsFailure.cliLinkChanged
+                }
+            },
+        )))
+        var state = SettingsState()
+        state.cliStatus = .installed
+        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).execute() == nil)
+        _ = reducer.reduce(into: &state, action: .requestCLIUninstallation)
+        #expect(state.isConfirmingCLIUninstallation)
+        _ = reducer.reduce(into: &state, action: .dismissCLIUninstallation)
+        #expect(!state.isConfirmingCLIUninstallation)
+        _ = reducer.reduce(into: &state, action: .requestCLIUninstallation)
+        let uninstall = reducer.reduce(into: &state, action: .uninstallCLI)
+        #expect(state.isUninstallingCLI)
+        #expect(!state.isConfirmingCLIUninstallation)
+        #expect(await reducer.reduce(into: &state, action: .refreshCLIStatus).execute() == nil)
+        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).execute() == nil)
+        let followup = try reducer.reduce(into: &state, action: #require(await uninstall.execute()))
+        #expect(!state.isUninstallingCLI)
+        if outcome == "success" {
+            #expect(state.cliStatus == .notInstalled)
+        } else {
+            let check = try reducer.reduce(into: &state, action: #require(await followup.execute()))
+            _ = try reducer.reduce(into: &state, action: #require(await check.execute()))
+            #expect(state.cliStatus == (outcome == "failure" ? .conflict : .installed))
+        }
+        #expect(state.failure == (outcome == "failure" ? .cliLinkChanged : nil))
+    }
+
+    @Test
+    func `conflict reveals installation destination and prevents uninstall`() async throws {
+        let reducer = SettingsReducer(dependencies: SettingsDependencies(
+            cliInstallerClient: CLIInstallerClient(
+                status: { .conflict },
+                install: {},
+                uninstall: { Issue.record("Must not uninstall a conflict") },
+            ),
+            workspaceClient: WorkspaceClient(
+                open: { _ in },
+                reveal: { path in #expect(path == CLIInstaller.installationPath) },
+            ),
+        ))
+        var state = SettingsState()
+        state.cliStatus = .conflict
+        _ = reducer.reduce(into: &state, action: .requestCLIUninstallation)
+        #expect(!state.isConfirmingCLIUninstallation)
+        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).execute() == nil)
+        let reveal = reducer.reduce(into: &state, action: .revealCLI)
+        _ = try reducer.reduce(into: &state, action: #require(await reveal.execute()))
+        #expect(state.failure == nil)
+    }
+
     private func makeReducer(_ client: TestCLIInstallerClient) -> SettingsReducer {
         SettingsReducer(dependencies: SettingsDependencies(
             cliInstallerClient: CLIInstallerClient(
                 status: { await client.status },
                 install: { try await client.install() },
+                uninstall: {},
             ),
         ))
     }

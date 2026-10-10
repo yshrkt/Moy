@@ -21,6 +21,12 @@ final class SettingsState {
     var cliStatus: CLIInstallationStatus?
     var isCheckingCLI = false
     var isInstallingCLI = false
+    var isUninstallingCLI = false
+    var isConfirmingCLIUninstallation = false
+    var isOperatingCLI: Bool {
+        isCheckingCLI || isInstallingCLI || isUninstallingCLI
+    }
+
     var failure: SettingsFailure?
 }
 
@@ -28,6 +34,8 @@ enum SettingsFailure: Error, Equatable, Sendable {
     case cliNotBundled
     case cliDestinationExists
     case cliInstallationFailed
+    case cliUninstallationFailed
+    case cliLinkChanged
     case cliAuthorizationFailed(String)
     case unexpected(String)
 

@@ -11,6 +11,10 @@ extension SettingsFailure {
             L10n.Error.cliDestinationExists
         case .cliInstallationFailed:
             L10n.Error.cliInstallationFailed
+        case .cliUninstallationFailed:
+            L10n.Error.cliUninstallationFailed
+        case .cliLinkChanged:
+            L10n.Error.cliLinkChanged
         case let .cliAuthorizationFailed(message):
             "\(L10n.Error.cliAuthorizationFailed)\n\(message)"
         case let .unexpected(message):

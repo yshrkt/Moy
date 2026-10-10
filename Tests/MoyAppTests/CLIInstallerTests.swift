@@ -52,9 +52,9 @@ struct CLIInstallerTests {
         let installer = CLIInstaller(
             sourceURL: fixture.source,
             destinationURL: fixture.destination,
-            authorizationClient: CLIInstallerAuthorizationClient { _, _ in
+            authorizationClient: CLIInstallerAuthorizationClient(install: { _, _ in
                 Issue.record("A writable destination must not request administrator authentication")
-            },
+            }),
         )
         try await installer.install()
         #expect(try await installer.status() == .installed)
@@ -68,7 +68,7 @@ struct CLIInstallerTests {
         let installer = CLIInstaller(
             sourceURL: fixture.source,
             destinationURL: fixture.destination,
-            authorizationClient: CLIInstallerAuthorizationClient { source, destination in
+            authorizationClient: CLIInstallerAuthorizationClient(install: { source, destination in
                 #expect(source == fixture.source)
                 #expect(destination == fixture.destination)
                 try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fixture.root.path)
@@ -77,7 +77,7 @@ struct CLIInstallerTests {
                     withIntermediateDirectories: true,
                 )
                 try FileManager.default.createSymbolicLink(at: destination, withDestinationURL: source)
-            },
+            }),
         )
         try await installer.install()
         #expect(try await installer.status() == .installed)
@@ -91,7 +91,7 @@ struct CLIInstallerTests {
         let installer = CLIInstaller(
             sourceURL: fixture.source,
             destinationURL: fixture.destination,
-            authorizationClient: CLIInstallerAuthorizationClient { _, _ in },
+            authorizationClient: CLIInstallerAuthorizationClient(install: { _, _ in }),
         )
         await #expect(throws: SettingsFailure.cliInstallationFailed) {
             try await installer.install()
@@ -123,6 +123,92 @@ struct CLIInstallerTests {
             try await fixture.installer.install()
         }
         #expect(try await fixture.installer.status() == .notInstalled)
+    }
+
+    @Test(arguments: [false, true])
+    func `uninstall removes only installed link including relative links`(relative: Bool) async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        try await fixture.installer.install()
+        if relative {
+            try FileManager.default.removeItem(at: fixture.destination)
+            try FileManager.default.createSymbolicLink(
+                atPath: fixture.destination.path,
+                withDestinationPath: "../bundled-moy",
+            )
+        }
+        try await fixture.installer.uninstall()
+        #expect(try await fixture.installer.status() == .notInstalled)
+        #expect(FileManager.default.isExecutableFile(atPath: fixture.source.path))
+    }
+
+    @Test(arguments: ["missing", "file", "directory", "link", "dangling"])
+    func `uninstall refuses changed or conflicting destinations`(kind: String) async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        try await fixture.installer.install()
+        try FileManager.default.removeItem(at: fixture.destination)
+        switch kind {
+        case "file": try Data("keep".utf8).write(to: fixture.destination)
+        case "directory": try FileManager.default.createDirectory(
+                at: fixture.destination,
+                withIntermediateDirectories: true,
+            )
+        case "link": try FileManager.default.createSymbolicLink(
+                atPath: fixture.destination.path,
+                withDestinationPath: "/bin/sh",
+            )
+        case "dangling": try FileManager.default.createSymbolicLink(
+                atPath: fixture.destination.path,
+                withDestinationPath: "/missing-moy",
+            )
+        default: break
+        }
+        await #expect(throws: SettingsFailure.cliLinkChanged) { try await fixture.installer.uninstall() }
+        #expect(try await fixture.installer.status() == (kind == "missing" ? .notInstalled : .conflict))
+        if kind == "file" {
+            #expect(try String(contentsOf: fixture.destination, encoding: .utf8) == "keep")
+        }
+    }
+
+    @Test(arguments: ["success", "cancel", "unchanged"])
+    func `uninstall authorization is requested only when needed and verified`(outcome: String) async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        try await fixture.installer.install()
+        let parent = fixture.destination.deletingLastPathComponent()
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: parent.path) }
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: parent.path)
+        let installer = CLIInstaller(sourceURL: fixture.source, destinationURL: fixture.destination,
+                                     authorizationClient: CLIInstallerAuthorizationClient(
+                                         install: { _, _ in },
+                                         uninstall: { source, destination, target in
+                                             #expect(source == fixture.source)
+                                             #expect(destination == fixture.destination)
+                                             #expect(target == fixture.source.path)
+                                             if outcome == "cancel" {
+                                                 throw CancellationError()
+                                             }
+                                             if outcome == "success" {
+                                                 try FileManager.default.setAttributes(
+                                                     [.posixPermissions: 0o755],
+                                                     ofItemAtPath: parent.path,
+                                                 )
+                                                 try FileManager.default.removeItem(at: destination)
+                                             }
+                                         },
+                                     ))
+        switch outcome {
+        case "success":
+            try await installer.uninstall()
+            #expect(try await installer.status() == .notInstalled)
+        case "cancel":
+            await #expect(throws: CancellationError.self) { try await installer.uninstall() }
+            #expect(try await installer.status() == .installed)
+        default:
+            await #expect(throws: SettingsFailure.cliUninstallationFailed) { try await installer.uninstall() }
+            #expect(try await installer.status() == .installed)
+        }
     }
 
     private struct Fixture {

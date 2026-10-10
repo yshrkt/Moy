@@ -28,6 +28,22 @@ struct SettingsView: View {
             }
         }
         .alert(
+            L10n.Settings.uninstallCLITitle,
+            isPresented: Binding(
+                get: { store.state.isConfirmingCLIUninstallation },
+                set: {
+                    if !$0 {
+                        store.send(.dismissCLIUninstallation)
+                    }
+                },
+            ),
+        ) {
+            Button(L10n.Settings.confirmUninstallCLI, role: .destructive) { store.send(.uninstallCLI) }
+            Button(L10n.Common.cancel, role: .cancel) { store.send(.dismissCLIUninstallation) }
+        } message: {
+            Text(L10n.Settings.uninstallCLIMessage)
+        }
+        .alert(
             L10n.Common.error,
             isPresented: Binding(
                 get: { store.state.failure != nil },
@@ -50,7 +66,7 @@ struct SettingsView: View {
         SettingsView(store: .reducer(
             initialState: SettingsState(),
             reducer: SettingsReducer(dependencies: SettingsDependencies(
-                cliInstallerClient: CLIInstallerClient(status: { .notInstalled }, install: {}),
+                cliInstallerClient: CLIInstallerClient(status: { .notInstalled }, install: {}, uninstall: {}),
             )),
         ))
     }

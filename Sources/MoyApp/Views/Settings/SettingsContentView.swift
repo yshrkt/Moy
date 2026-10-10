@@ -56,22 +56,35 @@ struct SettingsContentView: View {
         .formStyle(.grouped)
     }
 
+    private var progressMessage: String {
+        if store.state.isInstallingCLI {
+            return L10n.Settings.installingCLI
+        }
+        if store.state.isUninstallingCLI {
+            return L10n.Settings.uninstallingCLI
+        }
+        return L10n.Settings.checkingCLI
+    }
+
     @ViewBuilder
     private var installationControl: some View {
-        if store.state.isInstallingCLI || store.state.isCheckingCLI {
+        if store.state.isOperatingCLI {
             HStack(spacing: 8) {
                 ProgressView()
                     .controlSize(.small)
-                Text(store.state.isInstallingCLI ? L10n.Settings.installingCLI : L10n.Settings.checkingCLI)
+                Text(progressMessage)
             }
         } else {
             switch store.state.cliStatus {
             case .installed:
                 Label(L10n.Settings.cliInstalled, systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
+                Button(L10n.Settings.uninstallCLI) { store.send(.requestCLIUninstallation) }
             case .notInstalled:
                 Button(L10n.Settings.installCLI) { store.send(.installCLI) }
-            case .conflict, nil:
+            case .conflict:
+                Button(L10n.Common.reveal) { store.send(.revealCLI) }
+            case nil:
                 Button(L10n.Common.refresh) { store.send(.refreshCLIStatus) }
             }
         }
