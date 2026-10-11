@@ -1,100 +1,133 @@
 # Moy
 
-CLIサービスをlaunchdで管理するmacOS用メニューバーアプリです。
+**A safe harbor for your local services.**
 
-仕様と実装方針は[実装プラン](docs/plan.md)、開発ルールは[AGENTS.md](AGENTS.md)を参照してください。
+Moy is a macOS menu bar app for registering and managing command-line services as user LaunchAgents. Manage your services from the menu bar or the bundled `moy` CLI.
 
-## 開発環境
+[日本語](README.ja.md)
 
-- macOS 26以降
-- Xcode 27（Swift 6.4）
+## Requirements
+
+- macOS 26 or later.
+- Xcode 27 / Swift 6.4
 - mise
 
-Tuist・SwiftFormat・SwiftLintのバージョンは`mise.toml`で固定しています。SwiftはXcode同梱のツールチェーンを使用し、`.swift-version`は6.4、プロジェクトの言語モードはSwift 6に設定しています。
+## Build
 
-複数のXcodeを利用している場合は、`xcodebuild -version`と`xcrun swift --version`でXcode 27／Swift 6.4が選択されていることを確認してください。
+Run these commands to build and launch the app.
 
 ```bash
 mise install
 mise run generate
+mise run build
+open build/Build/Products/Debug/Moy.app
 ```
 
-`Moy.xcworkspace`が生成されます。Xcodeで開き、`Moy`スキームを選択してください。
+## Features
 
-| コマンド | 内容 |
-|---|---|
-| `mise run generate` | 依存解決・Xcodeワークスペース・文字列アクセサーの生成 |
-| `mise run build` | アプリと同梱CLIのビルド |
-| `mise run test` | 各モジュールのテスト実行 |
-| `mise run format` | SwiftソースとTuist定義の整形 |
-| `mise run lint` | SwiftLintによるチェック |
+- Add, edit, enable, disable, and restart services.
+- Check service status and open stdout/stderr logs from the menu bar.
+- Share service definitions between the GUI and CLI, with JSON output for scripts.
 
-ビルド先は`build/`です。ローカル開発用の署名でビルドし、CLIは`Moy.app/Contents/Helpers/moy`へ同梱します。配布用署名は未設定です。
+- Manage user LaunchAgents registered through Moy.
+- Keep services managed by `launchd` after quitting Moy.
 
-## モジュール
+## Usage
 
-- `MoyApp`: SwiftUI・NanoReduxによるGUI。日本語・英語に対応。
-- `MoyCLI`: 英語のCLI。製品名は`moy`。
-- `MoyKit`: GUIとCLIで共通利用するDomain・Platform層。
+Open `Moy.app` and use the menu bar to manage services.
 
-MoyKitとMoyCLIには、サービス定義のJSON保存、plist生成、`launchctl`による有効化・無効化・再実行、状態取得を実装しています。RepositoryとUseCaseは`async throws`で、同一プロセス内はactor、App／CLI間はファイルロックで直列化します。MoyAppの管理画面では、サービスの一覧・詳細・登録・編集・削除を提供します。
+1. Choose **Manage Services…** and add a service.
+2. Enter a unique identifier and the absolute executable path, then configure arguments and environment variables.
+3. Save the definition, or save and enable it immediately.
 
-## 設定
+Service actions work as follows.
 
-サービス一覧の左ペイン左下の歯車、またはメニューバーの「設定…」から、共通の設定ウィンドウを開きます。「設定」タブでCLIのインストール・アンインストール、「情報」タブでアプリのバージョン・ビルド番号を確認できます。
+| Action | Behavior |
+| --- | --- |
+| Enable | Create the LaunchAgent plist and load it into `launchd`. |
+| Disable | Stop and unload the service, then remove its plist. Keep the definition and logs. |
+| Restart | Start a waiting service or restart a running one. Requires an enabled, loaded service. |
+| Remove | Disable the service and delete its definition. Keep logs. |
 
-「コマンドラインツール」の「インストール」を押すと、同梱CLIへのリンクを `/usr/local/bin/moy` に作成します。既存ファイルや別のリンクは上書きしません。設定画面を開いたときに実際のリンクを確認するため、アプリ再起動後もインストール状態が反映されます。
+- Enabled services are loaded again at login.
+- Automatic startup depends on `RunAtLoad` and `KeepAlive`.
 
-インストール済みの場合は「アンインストール…」から確認後にリンクだけを削除できます。同梱CLI、登録済みサービス、設定・ログは残ります。削除に必要な場合は管理者認証を要求します。別のリンク先・リンク切れ・通常ファイル・ディレクトリがある場合は競合として表示し、「Finderに表示」からユーザー自身で確認・対処できます。アプリの移動でリンクが切れた場合も、古いリンクを手動で削除してから再インストールしてください。
+### Service settings
 
-`/usr/local/bin` に書き込み権限がない場合は、macOSの管理者認証ダイアログが表示されます。認証はMoyプロセス内の `NSAppleScript` から要求します。認証はリンクのインストール・アンインストールだけに使用し、サービス操作は通常ユーザー権限で行います。認証をキャンセルすると操作を中止します。旧バージョンで作成した `~/.local/bin/moy` は自動削除しません。
+Moy supports the following LaunchAgent settings.
 
-通常、`/usr/local/bin` はPATHに含まれています。新しいターミナルで `moy --help` を実行して確認してください。コマンドが見つからない場合は、シェルのPATHに `/usr/local/bin` が含まれているか確認してください。
+| Setting | Purpose |
+| --- | --- |
+| `Label` | Generated as `com.sputnik-apps.moy.<Identifier>`. Identifier is immutable after creation. |
+| `ProgramArguments` | Absolute executable path followed by ordered arguments. |
+| `WorkingDirectory` | Optional working directory. |
+| `EnvironmentVariables` | Environment variables passed to the process. |
+| `RunAtLoad` | Start when the LaunchAgent is loaded. Off by default. |
+| `KeepAlive` | Start and keep the service running. Off by default. |
+| `ThrottleInterval` | Minimum interval between launches, in seconds. Uses the OS default if omitted. |
+| `StandardOutPath` / `StandardErrorPath` | Log paths. Use Moy’s log directory if omitted. |
 
-## 引数・環境変数の編集
+- Identifiers use 1–64 lowercase ASCII letters, digits, hyphens, or underscores, starting and ending with a letter or digit.
+- Use an absolute executable path.
+- Shell configuration is not loaded. Set required environment variables explicitly, including `PATH` when needed.
+- Each GUI argument row is one literal argument. Quotes and `$VARIABLE` are passed unchanged.
+- For shell logic, pass a script as an argument to an executable such as `/bin/zsh`.
+- `ThrottleInterval` limits launch frequency; it does not schedule jobs.
 
-サービスの登録・編集画面では、引数を1列、環境変数を「名前／値」の2列の一覧で入力します。
+### CLI
 
-- 下部の＋で行を追加し、そのまま入力できます。引数は選択行の直後（未選択なら末尾）、環境変数は末尾に追加します。
-- 未選択の行をクリックすると選択し、選択中の行のセルをクリックすると、その値を編集できます。−で削除すると、次の行、なければ前の行を選択します。
-- 引数は行をドラッグして行間にドロップするか、下部の上下ボタンで並べ替えます。環境変数は再編集時に名前順で表示します。
-- Tab／Shift-Tabで入力欄・ボタン間を移動できます。選択中のセルのクリックまたは行選択中のReturnで編集を開始し、Escapeで行選択へ戻ります。Deleteは行選択中なら行を、文字編集中なら文字を削除します。
-- 一覧は全行が見える高さに広がり、編集画面全体でスクロールします。保存中は一覧を操作できません。
+#### Install or uninstall
 
-1行が1引数です。空白を含む値を引用符で囲む必要はなく、入力した引用符や`$PORT`はそのまま渡されます。環境変数欄の値は実行するプロセスに渡されますが、引数内での変数展開は行いません。変数展開や準備処理が必要な場合はスクリプトを用意し、例えば実行ファイルに`/bin/zsh`、引数にスクリプトの絶対パスを指定してください。
+- Open **Settings… → Command Line Tool** to create or remove the bundled CLI’s symbolic link at `/usr/local/bin/moy`.
+- macOS asks for administrator authentication only when needed.
+- Existing files and unrelated links are never overwritten.
+- Uninstalling removes only the link. Services, settings, and logs remain.
 
-## CLI
+#### Example
 
-ビルド後のCLIは`build/Build/Products/Debug/moy`に生成され、`Moy.app/Contents/Helpers/moy`にも同梱されます。
+This example registers a web server, checks its status, and restarts it.
 
 ```bash
-# 定義を保存する（plistの作成やbootstrapはまだ行わない）
-build/Build/Products/Debug/moy add \
-  --identifier web-server \
+moy --help
+
+# Save a service definition, then enable it.
+moy add --identifier web-server \
   --name "Local web server" \
-  --description "Serves the public directory" \
   --program /usr/bin/python3 \
-  --arg -m \
-  --arg http.server \
-  --working-directory "$PWD/public" \
-  --env PORT=8080 \
+  --arg -m --arg http.server --arg 8080 \
+  --working-directory "$PWD" \
   --run-at-load
 
-# Identifierを指定して操作する
-build/Build/Products/Debug/moy enable web-server
-build/Build/Products/Debug/moy status web-server
-build/Build/Products/Debug/moy restart web-server
-build/Build/Products/Debug/moy logs web-server
-build/Build/Products/Debug/moy disable web-server
+moy enable web-server
+moy status web-server
+moy restart web-server
+moy logs web-server
+moy disable web-server
 ```
 
-`add --enable`では保存と有効化を一度に行えます。`list`、`show`、`status`、`logs`は`--json`に対応しています。すべてのコマンドとオプションは`moy --help`および`moy <command> --help`で確認できます。CLIのヘルプとメッセージは英語です。
+#### Subcommands
 
-各サービス定義の`kind`は必須で、現在は`launchAgent`を保存します。開発中のため`kind`がないJSONの互換読み込みは行いません。
+The following subcommands are available.
 
-定義は`~/Library/Application Support/Moy/services.json`、有効なサービスのplistは`~/Library/LaunchAgents/<Label>.plist`、既定のログは`~/Library/Logs/Moy/`に保存されます。Identifierは1〜64文字の小文字英数字・ハイフン・アンダースコアで指定し、作成後は変更できません。Labelは`com.sputnik-apps.moy.<Identifier>`として生成されます。表示名は任意で、未設定の場合はIdentifierを表示します。
+| Command | Behavior |
+| --- | --- |
+| `list` | List registered services. |
+| `show` | Show a service definition. |
+| `add` | Add a service definition. |
+| `edit` | Update service settings. |
+| `remove` | Disable the service and delete its definition. |
+| `enable` | Create the plist and enable the service. |
+| `disable` | Stop and unload the service, then remove its plist. |
+| `restart` | Start a waiting service or restart a running one. |
+| `status` | Show service status. |
+| `logs` | Show stdout and stderr log file paths. |
 
-- `enable`: plistを作成してユーザーのGUIドメインへ`bootstrap`する
-- `disable`: `bootout`を確認してplistを削除する。定義とログは残す
-- `restart`: 読み込み済みのサービスを`kickstart -k`する
-- `remove`: 必要なら無効化してから定義を削除する。ログは残す
+- Use identifiers to specify services.
+- `add --enable` saves and enables in one step.
+- `status` shows all services when the identifier is omitted.
+- `list`, `show`, `status`, and `logs` support `--json` output.
+- See `moy <command> --help` for each command’s options.
+
+## License
+
+[MIT](LICENSE) © 2026 Yoshihiro Kato
