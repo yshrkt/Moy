@@ -1,4 +1,11 @@
+import MoyKit
+
 enum SettingsAction: Sendable {
+    case refreshLaunchAtLoginStatus
+    case receiveLaunchAtLoginStatus(LaunchAtLoginStatus)
+    case setLaunchAtLogin(Bool)
+    case receiveLaunchAtLoginUpdate(LaunchAtLoginStatus, SettingsFailure?)
+    case openLoginItemsSettings
     case appear
     case selectTab(SettingsTab)
     case refreshCLIStatus

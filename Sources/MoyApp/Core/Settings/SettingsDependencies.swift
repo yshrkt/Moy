@@ -1,4 +1,7 @@
+import MoyKit
+
 struct SettingsDependencies: Sendable {
+    var launchAtLoginUseCase: any LaunchAtLoginUseCase = DefaultLaunchAtLoginUseCase()
     var cliInstallerClient: CLIInstallerClient = .live
     var workspaceClient: WorkspaceClient = .live
 }

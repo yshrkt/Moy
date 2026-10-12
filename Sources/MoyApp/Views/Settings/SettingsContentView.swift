@@ -7,10 +7,38 @@ struct SettingsContentView: View {
     var body: some View {
         Form {
             Section {
+                Toggle(L10n.Settings.launchAtLoginTitle, isOn: Binding(
+                    get: {
+                        store.state.launchAtLoginStatus == .enabled
+                            || store.state.launchAtLoginStatus == .requiresApproval
+                    },
+                    set: { store.send(.setLaunchAtLogin($0)) },
+                ))
+                .toggleStyle(.switch)
+                .disabled(store.state.isOperatingLaunchAtLogin || store.state.launchAtLoginStatus == nil)
+
+                Text(L10n.Settings.launchAtLoginDescription)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+
+                if store.state.isOperatingLaunchAtLogin {
+                    ProgressView()
+                        .controlSize(.small)
+                        .accessibilityLabel(L10n.Settings.launchAtLoginUpdating)
+                }
+                if store.state.launchAtLoginStatus == .requiresApproval {
+                    Text(L10n.Settings.launchAtLoginApproval)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    Button(L10n.Settings.openLoginItemsSettings) { store.send(.openLoginItemsSettings) }
+                }
+            } header: {
+                Text(L10n.Settings.generalTitle)
+            }
+
+            Section {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(L10n.Settings.cliDescription)
-                        .foregroundStyle(.secondary)
-                    Text(L10n.Settings.cliAuthorizationHelp)
                         .font(.callout)
                         .foregroundStyle(.secondary)
 
@@ -30,6 +58,7 @@ struct SettingsContentView: View {
 
                     if store.state.cliStatus == .conflict {
                         Label(L10n.Settings.cliConflict, systemImage: "exclamationmark.triangle")
+                            .font(.callout)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -39,13 +68,15 @@ struct SettingsContentView: View {
             }
 
             Section {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text(L10n.Settings.cliPathHelp)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                     Text(verbatim: "moy --help")
                         .font(.callout.monospaced())
                         .textSelection(.enabled)
                     Text(L10n.Settings.cliVerifyHelp)
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 6)

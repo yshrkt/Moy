@@ -1,4 +1,5 @@
 import Foundation
+import MoyKit
 import NanoRedux
 import Observation
 
@@ -18,6 +19,13 @@ enum CLIInstallationStatus: Equatable, Sendable {
 @Observable
 final class SettingsState {
     var selectedTab: SettingsTab = .settings
+    var launchAtLoginStatus: LaunchAtLoginStatus?
+    var isCheckingLaunchAtLogin = false
+    var isUpdatingLaunchAtLogin = false
+    var isOperatingLaunchAtLogin: Bool {
+        isCheckingLaunchAtLogin || isUpdatingLaunchAtLogin
+    }
+
     var cliStatus: CLIInstallationStatus?
     var isCheckingCLI = false
     var isInstallingCLI = false
@@ -31,6 +39,7 @@ final class SettingsState {
 }
 
 enum SettingsFailure: Error, Equatable, Sendable {
+    case launchAtLoginFailed(String)
     case cliNotBundled
     case cliDestinationExists
     case cliInstallationFailed

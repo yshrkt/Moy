@@ -5,6 +5,8 @@ typealias L10n = MoyStrings
 extension SettingsFailure {
     var localizedMessage: String {
         switch self {
+        case let .launchAtLoginFailed(message):
+            "\(L10n.Error.launchAtLoginFailed)\n\(message)"
         case .cliNotBundled:
             L10n.Error.cliNotBundled
         case .cliDestinationExists:

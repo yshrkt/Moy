@@ -1,3 +1,4 @@
+import MoyKit
 import NanoRedux
 
 struct SettingsReducer: InjectableReducer {
@@ -6,6 +7,35 @@ struct SettingsReducer: InjectableReducer {
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     func reduce(into state: inout SettingsState, action: SettingsAction) -> Effect<SettingsAction> {
         switch action {
+        case .refreshLaunchAtLoginStatus:
+            guard !state.isOperatingLaunchAtLogin else { return .none }
+            state.isCheckingLaunchAtLogin = true
+            let useCase = dependencies.launchAtLoginUseCase
+            return .run { await .receiveLaunchAtLoginStatus(useCase.status()) }
+
+        case let .receiveLaunchAtLoginStatus(status):
+            state.isCheckingLaunchAtLogin = false
+            state.launchAtLoginStatus = status
+            return .none
+
+        case let .setLaunchAtLogin(enabled):
+            return setLaunchAtLogin(enabled, into: &state)
+
+        case let .receiveLaunchAtLoginUpdate(status, failure):
+            state.isUpdatingLaunchAtLogin = false
+            state.launchAtLoginStatus = status
+            if let failure {
+                state.failure = failure
+            }
+            return .none
+
+        case .openLoginItemsSettings:
+            let useCase = dependencies.launchAtLoginUseCase
+            return .run {
+                await useCase.openSystemSettings()
+                return .refreshLaunchAtLoginStatus
+            }
+
         case .appear, .refreshCLIStatus:
             return refreshCLIStatus(into: &state)
 
@@ -103,6 +133,27 @@ struct SettingsReducer: InjectableReducer {
         case .cancelCLIInstallation:
             state.isInstallingCLI = false
             return .run { .refreshCLIStatus }
+        }
+    }
+
+    private func setLaunchAtLogin(_ enabled: Bool, into state: inout SettingsState) -> Effect<SettingsAction> {
+        guard !state.isOperatingLaunchAtLogin, let status = state.launchAtLoginStatus else { return .none }
+        let registered = status == .enabled || status == .requiresApproval
+        guard enabled != registered else { return .none }
+        state.isUpdatingLaunchAtLogin = true
+        state.failure = nil
+        let useCase = dependencies.launchAtLoginUseCase
+        return .run {
+            do {
+                try await useCase.setEnabled(enabled)
+                return await .receiveLaunchAtLoginUpdate(useCase.status(), nil)
+            } catch let LaunchAtLoginError.updateFailed(message) {
+                return await .receiveLaunchAtLoginUpdate(useCase.status(), .launchAtLoginFailed(message))
+            } catch {
+                return await .receiveLaunchAtLoginUpdate(
+                    useCase.status(), .launchAtLoginFailed(error.localizedDescription),
+                )
+            }
         }
     }
 

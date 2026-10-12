@@ -21,10 +21,14 @@ struct SettingsView: View {
         }
         .tabViewStyle(.tabBarOnly)
         .frame(width: 560, height: 440)
-        .task { store.send(.appear) }
+        .task {
+            store.send(.appear)
+            store.send(.refreshLaunchAtLoginStatus)
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 store.send(.refreshCLIStatus)
+                store.send(.refreshLaunchAtLoginStatus)
             }
         }
         .alert(

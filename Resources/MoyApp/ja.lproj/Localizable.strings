@@ -104,7 +104,7 @@
 "settings.copyright" = "Copyright © 2026 Yoshihiro Kato. All rights reserved.";
 "settings.openRepository" = "GitHubリポジトリを開く";
 "settings.cliTitle" = "コマンドラインツール";
-"settings.cliDescription" = "ターミナルから moy コマンドでサービスを管理できます。";
+"settings.cliDescription" = "ターミナルから moy コマンドでサービスを管理できます。\nインストール・アンインストールに必要な場合、macOSの管理者認証ダイアログが表示されます。";
 "settings.cliCommand" = "moy コマンド";
 "settings.installCLI" = "インストール";
 "settings.installingCLI" = "インストール中…";
@@ -116,7 +116,6 @@
 "settings.cliPathHelp" = "通常、/usr/local/bin はPATHに含まれています。インストール後、新しいターミナルで次のコマンドを実行してください。";
 "settings.cliVerifyHelp" = "moy が見つからない場合は、シェルのPATHに /usr/local/bin が含まれているか確認してください。";
 "settings.versionFormat" = "バージョン: %1$@ (%2$@)";
-"settings.cliAuthorizationHelp" = "インストール・アンインストールに必要な場合、macOSの管理者認証ダイアログが表示されます。";
 "error.cliInstallationFailed" = "インストールしたコマンドを確認できませんでした。状態を更新してから再試行してください。";
 "error.cliAuthorizationFailed" = "管理者権限でCLIの操作を完了できませんでした。";
 
@@ -145,3 +144,12 @@
 "settings.uninstallCLIMessage" = "/usr/local/bin/moy のリンクを削除します。同梱CLI、登録済みサービス、設定、ログは残ります。";
 "error.cliUninstallationFailed" = "CLIのリンクが削除されたことを確認できませんでした。状態を更新してから再試行してください。";
 "error.cliLinkChanged" = "確認後にCLIのリンクが変更または削除されたため、アンインストールできませんでした。";
+
+/* Launch at login */
+"settings.general_title" = "一般";
+"settings.launch_at_login_title" = "ログイン時に起動する";
+"settings.launch_at_login_description" = "MacにログインしたときにMoyをメニューバーに自動で起動します。サービスの起動条件は各サービスのRunAtLoad／KeepAliveで設定します。";
+"settings.launch_at_login_updating" = "ログイン時起動の設定を確認・更新中";
+"settings.launch_at_login_approval" = "ログイン時起動は登録済みですが、macOSの承認が必要です。システム設定のログイン項目でMoyを許可してください。";
+"settings.open_login_items_settings" = "ログイン項目の設定を開く…";
+"error.launch_at_login_failed" = "ログイン時起動の設定を変更できませんでした。";

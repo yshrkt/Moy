@@ -104,7 +104,7 @@
 "settings.copyright" = "Copyright © 2026 Yoshihiro Kato. All rights reserved.";
 "settings.openRepository" = "Open GitHub repository";
 "settings.cliTitle" = "Command Line Tool";
-"settings.cliDescription" = "Use the moy command in Terminal to manage services.";
+"settings.cliDescription" = "Use the moy command in Terminal to manage services.\nmacOS will ask for administrator authentication if needed to install or uninstall the command.";
 "settings.cliCommand" = "moy command";
 "settings.installCLI" = "Install";
 "settings.installingCLI" = "Installing…";
@@ -116,7 +116,6 @@
 "settings.cliPathHelp" = "/usr/local/bin is usually already in PATH. After installation, open a new Terminal session and run:";
 "settings.cliVerifyHelp" = "If moy is not found, check that /usr/local/bin is included in your shell’s PATH.";
 "settings.versionFormat" = "Version: %1$@ (%2$@)";
-"settings.cliAuthorizationHelp" = "macOS will ask for administrator authentication if needed to install or uninstall the command.";
 "error.cliInstallationFailed" = "The installed command could not be verified. Refresh the status and try again.";
 "error.cliAuthorizationFailed" = "The CLI operation could not be completed with administrator privileges.";
 
@@ -145,3 +144,12 @@
 "settings.uninstallCLIMessage" = "The link at /usr/local/bin/moy will be removed. The bundled CLI, registered services, settings, and logs will be kept.";
 "error.cliUninstallationFailed" = "The removal of the CLI link could not be verified. Refresh the status and try again.";
 "error.cliLinkChanged" = "The CLI link changed or was removed after confirmation, so it could not be uninstalled.";
+
+/* Launch at login */
+"settings.general_title" = "General";
+"settings.launch_at_login_title" = "Launch at Login";
+"settings.launch_at_login_description" = "Automatically start Moy in the menu bar when you log in to your Mac. Service startup is configured separately with RunAtLoad and KeepAlive.";
+"settings.launch_at_login_updating" = "Checking or updating launch at login";
+"settings.launch_at_login_approval" = "Launch at login is registered but requires macOS approval. Allow Moy in Login Items in System Settings.";
+"settings.open_login_items_settings" = "Open Login Items Settings…";
+"error.launch_at_login_failed" = "Could not change the launch at login setting.";
