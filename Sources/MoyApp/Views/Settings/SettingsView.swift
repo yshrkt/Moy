@@ -7,7 +7,9 @@ struct SettingsView: View {
     let store: SettingsStore
 
     var body: some View {
-        TabView(selection: Binding(
+        let backgroundColor = Color(nsColor: .windowBackgroundColor)
+
+        return TabView(selection: Binding(
             get: { store.state.selectedTab },
             set: { store.send(.selectTab($0)) },
         )) {
@@ -20,7 +22,11 @@ struct SettingsView: View {
                 .tag(SettingsTab.information)
         }
         .tabViewStyle(.tabBarOnly)
+        .toolbarBackground(backgroundColor, for: .windowToolbar)
+        .toolbarBackgroundVisibility(.visible, for: .windowToolbar)
         .frame(width: 560, height: 440)
+        .background(backgroundColor)
+        .containerBackground(backgroundColor, for: .window)
         .task {
             store.send(.appear)
             store.send(.refreshLaunchAtLoginStatus)

@@ -85,6 +85,8 @@ struct SettingsContentView: View {
             }
         }
         .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
+        .scrollEdgeEffectHidden(true, for: .top)
     }
 
     private var progressMessage: String {
