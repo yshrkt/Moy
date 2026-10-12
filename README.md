@@ -12,7 +12,7 @@ Moy is a macOS menu bar app for registering and managing command-line services a
 
 ## Requirements
 
-- macOS 26 or later.
+- macOS 26 or later (Apple Silicon only).
 - Xcode 27 / Swift 6.4
 - mise
 

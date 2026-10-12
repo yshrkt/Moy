@@ -2,7 +2,7 @@
 
 ## 1. 技術構成とモジュール
 
-macOS 26以降を対象に、Xcode 27・Swift 6.4・SwiftUI・NanoReduxで実装する。Swiftの言語モードはSwift 6とする。Moyで登録したユーザー単位のLaunchAgentを管理し、メニューバーから状態確認・操作、管理ウィンドウから登録・編集を行う。
+Apple Silicon搭載MacのmacOS 26以降を対象に、Xcode 27・Swift 6.4・SwiftUI・NanoReduxで実装する。Swiftの言語モードはSwift 6とする。Tuistのプロジェクト共通設定で`ARCHS = arm64`を指定し、アプリ・同梱CLI・共通モジュールのDebug／Release／ArchiveをApple Silicon向けに限定する。Moyで登録したユーザー単位のLaunchAgentを管理し、メニューバーから状態確認・操作、管理ウィンドウから登録・編集を行う。
 
 MiroCalの責務分離・命名規則・Tuist設定を参考に、以下の3モジュールに分ける。
 
@@ -240,3 +240,5 @@ CLIは**ヘルプ・メッセージとも英語のみ**とし、ローカライ�
 ### 公開に向けた配布方針
 
 ZIPまたはDMG形式でのバイナリ配布を検討する。形式と配布手順は未確定とし、未確定の配布予定はREADMEに記載しない。署名・公証・パッケージ作成の実装は別途行う。
+
+公証に向けて、MoyAppと同梱CLIのMoyCLIではHardened Runtimeを有効にする。Tuistの両ターゲットに`ENABLE_HARDENED_RUNTIME = YES`を設定し、App Sandboxは無効のままとする。

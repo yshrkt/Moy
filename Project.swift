@@ -10,6 +10,7 @@ let project = Project(
     settings: .settings(base: [
         "SWIFT_VERSION": "6.0", // Swift 6 language mode; compiler: Swift 6.4 (Xcode 27).
         "ENABLE_APP_SANDBOX": "NO",
+        "ARCHS": "arm64",
     ]),
     targets: [
         .target(
@@ -58,6 +59,7 @@ let project = Project(
             ],
             settings: .settings(base: [
                 "PRODUCT_MODULE_NAME": "MoyApp",
+                "ENABLE_HARDENED_RUNTIME": "YES",
                 "CODE_SIGN_STYLE": "Automatic",
                 "CODE_SIGN_IDENTITY": "-",
             ]),
@@ -77,6 +79,7 @@ let project = Project(
             ],
             settings: .settings(base: [
                 "PRODUCT_MODULE_NAME": "MoyCLI",
+                "ENABLE_HARDENED_RUNTIME": "YES",
                 "CODE_SIGN_IDENTITY": "-",
                 "SKIP_INSTALL": "YES",
             ]),

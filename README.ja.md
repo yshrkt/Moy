@@ -12,7 +12,7 @@ Moyは、CLIサービスをユーザー単位のLaunchAgentとして登録・管
 
 ## 動作環境
 
-- macOS 26以降。
+- macOS 26以降（Apple Siliconのみ）。
 - Xcode 27 / Swift 6.4
 - mise
 
