@@ -1,3 +1,5 @@
+<img src="docs/Images/AppIcon.png" alt="Moy app icon" width="128">
+
 # Moy
 
 **A safe harbor for your local services.**
@@ -5,6 +7,8 @@
 Moy is a macOS menu bar app for registering and managing command-line services as user LaunchAgents. Manage your services from the menu bar or the bundled `moy` CLI.
 
 [日本語](README.ja.md)
+
+<img src="docs/Images/Screenshot.jpg" alt="Moy menu bar showing service statuses and controls" width="400">
 
 ## Requirements
 

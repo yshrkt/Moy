@@ -1,3 +1,5 @@
+<img src="docs/Images/AppIcon.png" alt="Moyのアプリアイコン" width="128">
+
 # Moy
 
 **A safe harbor for your local services.**
@@ -5,6 +7,8 @@
 Moyは、CLIサービスをユーザー単位のLaunchAgentとして登録・管理するmacOS用メニューバーアプリです。登録したサービスは、メニューバーと同梱の`moy` CLIから操作できます。
 
 [English](README.md)
+
+<img src="docs/Images/Screenshot.jpg" alt="サービスの状態と操作を表示するMoyのメニューバー画面" width="400">
 
 ## 動作環境
 
