@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 @MainActor
@@ -36,6 +37,11 @@ struct SettingsView: View {
                 store.send(.refreshCLIStatus)
                 store.send(.refreshLaunchAtLoginStatus)
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // A menu bar app's scenePhase may stay active while Finder has focus.
+            store.send(.refreshCLIStatus)
+            store.send(.refreshLaunchAtLoginStatus)
         }
         .alert(
             L10n.Settings.uninstallCLITitle,
