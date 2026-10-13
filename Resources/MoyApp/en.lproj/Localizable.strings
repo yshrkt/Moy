@@ -20,7 +20,6 @@
 "common.restart" = "Restart";
 "common.reveal" = "Show in Finder";
 "common.save" = "Save";
-"common.saveAndEnable" = "Save and Enable";
 "menu.empty" = "No services registered";
 "menu.manage" = "Manage Services…";
 "menu.title" = "Services";

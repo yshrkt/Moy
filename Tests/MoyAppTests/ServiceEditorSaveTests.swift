@@ -9,8 +9,8 @@ import Testing
 @MainActor
 @Suite("Service editor save failures", .serialized)
 struct ServiceEditorSaveTests {
-    @Test(arguments: [false, true], [false, true])
-    func `missing executables fail without saving and can be corrected`(enable: Bool, commandOnly: Bool) async throws {
+    @Test(arguments: [false, true])
+    func `missing executables fail without saving and can be corrected`(commandOnly: Bool) async throws {
         let root = FileManager.default.temporaryDirectory.appending(path: "MoyEditorSave-\(UUID())")
         defer { try? FileManager.default.removeItem(at: root) }
         let paths = MoyPaths(
@@ -31,7 +31,7 @@ struct ServiceEditorSaveTests {
         let invalidPath = commandOnly ? "unknown-command" : root.appending(path: "missing-tool").path
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable(invalidPath))))
 
-        let effect = reducer.reduce(into: &state, action: .editor(.saveService(enable: enable)))
+        let effect = reducer.reduce(into: &state, action: .editor(.saveService))
         #expect(state.editor?.isSaving == true)
         let response = try #require(await effect.execute())
         let saveEffect = reducer.reduce(into: &state, action: response)
@@ -46,7 +46,7 @@ struct ServiceEditorSaveTests {
         #expect(!FileManager.default.fileExists(atPath: paths.servicesFile.path))
 
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
-        let retry = reducer.reduce(into: &state, action: .editor(.saveService(enable: false)))
+        let retry = reducer.reduce(into: &state, action: .editor(.saveService))
         #expect(state.editor?.failure == nil)
         let saved = try #require(await retry.execute())
         let retryEffect = reducer.reduce(into: &state, action: saved)
@@ -55,6 +55,8 @@ struct ServiceEditorSaveTests {
         #expect(state.editor == nil)
         #expect(state.editor?.isSaving != true)
         #expect(try await repository.list().first?.programArguments == ["/usr/bin/true"])
+        let plistPath = try paths.plistFile(identifier: ServiceIdentifier("invalid-command")).path
+        #expect(!FileManager.default.fileExists(atPath: plistPath))
     }
 
     @Test
@@ -142,7 +144,7 @@ struct ServiceEditorSaveTests {
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("worker"))))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.throttleInterval("abc"))))
-        _ = reducer.reduce(into: &state, action: .editor(.saveService(enable: false)))
+        _ = reducer.reduce(into: &state, action: .editor(.saveService))
         #expect(state.editor?.failure == .invalidThrottleInterval)
         #expect(state.editor?.throttleInterval == "abc")
         #expect(state.editor?.isSaving != true)

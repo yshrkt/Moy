@@ -20,7 +20,6 @@
 "common.restart" = "再起動";
 "common.reveal" = "Finderに表示";
 "common.save" = "保存";
-"common.saveAndEnable" = "保存して有効化";
 "menu.empty" = "登録済みのサービスはありません";
 "menu.manage" = "サービスを管理…";
 "menu.title" = "サービス";

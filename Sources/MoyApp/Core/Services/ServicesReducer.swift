@@ -90,14 +90,14 @@ struct ServicesReducer: InjectableReducer {
             state.editor = nil
             return .none
 
-        case let .editor(.delegate(.save(sessionID, payload, enable))):
+        case let .editor(.delegate(.save(sessionID, payload))):
             guard let editor = state.editor, editor.id == sessionID, editor.isSaving else { return .none }
             let serviceManagementUseCase = dependencies.serviceManagementUseCase
             return .run {
                 do {
                     switch payload {
                     case let .create(identifier, draft):
-                        _ = try await serviceManagementUseCase.create(draft, enable: enable)
+                        _ = try await serviceManagementUseCase.create(draft, enable: false)
                         return .receiveSave(sessionID, identifier, .success(()))
                     case let .update(definition):
                         try await serviceManagementUseCase.update(definition)

@@ -26,22 +26,11 @@ struct ServiceEditorView: View {
                     }
                     .disabled(store.state.isSaving)
                 }
-                ToolbarItemGroup(placement: .confirmationAction) {
-                    if case .create = editor.mode {
-                        Button(L10n.Common.save) {
-                            store.send(.saveService(enable: false))
-                        }
-                        .disabled(!canSave(editor))
-                        Button(L10n.Common.saveAndEnable) {
-                            store.send(.saveService(enable: true))
-                        }
-                        .disabled(!canSave(editor))
-                    } else {
-                        Button(L10n.Common.save) {
-                            store.send(.saveService(enable: false))
-                        }
-                        .disabled(!canSave(editor))
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(L10n.Common.save) {
+                        store.send(.saveService)
                     }
+                    .disabled(!canSave(editor))
                 }
             }
             .overlay {

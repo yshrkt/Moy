@@ -6,7 +6,7 @@ import Testing
 @Suite("Services reducer")
 struct ServicesReducerTests {
     @Test
-    func `create service`() async throws {
+    func `create service without enabling`() async throws {
         let useCase = TestServiceManagementUseCase()
         let reducer = makeReducer(useCase: useCase)
         var state = ServicesState()
@@ -23,7 +23,7 @@ struct ServicesReducerTests {
         _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentKey(variableID, "MODE")))
         _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentValue(variableID, "development")))
 
-        let effect = reducer.reduce(into: &state, action: .editor(.saveService(enable: true)))
+        let effect = reducer.reduce(into: &state, action: .editor(.saveService))
         #expect(state.editor?.isSaving == true)
         let response = try #require(await effect.execute())
         let saveEffect = reducer.reduce(into: &state, action: response)
@@ -31,7 +31,7 @@ struct ServicesReducerTests {
         _ = reducer.reduce(into: &state, action: saveResult)
 
         let request = try #require(await useCase.lastCreateRequest())
-        #expect(request.enable)
+        #expect(!request.enable)
         #expect(request.draft.identifier.rawValue == "api-server")
         #expect(request.draft.displayName == "API Server")
         #expect(request.draft.programArguments == ["/usr/bin/python3", ""])

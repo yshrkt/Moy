@@ -16,14 +16,14 @@ struct ServiceEditorReducer: InjectableReducer {
             state.failure = nil
             return .none
 
-        case let .saveService(enable):
+        case .saveService:
             guard !state.isSaving else { return .none }
             state.failure = nil
             do {
                 let payload = try ServiceEditorPayload(editor: state)
                 state.isSaving = true
                 let id = state.id
-                return .run { .delegate(.save(id, payload, enable: enable)) }
+                return .run { .delegate(.save(id, payload)) }
             } catch {
                 state.failure = .from(error)
                 return .none

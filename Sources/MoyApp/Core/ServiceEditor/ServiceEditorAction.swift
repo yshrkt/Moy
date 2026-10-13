@@ -17,13 +17,13 @@ enum ServiceEditorAction: Sendable {
     case removeEnvironmentVariable(UUID)
     case chooseEditorPath(ServiceEditorPath)
     case receiveEditorPath(UUID, ServiceEditorPath, String?)
-    case saveService(enable: Bool)
+    case saveService
     case dismissFailure
     case receiveSave(Result<Void, ServicesFailure>)
     case delegate(Delegate)
 
     enum Delegate: Sendable {
         case cancel(UUID)
-        case save(UUID, ServiceEditorPayload, enable: Bool)
+        case save(UUID, ServiceEditorPayload)
     }
 }

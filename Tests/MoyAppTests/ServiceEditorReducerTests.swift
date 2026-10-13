@@ -12,23 +12,22 @@ struct ServiceEditorReducerTests {
         var state = ServiceEditorState.create()
         state.identifier = "worker"
         state.executable = "/usr/bin/true"
-        let effect = reducer.reduce(into: &state, action: .saveService(enable: true))
+        let effect = reducer.reduce(into: &state, action: .saveService)
         #expect(state.isSaving)
         _ = reducer.reduce(into: &state, action: .updateEditor(.displayName("changed")))
         _ = reducer.reduce(into: &state, action: .addArgument)
         #expect(state.displayName.isEmpty)
         #expect(state.arguments.isEmpty)
-        let duplicate = reducer.reduce(into: &state, action: .saveService(enable: false))
+        let duplicate = reducer.reduce(into: &state, action: .saveService)
         #expect(await duplicate.execute() == nil)
         let action = try #require(await effect.execute())
-        guard case let .delegate(.save(id, .create(identifier, draft), enable)) = action else {
+        guard case let .delegate(.save(id, .create(identifier, draft))) = action else {
             Issue.record("Expected a create payload delegate")
             return
         }
         #expect(id == state.id)
         #expect(identifier.rawValue == "worker")
         #expect(draft.programArguments == ["/usr/bin/true"])
-        #expect(enable)
     }
 
     @Test
