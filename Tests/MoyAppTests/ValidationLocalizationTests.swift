@@ -4,6 +4,30 @@ import MoyKit
 import Testing
 
 struct ValidationLocalizationTests {
+    @Test(arguments: ServiceIdentifierValidationIssue.allCases)
+    func `identifier reasons have Japanese and English messages`(issue: ServiceIdentifierValidationIssue) throws {
+        let key = "validation.identifier.\(issue)"
+        try expectIdentifierTranslations(key: key, localizedMessage: issue.localizedMessage)
+    }
+
+    @Test
+    func `identifier duplicates have Japanese and English messages`() throws {
+        try expectIdentifierTranslations(
+            key: "validation.identifier.duplicate",
+            localizedMessage: ServiceEditorIdentifierIssue.duplicate.localizedMessage,
+        )
+    }
+
+    private func expectIdentifierTranslations(key: String, localizedMessage: String) throws {
+        let bundle = MoyResources.bundle
+        for language in ["ja", "en"] {
+            let path = try #require(bundle.path(forResource: language, ofType: "lproj"))
+            let languageBundle = try #require(Bundle(path: path))
+            #expect(languageBundle.localizedString(forKey: key, value: nil, table: "Localizable") != key)
+        }
+        #expect(localizedMessage == bundle.localizedString(forKey: key, value: nil, table: "Localizable"))
+    }
+
     @Test(arguments: ServiceValidationIssue.allCases)
     func `every reason has Japanese and English resources and localized GUI output`(
         issue: ServiceValidationIssue,

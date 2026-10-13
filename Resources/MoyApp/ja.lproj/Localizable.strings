@@ -41,6 +41,11 @@
 "services.logs" = "ログ";
 "services.status" = "状態";
 "services.identifier" = "Identifier";
+"validation.identifier.empty" = "Identifierを入力してください。";
+"validation.identifier.tooLong" = "64文字以内で入力してください。";
+"validation.identifier.invalidCharacters" = "半角小文字英数字・ハイフン・アンダースコアで入力してください。";
+"validation.identifier.invalidBoundary" = "先頭と末尾は英数字にしてください。";
+"validation.identifier.duplicate" = "重複しています。";
 "services.identifierHelp" = "入力した値はMoy内で一意の識別子として利用します。\n1〜64文字の半角小文字英数字・ハイフン・アンダースコアを使用します。作成後は変更できません。";
 "services.label" = "Launchd Label";
 "services.displayName" = "表示名";

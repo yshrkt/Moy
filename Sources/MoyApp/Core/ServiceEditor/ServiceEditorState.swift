@@ -15,6 +15,15 @@ final class ServiceEditorState {
     let id = UUID()
     var isSaving = false
     var failure: ServicesFailure?
+    var existingIdentifiers: Set<String> = []
+
+    var identifierIssue: ServiceEditorIdentifierIssue? = .invalidFormat(.empty)
+    var validatingIdentifier: String?
+
+    var canSave: Bool {
+        !isSaving && validatingIdentifier == nil && identifierIssue == nil
+            && !executable.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     struct Argument: Equatable, Identifiable, Sendable {
         let id: UUID
@@ -54,8 +63,8 @@ final class ServiceEditorState {
     var standardOutPath: String
     var standardErrorPath: String
 
-    static func create() -> Self {
-        Self(
+    static func create(existingIdentifiers: Set<String> = []) -> Self {
+        let state = Self(
             mode: .create,
             identifier: "",
             displayName: "",
@@ -70,9 +79,12 @@ final class ServiceEditorState {
             standardOutPath: "",
             standardErrorPath: "",
         )
+        state.existingIdentifiers = existingIdentifiers
+        return state
     }
 
     init(service: ServiceDefinition) {
+        identifierIssue = nil
         mode = .edit(service.identifier)
         identifier = service.identifier.rawValue
         displayName = service.displayName ?? ""

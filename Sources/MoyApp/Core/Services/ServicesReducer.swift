@@ -45,17 +45,25 @@ struct ServicesReducer: InjectableReducer {
         case let .receiveServices(.success(snapshot)):
             state.isLoading = false
             state.services = snapshot.services
+            var validationEffect: Effect<ServicesAction> = .none
+            if var editor = state.editor {
+                validationEffect = ServiceEditorReducer(dependencies: dependencies.editor)
+                    .reduce(into: &editor, action: .updateExistingIdentifiers(
+                        Set(snapshot.services.map(\.identifier.rawValue)),
+                    ))
+                    .map(namespace: Self.self) { .editor($0) }
+            }
             state.statuses = snapshot.statuses
             state.statusFailures = snapshot.statusFailures
             if let selectedIdentifier = state.selectedIdentifier,
                snapshot.services.contains(where: { $0.identifier == selectedIdentifier })
             {
-                return .none
+                return validationEffect
             }
             state.selectedIdentifier = snapshot.services.first?.identifier
             state.copyRequestID = nil
             state.copyToast = nil
-            return .none
+            return validationEffect
 
         case let .receiveServices(.failure(failure)):
             state.isLoading = false
@@ -73,7 +81,7 @@ struct ServicesReducer: InjectableReducer {
         case .presentCreateService:
             guard state.editor?.isSaving != true else { return .none }
             state.failure = nil
-            state.editor = .create()
+            state.editor = .create(existingIdentifiers: Set(state.services.map(\.identifier.rawValue)))
             return .none
 
         case let .presentEditService(identifier):

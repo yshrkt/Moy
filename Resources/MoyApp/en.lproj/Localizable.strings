@@ -41,6 +41,11 @@
 "services.logs" = "Logs";
 "services.status" = "Status";
 "services.identifier" = "Identifier";
+"validation.identifier.empty" = "Enter an identifier.";
+"validation.identifier.tooLong" = "Use no more than 64 characters.";
+"validation.identifier.invalidCharacters" = "Use lowercase ASCII letters, digits, hyphens, or underscores.";
+"validation.identifier.invalidBoundary" = "Start and end with a letter or digit.";
+"validation.identifier.duplicate" = "This identifier already exists.";
 "services.identifierHelp" = "The entered value is used as a unique identifier in Moy.\nUse 1–64 lowercase ASCII letters, digits, hyphens, or underscores. It cannot be changed after creation.";
 "services.label" = "Launchd Label";
 "services.displayName" = "Display Name";

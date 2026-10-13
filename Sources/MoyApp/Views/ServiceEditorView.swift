@@ -30,7 +30,7 @@ struct ServiceEditorView: View {
                     Button(L10n.Common.save) {
                         store.send(.saveService)
                     }
-                    .disabled(!canSave(editor))
+                    .disabled(!editor.canSave)
                 }
             }
             .overlay {
@@ -117,6 +117,15 @@ private extension ServiceEditorView {
                     .disabled(isEditing(editor))
                 }
                 .font(.body.monospaced())
+            }
+            if case .create = editor.mode {
+                Text(editor.identifierIssue?.localizedMessage ?? " ")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .lineLimit(2, reservesSpace: true)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityHidden(editor.identifierIssue == nil)
             }
             fieldHelp(L10n.Services.identifierHelp)
         }
@@ -310,12 +319,6 @@ private extension ServiceEditorView {
             return true
         }
         return false
-    }
-
-    private func canSave(_ editor: ServiceEditorState) -> Bool {
-        !store.state.isSaving
-            && !editor.identifier.isEmpty
-            && !editor.executable.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 

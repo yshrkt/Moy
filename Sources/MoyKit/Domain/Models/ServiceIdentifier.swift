@@ -18,20 +18,11 @@ public struct ServiceIdentifier: Hashable, Sendable {
     }
 
     public static func isValid(_ value: String) -> Bool {
-        let bytes = Array(value.utf8)
-        guard 1 ... maximumLength ~= bytes.count,
-              let first = bytes.first,
-              let last = bytes.last,
-              isAlphanumeric(first),
-              isAlphanumeric(last)
-        else {
-            return false
-        }
-        return bytes.allSatisfy { isAlphanumeric($0) || $0 == 45 || $0 == 95 }
+        validationIssue(for: value) == nil
     }
 
-    private static func isAlphanumeric(_ byte: UInt8) -> Bool {
-        (97 ... 122).contains(byte) || (48 ... 57).contains(byte)
+    public static func validationIssue(for value: String) -> ServiceIdentifierValidationIssue? {
+        ServiceIdentifierValidator.validate(value)
     }
 }
 

@@ -2,6 +2,26 @@ import MoyKit
 
 typealias L10n = MoyStrings
 
+extension ServiceEditorIdentifierIssue {
+    var localizedMessage: String {
+        switch self {
+        case let .invalidFormat(issue): issue.localizedMessage
+        case .duplicate: L10n.Validation.Identifier.duplicate
+        }
+    }
+}
+
+extension ServiceIdentifierValidationIssue {
+    var localizedMessage: String {
+        switch self {
+        case .empty: L10n.Validation.Identifier.empty
+        case .tooLong: L10n.Validation.Identifier.tooLong
+        case .invalidCharacters: L10n.Validation.Identifier.invalidCharacters
+        case .invalidBoundary: L10n.Validation.Identifier.invalidBoundary
+        }
+    }
+}
+
 extension SettingsFailure {
     var localizedMessage: String {
         switch self {

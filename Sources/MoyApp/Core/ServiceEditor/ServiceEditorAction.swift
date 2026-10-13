@@ -4,6 +4,8 @@ import MoyKit
 enum ServiceEditorAction: Sendable {
     case cancel
     case updateEditor(ServiceEditorField)
+    case updateExistingIdentifiers(Set<String>)
+    case receiveIdentifierValidation(UUID, String, ServiceEditorIdentifierIssue?)
     case selectArgument(UUID?)
     case moveArgument(UUID, toIndex: Int)
     case dropArgument(UUID, insertionIndex: Int)

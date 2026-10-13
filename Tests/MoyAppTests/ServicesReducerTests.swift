@@ -12,7 +12,9 @@ struct ServicesReducerTests {
         var state = ServicesState()
 
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("api-server"))))
+        let validation = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("api-server"))))
+        let validated = try #require(await validation.execute())
+        _ = reducer.reduce(into: &state, action: validated)
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.displayName("API Server"))))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/python3"))))
         _ = reducer.reduce(into: &state, action: .editor(.addArgument))

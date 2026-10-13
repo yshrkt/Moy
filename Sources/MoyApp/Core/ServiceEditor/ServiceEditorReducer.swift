@@ -9,6 +9,7 @@ struct ServiceEditorReducer: InjectableReducer {
         switch action {
         case .cancel:
             guard !state.isSaving else { return .none }
+            state.validatingIdentifier = nil
             let id = state.id
             return .run { .delegate(.cancel(id)) }
 
@@ -17,8 +18,14 @@ struct ServiceEditorReducer: InjectableReducer {
             return .none
 
         case .saveService:
-            guard !state.isSaving else { return .none }
+            guard !state.isSaving, state.validatingIdentifier == nil else { return .none }
             state.failure = nil
+            if case .create = state.mode {
+                state.identifierIssue = ServiceEditorIdentifierValidator.validate(
+                    state.identifier, existingIdentifiers: state.existingIdentifiers,
+                )
+            }
+            guard state.identifierIssue == nil else { return .none }
             do {
                 let payload = try ServiceEditorPayload(editor: state)
                 state.isSaving = true
@@ -39,6 +46,17 @@ struct ServiceEditorReducer: InjectableReducer {
         case .delegate:
             return .none
 
+        case let .updateExistingIdentifiers(identifiers):
+            guard state.existingIdentifiers != identifiers else { return .none }
+            state.existingIdentifiers = identifiers
+            return validateIdentifier(into: &state)
+
+        case let .receiveIdentifierValidation(sessionID, identifier, issue):
+            guard state.id == sessionID, state.identifier == identifier else { return .none }
+            state.validatingIdentifier = nil
+            state.identifierIssue = issue
+            return .none
+
         case let .updateEditor(field):
             guard !state.isSaving else { return .none }
             let editor = state
@@ -46,6 +64,7 @@ struct ServiceEditorReducer: InjectableReducer {
             case let .identifier(value):
                 guard case .create = editor.mode else { return .none }
                 editor.identifier = value
+                return validateIdentifier(into: &state)
             case let .displayName(value):
                 editor.displayName = value
             case let .description(value):
@@ -92,6 +111,22 @@ struct ServiceEditorReducer: InjectableReducer {
             case .standardError: .standardErrorPath(selectedPath)
             }
             return reduce(into: &state, action: .updateEditor(field))
+        }
+    }
+
+    private func validateIdentifier(into state: inout ServiceEditorState) -> Effect<ServiceEditorAction> {
+        guard case .create = state.mode else { return .none }
+        let sessionID = state.id
+        let identifier = state.identifier
+        let existingIdentifiers = state.existingIdentifiers
+        state.validatingIdentifier = identifier
+        return .debounce(for: .milliseconds(300), key: "serviceEditor.identifierValidation") {
+            Effect.run {
+                let issue = ServiceEditorIdentifierValidator.validate(
+                    identifier, existingIdentifiers: existingIdentifiers,
+                )
+                return .receiveIdentifierValidation(sessionID, identifier, issue)
+            }
         }
     }
 }

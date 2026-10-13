@@ -27,7 +27,9 @@ struct ServiceEditorSaveTests {
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("invalid-command"))))
+        let validation = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("invalid-command"))))
+        let validated = try #require(await validation.execute())
+        _ = reducer.reduce(into: &state, action: validated)
         let invalidPath = commandOnly ? "unknown-command" : root.appending(path: "missing-tool").path
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable(invalidPath))))
 
@@ -141,7 +143,9 @@ struct ServiceEditorSaveTests {
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("worker"))))
+        let validation = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("worker"))))
+        let validated = try #require(await validation.execute())
+        _ = reducer.reduce(into: &state, action: validated)
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.throttleInterval("abc"))))
         _ = reducer.reduce(into: &state, action: .editor(.saveService))
