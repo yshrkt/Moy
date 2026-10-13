@@ -42,7 +42,7 @@ Open `Moy.app` and use the menu bar to manage services.
 
 1. Choose **Manage Services…** and add a service.
 2. Enter a unique identifier and the absolute executable path, then configure arguments and environment variables.
-3. Save the definition, or save and enable it immediately.
+3. Save the definition, then enable it from the service details when needed.
 
 Service actions work as follows.
 
@@ -119,6 +119,8 @@ The following subcommands are available.
 | `show` | Show a service definition. |
 | `add` | Add a service definition. |
 | `edit` | Update service settings. |
+| `import` | Import a service from a JSON file. |
+| `export` | Export a service to a JSON file. |
 | `remove` | Disable the service and delete its definition. |
 | `enable` | Create the plist and enable the service. |
 | `disable` | Stop and unload the service, then remove its plist. |

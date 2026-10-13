@@ -169,3 +169,119 @@ private func withTemporaryEnvironment(_ body: ([String: String]) throws -> Void)
         "MOY_LOG_DIRECTORY": root.appending(path: "logs").path,
     ])
 }
+
+extension CLIEndToEndTests {
+    @Test
+    func `exports and imports all settings into a separate environment without enabling`() throws {
+        try withTemporaryEnvironment { source in
+            let identifier = "json-transfer-" + UUID().uuidString.lowercased()
+            let root = try URL(filePath: #require(source["MOY_DATA_DIRECTORY"])).deletingLastPathComponent()
+            let file = root.appending(path: "service with spaces.json")
+            let add = try runCLI([
+                "add", "--identifier", identifier, "--name", "Imported service", "--description", "Service description",
+                "--program", "/usr/bin/printf", "--arg", "", "--arg", "hello world", "--arg", "$PORT",
+                "--env", "TOKEN=a=b", "--working-directory", "/tmp", "--run-at-load", "--keep-alive",
+                "--throttle-interval", "12", "--stderr", "/tmp/custom service.stderr.log",
+            ], environment: source)
+            #expect(add.status == 0)
+            try Data("previous export".utf8).write(to: file)
+            let exported = try runCLI(["export", identifier, "--output", file.path], environment: source)
+            #expect(exported.status == 0)
+            #expect(exported.standardOutput == "Exported \(identifier) to \(file.path)\n")
+            let document = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: file)) as? [String: Any])
+            #expect(document["schemaVersion"] as? Int == 1)
+            let service = try #require(document["service"] as? [String: Any])
+            #expect(service["standardOutPath"] as? String == "")
+            #expect(service["standardErrorPath"] as? String == "/tmp/custom service.stderr.log")
+            #expect(service["registration"] == nil)
+            #expect(service["Label"] == nil)
+
+            try withTemporaryEnvironment { destination in
+                let imported = try runCLI(["import", file.path], environment: destination)
+                #expect(imported.status == 0)
+                #expect(imported.standardOutput == "Imported \(identifier)\n")
+                let show = try runCLI(["show", identifier, "--json"], environment: destination)
+                let data = try #require(show.standardOutput.data(using: .utf8))
+                let saved = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+                try expectImportedSettings(saved, identifier: identifier, environment: destination)
+                let agents = try URL(filePath: #require(destination["MOY_LAUNCH_AGENTS_DIRECTORY"]))
+                let plist = agents.appending(path: "com.sputnik-apps.moy.\(identifier).plist")
+                #expect(!FileManager.default.fileExists(atPath: plist.path))
+                let dataDirectory = try URL(filePath: #require(destination["MOY_DATA_DIRECTORY"]))
+                let storage = dataDirectory.appending(path: "services.json")
+                let before = try Data(contentsOf: storage)
+                let duplicate = try runCLI(["import", file.path], environment: destination)
+                #expect(duplicate.status != 0)
+                #expect(duplicate.standardError.contains("already exists"))
+                #expect(try Data(contentsOf: storage) == before)
+            }
+        }
+    }
+
+    @Test(arguments: ["malformed", "futureSchema", "unknownKey", "missingLog", "missingExecutable", "blankLog"])
+    func `invalid imports fail without registering`(mutation: String) throws {
+        try withTemporaryEnvironment { environment in
+            let root = try URL(filePath: #require(environment["MOY_DATA_DIRECTORY"])).deletingLastPathComponent()
+            let file = root.appending(path: "invalid.json")
+            var service: [String: Any] = [
+                "identifier": "invalid-json-test", "kind": "launchAgent", "programArguments": ["/usr/bin/true"],
+                "environmentVariables": [:] as [String: String], "runAtLoad": false, "keepAlive": false,
+                "standardOutPath": "", "standardErrorPath": "",
+            ]
+            var schema = 1
+            switch mutation {
+            case "futureSchema": schema = 2
+            case "unknownKey": service["Label"] = "custom-label"
+            case "missingLog": service.removeValue(forKey: "standardOutPath")
+            case "missingExecutable": service["programArguments"] = [root.appending(path: "missing-tool").path]
+            case "blankLog": service["standardOutPath"] = " "
+            default: break
+            }
+            let data = mutation == "malformed" ? Data("not json".utf8)
+                : try JSONSerialization.data(withJSONObject: ["schemaVersion": schema, "service": service])
+            try data.write(to: file)
+            let result = try runCLI(["import", file.path, "--enable"], environment: environment)
+            #expect(result.status != 0)
+            #expect(!result.standardError.isEmpty)
+            let list = try runCLI(["list", "--json"], environment: environment)
+            let listed = try #require(list.standardOutput.data(using: .utf8))
+            #expect(try (JSONSerialization.jsonObject(with: listed) as? [[String: Any]])?.isEmpty == true)
+        }
+    }
+
+    @Test
+    func `export requires an output and preserves existing files when the service is missing`() throws {
+        try withTemporaryEnvironment { environment in
+            let root = try URL(filePath: #require(environment["MOY_DATA_DIRECTORY"])).deletingLastPathComponent()
+            let output = root.appending(path: "existing.json")
+            let previous = Data("previous output".utf8)
+            try previous.write(to: output)
+            let missingOutput = try runCLI(["export", "missing-service"], environment: environment)
+            #expect(missingOutput.status != 0)
+            #expect(missingOutput.standardError.contains("--output"))
+            let arguments = ["export", "missing-service", "--output", output.path]
+            let missingService = try runCLI(arguments, environment: environment)
+            #expect(missingService.status != 0)
+            #expect(missingService.standardError.contains("Service not found"))
+            #expect(try Data(contentsOf: output) == previous)
+            let help = try runCLI(["import", "--help"], environment: environment)
+            #expect(help.status == 0)
+            #expect(help.standardOutput.contains("--enable"))
+        }
+    }
+}
+
+private func expectImportedSettings(_ saved: [String: Any], identifier: String, environment: [String: String]) throws {
+    #expect(saved["kind"] as? String == "launchAgent")
+    #expect(saved["displayName"] as? String == "Imported service")
+    #expect(saved["description"] as? String == "Service description")
+    #expect(saved["programArguments"] as? [String] == ["/usr/bin/printf", "", "hello world", "$PORT"])
+    #expect(saved["environmentVariables"] as? [String: String] == ["TOKEN": "a=b"])
+    #expect(saved["workingDirectory"] as? String == "/tmp")
+    #expect(saved["runAtLoad"] as? Bool == true)
+    #expect(saved["keepAlive"] as? Bool == true)
+    #expect(saved["throttleInterval"] as? Int == 12)
+    let logs = try #require(environment["MOY_LOG_DIRECTORY"])
+    #expect(saved["standardOutPath"] as? String == "\(logs)/com.sputnik-apps.moy.\(identifier).stdout.log")
+    #expect(saved["standardErrorPath"] as? String == "/tmp/custom service.stderr.log")
+}

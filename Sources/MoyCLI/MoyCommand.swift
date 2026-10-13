@@ -8,6 +8,8 @@ struct MoyCommand: AsyncParsableCommand {
         version: "0.1.0",
         subcommands: [
             AddCommand.self,
+            ImportCommand.self,
+            ExportCommand.self,
             EditCommand.self,
             RemoveCommand.self,
             ListCommand.self,
