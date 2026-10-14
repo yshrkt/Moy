@@ -2,6 +2,9 @@ import Darwin
 import Foundation
 
 public actor LaunchctlAgentRepository: LaunchAgentRepository {
+    static let defaultUnloadVerificationAttempts = 31
+    static let defaultUnloadVerificationDelay: Duration = .seconds(1)
+
     private struct LoadedState {
         let isLoaded: Bool
         let pid: Int32?
@@ -28,8 +31,8 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
         self.processRunner = processRunner
         self.plistWriter = plistWriter
         self.userID = userID
-        unloadVerificationAttempts = 20
-        unloadVerificationDelay = .milliseconds(100)
+        unloadVerificationAttempts = Self.defaultUnloadVerificationAttempts
+        unloadVerificationDelay = Self.defaultUnloadVerificationDelay
     }
 
     init(

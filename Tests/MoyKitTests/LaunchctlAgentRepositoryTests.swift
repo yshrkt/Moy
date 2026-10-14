@@ -25,6 +25,33 @@ struct LaunchctlAgentRepositoryTests {
     }
 
     @Test
+    func `disable allows a slow process time to finish unloading`() async throws {
+        let fixture = try TemporaryPaths()
+        defer { fixture.remove() }
+        let identifier = try ServiceIdentifier("slow-bootout")
+        try createPlist(for: identifier, in: fixture)
+        let loadedChecks = 20
+        let runner = ScriptedProcessRunner(results: [
+            .loaded,
+            .success,
+        ] + Array(repeating: .loaded, count: loadedChecks) + [
+            .missing,
+        ])
+        let repository = makeRepository(
+            paths: fixture.paths,
+            runner: runner,
+            attempts: LaunchctlAgentRepository.defaultUnloadVerificationAttempts,
+        )
+
+        try await repository.disable(identifier: identifier)
+
+        #expect(LaunchctlAgentRepository.defaultUnloadVerificationAttempts == 31)
+        #expect(LaunchctlAgentRepository.defaultUnloadVerificationDelay == .seconds(1))
+        #expect(!FileManager.default.fileExists(atPath: fixture.paths.plistFile(identifier: identifier).path))
+        #expect(await runner.receivedArguments().filter { $0.first == "print" }.count == loadedChecks + 2)
+    }
+
+    @Test
     func `disable preserves plist when launchd stays loaded`() async throws {
         let fixture = try TemporaryPaths()
         defer { fixture.remove() }
