@@ -21,6 +21,7 @@ struct InternalDaemonCommand: AsyncParsableCommand {
             let services = MoyRuntime.makeServiceManagementUseCase(
                 paths: user.paths, userID: user.userID,
                 repository: ReviewedServiceRepository(base: repository, expected: expected),
+                daemonLogRepository: repository,
             )
             guard expected.kind == .launchDaemon,
                   try await services.find(identifier: expected.identifier) == expected

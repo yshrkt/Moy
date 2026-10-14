@@ -19,6 +19,7 @@ struct InternalRepositoryCommand: AsyncParsableCommand {
         var response = UserRepositoryResponse()
         do {
             switch request {
+            case let .prepareLogs(service): try await LocalServiceLogRepository().prepare(for: service)
             case let .status(identifier): response.status = try await launch.status(identifier: identifier)
             case let .enable(service):
                 guard service.kind == .launchAgent else { throw MoyError.administratorRequired }

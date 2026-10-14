@@ -4,6 +4,27 @@ import Testing
 
 struct UserServiceRepositoryTests {
     @Test
+    func `daemon log preparation delegates the paths to the original user`() async throws {
+        let runner = UserRepositoryProcessStub(response: .init())
+        let repository = UserServiceRepository(userID: 501, executable: "/test/moy", runner: runner)
+        let service = try ServiceDefinition(
+            identifier: ServiceIdentifier("remote-log"), kind: .launchDaemon, programArguments: ["/usr/bin/true"],
+            standardOutPath: "/Users/example/Library/Logs/Moy/stdout.log",
+            standardErrorPath: "/Users/example/Library/Logs/Moy/stderr.log",
+        )
+        try await repository.prepare(for: service)
+        let invocation = try #require(await runner.invocation)
+        #expect(invocation.arguments[2] == "#501")
+        let payload = try #require(invocation.arguments.last.flatMap { Data(base64Encoded: $0) })
+        let request = try JSONDecoder().decode(UserRepositoryRequest.self, from: payload)
+        if case let .prepareLogs(received) = request {
+            #expect(received == service)
+        } else {
+            Issue.record("Expected a log preparation request")
+        }
+    }
+
+    @Test
     func `user file operations run through an unprivileged subprocess with a clean environment`() async throws {
         var response = UserRepositoryResponse()
         response.services = []

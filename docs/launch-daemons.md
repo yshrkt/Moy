@@ -30,7 +30,15 @@ RunAtLoadをON、KeepAliveをOFFにする。コマンドはrootとして実行�
 
 RunAtLoadはシステム起動時に加え、初回有効化や設定反映による再読み込み時にも実行する。終了後の「待機中」は正常で、前回の終了コードとログで結果を確認する。Moyはコマンドの効果を追跡せず、無効化・削除によって実行済みの変更を取り消さない。
 
-plistは`/Library/LaunchDaemons/<Label>.plist`、既定ログは`/Library/Logs/Moy/<Label>.stdout.log`／`stderr.log`に配置する。定義のJSONはAgentと共通のユーザー設定ディレクトリに保存する。
+plistは`/Library/LaunchDaemons/<Label>.plist`、既定ログは`~/Library/Logs/Moy/<Label>.stdout.log`／`stderr.log`に配置する。定義のJSONはAgentと共通のユーザー設定ディレクトリに保存する。
+
+## ログの事前作成
+
+Daemonの有効化では、管理者認証の成功後、plist配置・登録前に元ユーザーの権限でログの親ディレクトリとファイルを準備する。新規ファイルはユーザー所有・600の権限で作成し、既存の通常ファイルは内容・所有者・権限を維持して書き込み可否だけを確認する。独自のログ保存先にも同じ処理を行う。
+
+ユーザー権限で準備できないパスは有効化前にエラーとなる。root権限による作成へのフォールバックは行わない。認証キャンセル時にはログも作成しない。
+
+保存済みの定義は絶対パスを保持しているため、以前の`/Library/Logs/Moy`を自動移行しない。既存サービスで新しい保存先を使う場合は、その定義のログパスを編集する。
 
 ## 専用ジョブによる実機確認
 
@@ -41,10 +49,10 @@ moy add --identifier daemon-smoke-test --kind launchDaemon \
   --program /usr/bin/id --arg -u --run-at-load
 sudo moy enable daemon-smoke-test
 moy status daemon-smoke-test
-cat /Library/Logs/Moy/com.sputnik-apps.moy.daemon-smoke-test.stdout.log
+cat ~/Library/Logs/Moy/com.sputnik-apps.moy.daemon-smoke-test.stdout.log
 ```
 
-ログの`0`でroot実行を、前回の終了コード`0`で正常終了を確認する。plistの所有者がroot、権限が644であること、ユーザー設定ディレクトリ・JSON・ロックファイルの所有者が元ユーザーのままであることを確認する。
+ログの`0`でroot実行を、前回の終了コード`0`で正常終了を確認する。plistの所有者がroot、権限が644であること、ログファイルの所有者と、ユーザー設定ディレクトリ・JSON・ロックファイルの所有者が元ユーザーのままであることを確認する。
 
 GUIで同じサービスを開き、実行設定の変更を保存して認証をキャンセルする。JSONとplistが変更されず、入力が残り、エラーが表示されないことを確認する。次に認証して保存し、再実行と状態表示、認証終了後のウィンドウ復帰を確認する。
 
@@ -55,7 +63,7 @@ sudo moy disable daemon-smoke-test
 moy remove daemon-smoke-test
 ```
 
-`launchctl print system/com.sputnik-apps.moy.daemon-smoke-test`で未登録、plistの不存在を確認する。ログは仕様どおり残るため、必要ならテスト用の2ファイルだけを管理者権限で削除する。
+`launchctl print system/com.sputnik-apps.moy.daemon-smoke-test`で未登録、plistの不存在を確認する。ログは仕様どおり残るため、必要ならテスト用の2ファイルだけをユーザー権限で削除する。
 
 ## 今回の確認状況
 

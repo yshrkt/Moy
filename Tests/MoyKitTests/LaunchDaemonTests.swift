@@ -144,7 +144,6 @@ private func daemonPaths(_ fixture: TemporaryPaths) -> MoyPaths {
     MoyPaths(
         dataDirectory: fixture.paths.dataDirectory, launchAgentsDirectory: fixture.paths.launchAgentsDirectory,
         logDirectory: fixture.paths.logDirectory, launchDaemonsDirectory: fixture.root.appending(path: "daemons"),
-        daemonLogDirectory: fixture.root.appending(path: "daemon-logs"),
     )
 }
 

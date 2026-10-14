@@ -1,7 +1,34 @@
+import Darwin
 import Foundation
+import MoyKit
 import Testing
 
 struct CLIEndToEndTests {
+    @Test
+    func `internal user log preparation creates files without enabling the daemon`() throws {
+        try withTemporaryEnvironment { environment in
+            let directory = try URL(filePath: #require(environment["MOY_LOG_DIRECTORY"]))
+            let service = try ServiceDefinition(
+                identifier: ServiceIdentifier("prepare-logs-cli"), kind: .launchDaemon,
+                programArguments: ["/usr/bin/true"], standardOutPath: directory.appending(path: "stdout.log").path,
+                standardErrorPath: directory.appending(path: "stderr.log").path,
+            )
+            let payload = try JSONEncoder().encode(UserRepositoryRequest.prepareLogs(service)).base64EncodedString()
+            let result = try runCLI(["internal-repository", payload], environment: environment)
+            #expect(result.status == 0)
+            let data = try #require(result.standardOutput.data(using: .utf8))
+            let response = try JSONDecoder().decode(UserRepositoryResponse.self, from: data)
+            #expect(response.error == nil)
+            for path in [service.standardOutPath, service.standardErrorPath] {
+                let attributes = try FileManager.default.attributesOfItem(atPath: path)
+                #expect(attributes[.ownerAccountID] as? UInt32 == getuid())
+                #expect(try Data(contentsOf: URL(filePath: path)).isEmpty)
+            }
+            let definitions = try URL(filePath: #require(environment["MOY_DATA_DIRECTORY"]))
+            #expect(!FileManager.default.fileExists(atPath: definitions.appending(path: "services.json").path))
+        }
+    }
+
     @Test
     func `daemon definitions are editable without sudo but enable fails before writes`() throws {
         try withTemporaryEnvironment { environment in
@@ -16,6 +43,8 @@ struct CLIEndToEndTests {
             let enable = try runCLI(["enable", identifier], environment: environment)
             #expect(enable.status != 0)
             #expect(enable.standardError.contains("sudo"))
+            let logDirectory = try #require(environment["MOY_LOG_DIRECTORY"])
+            #expect(!FileManager.default.fileExists(atPath: logDirectory))
             #expect(try Data(contentsOf: storage) == original)
             let edit = try runCLI(["edit", identifier, "--run-at-load", "true"], environment: environment)
             #expect(edit.status == 0)
@@ -24,7 +53,8 @@ struct CLIEndToEndTests {
             let service = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
             #expect(service["kind"] as? String == "launchDaemon")
             #expect(service["runAtLoad"] as? Bool == true)
-            #expect((service["standardOutPath"] as? String)?.hasPrefix("/Library/Logs/Moy/") == true)
+            let logs = try #require(environment["MOY_LOG_DIRECTORY"])
+            #expect((service["standardOutPath"] as? String)?.hasPrefix(logs + "/") == true)
             let exported = directory.appending(path: "exported.json")
             #expect(try runCLI(["export", identifier, "--output", exported.path], environment: environment).status == 0)
             let exportedData = try Data(contentsOf: exported)

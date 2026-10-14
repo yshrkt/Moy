@@ -11,6 +11,8 @@ public actor LaunchctlServiceRepository: LaunchdRepository {
         let lastExitStatus: Int32?
     }
 
+    private let checkAdministrator: @Sendable () throws -> Void
+    private let logRepository: any ServiceLogRepository
     private let kind: ServiceKind
     private let paths: MoyPaths
     private let fileManager: FileManager
@@ -23,11 +25,16 @@ public actor LaunchctlServiceRepository: LaunchdRepository {
     public init(
         paths: MoyPaths = .defaults(),
         kind: ServiceKind = .launchAgent,
+        logRepository: any ServiceLogRepository = LocalServiceLogRepository(),
         fileManager: FileManager = .default,
         processRunner: any ProcessRunning = DefaultProcessRunner(),
         plistWriter: LaunchdPlistWriter = .init(),
         userID: uid_t = getuid(),
     ) {
+        checkAdministrator = {
+            guard geteuid() == 0 else { throw MoyError.administratorRequired }
+        }
+        self.logRepository = logRepository
         self.kind = kind
         self.paths = paths
         self.fileManager = fileManager
@@ -40,14 +47,21 @@ public actor LaunchctlServiceRepository: LaunchdRepository {
 
     init(
         paths: MoyPaths,
+        kind: ServiceKind = .launchAgent,
+        logRepository: any ServiceLogRepository = LocalServiceLogRepository(),
         fileManager: FileManager,
         processRunner: any ProcessRunning,
         plistWriter: LaunchdPlistWriter,
         userID: uid_t,
         unloadVerificationAttempts: Int,
         unloadVerificationDelay: Duration,
+        checkAdministrator: @escaping @Sendable () throws -> Void = {
+            guard geteuid() == 0 else { throw MoyError.administratorRequired }
+        },
     ) {
-        kind = .launchAgent
+        self.checkAdministrator = checkAdministrator
+        self.logRepository = logRepository
+        self.kind = kind
         self.paths = paths
         self.fileManager = fileManager
         self.processRunner = processRunner
@@ -95,7 +109,11 @@ public actor LaunchctlServiceRepository: LaunchdRepository {
             throw MoyError.inconsistentState(identifier.rawValue)
         }
 
-        try prepareOutputDirectories(for: service)
+        if kind == .launchDaemon {
+            try await logRepository.prepare(for: service)
+        } else {
+            try prepareOutputDirectories(for: service)
+        }
         let plistURL = paths.plistFile(identifier: identifier, kind: kind)
         try plistWriter.write(service, to: plistURL)
         if kind == .launchDaemon {
@@ -163,8 +181,8 @@ public actor LaunchctlServiceRepository: LaunchdRepository {
 
 private extension LaunchctlServiceRepository {
     func requirePrivilege() throws {
-        if kind == .launchDaemon, geteuid() != 0 {
-            throw MoyError.administratorRequired
+        if kind == .launchDaemon {
+            try checkAdministrator()
         }
     }
 

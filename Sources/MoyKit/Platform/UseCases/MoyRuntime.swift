@@ -15,13 +15,17 @@ public enum MoyRuntime {
     public static func makeServiceManagementUseCase(
         paths: MoyPaths, userID: UInt32?, repository: any ServiceRepository,
         launchAgentRepository: (any LaunchdRepository)? = nil,
+        daemonLogRepository: (any ServiceLogRepository)? = nil,
     ) -> any ServiceManagementUseCase {
         DefaultServiceManagementUseCase(
             serviceRepository: repository,
             launchAgentRepository: launchAgentRepository ?? LaunchctlServiceRepository(
                 paths: paths, userID: userID ?? getuid(),
             ),
-            launchDaemonRepository: LaunchctlServiceRepository(paths: paths, kind: .launchDaemon),
+            launchDaemonRepository: LaunchctlServiceRepository(
+                paths: paths, kind: .launchDaemon,
+                logRepository: daemonLogRepository ?? LocalServiceLogRepository(),
+            ),
         )
     }
 }

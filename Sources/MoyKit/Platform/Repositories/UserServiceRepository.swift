@@ -93,7 +93,14 @@ public struct UserServiceRepository: ServiceRepository, ServiceDocumentRepositor
     }
 }
 
+extension UserServiceRepository: ServiceLogRepository {
+    public func prepare(for service: ServiceDefinition) async throws {
+        _ = try await request(.prepareLogs(service))
+    }
+}
+
 public enum UserRepositoryRequest: Codable, Sendable {
+    case prepareLogs(ServiceDefinition)
     case status(ServiceIdentifier)
     case enable(ServiceDefinition)
     case disable(ServiceIdentifier)

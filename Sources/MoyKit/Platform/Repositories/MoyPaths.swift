@@ -4,16 +4,13 @@ public struct MoyPaths: Equatable, Sendable {
     public let dataDirectory: URL
     public let launchAgentsDirectory: URL
     public let launchDaemonsDirectory: URL
-    public let daemonLogDirectory: URL
     public let logDirectory: URL
 
     public init(
         dataDirectory: URL, launchAgentsDirectory: URL, logDirectory: URL,
         launchDaemonsDirectory: URL = URL(filePath: "/Library/LaunchDaemons"),
-        daemonLogDirectory: URL = URL(filePath: "/Library/Logs/Moy"),
     ) {
         self.launchDaemonsDirectory = launchDaemonsDirectory
-        self.daemonLogDirectory = daemonLogDirectory
         self.dataDirectory = dataDirectory
         self.launchAgentsDirectory = launchAgentsDirectory
         self.logDirectory = logDirectory
@@ -51,29 +48,29 @@ public struct MoyPaths: Equatable, Sendable {
         return directory.appending(path: "\(identifier.launchdLabel).plist")
     }
 
-    public func standardOutFile(identifier: ServiceIdentifier, kind: ServiceKind = .launchAgent) -> URL {
-        logFile(label: identifier.launchdLabel, suffix: "stdout", kind: kind)
+    public func standardOutFile(identifier: ServiceIdentifier, kind _: ServiceKind = .launchAgent) -> URL {
+        logFile(label: identifier.launchdLabel, suffix: "stdout")
     }
 
-    public func standardErrorFile(identifier: ServiceIdentifier, kind: ServiceKind = .launchAgent) -> URL {
-        logFile(label: identifier.launchdLabel, suffix: "stderr", kind: kind)
+    public func standardErrorFile(identifier: ServiceIdentifier, kind _: ServiceKind = .launchAgent) -> URL {
+        logFile(label: identifier.launchdLabel, suffix: "stderr")
     }
 
-    public func standardOutFilePreview(identifier: ServiceIdentifier?, kind: ServiceKind = .launchAgent) -> URL {
+    public func standardOutFilePreview(identifier: ServiceIdentifier?, kind _: ServiceKind = .launchAgent) -> URL {
         logFile(
             label: identifier?.launchdLabel ?? "\(ServiceIdentifier.launchdLabelPrefix)<Identifier>",
-            suffix: "stdout", kind: kind,
+            suffix: "stdout",
         )
     }
 
-    public func standardErrorFilePreview(identifier: ServiceIdentifier?, kind: ServiceKind = .launchAgent) -> URL {
+    public func standardErrorFilePreview(identifier: ServiceIdentifier?, kind _: ServiceKind = .launchAgent) -> URL {
         logFile(
             label: identifier?.launchdLabel ?? "\(ServiceIdentifier.launchdLabelPrefix)<Identifier>",
-            suffix: "stderr", kind: kind,
+            suffix: "stderr",
         )
     }
 
-    private func logFile(label: String, suffix: String, kind: ServiceKind) -> URL {
-        (kind == .launchDaemon ? daemonLogDirectory : logDirectory).appending(path: "\(label).\(suffix).log")
+    private func logFile(label: String, suffix: String) -> URL {
+        logDirectory.appending(path: "\(label).\(suffix).log")
     }
 }

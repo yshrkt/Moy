@@ -20,13 +20,16 @@ enum CLIContext {
     }
 
     static func services(user: MoyUserContext) throws -> any ServiceManagementUseCase {
-        let repository: any ServiceRepository = try geteuid() == 0
-            ? UserServiceRepository(userID: user.userID, executable: executablePath())
-            : JSONServiceRepository(paths: user.paths)
-        let agent: (any LaunchdRepository)? = try geteuid() == 0
+        let userRepository: UserServiceRepository? = try geteuid() == 0
             ? UserServiceRepository(userID: user.userID, executable: executablePath()) : nil
+        let repository: any ServiceRepository = if let userRepository {
+            userRepository
+        } else {
+            JSONServiceRepository(paths: user.paths)
+        }
         return MoyRuntime.makeServiceManagementUseCase(
-            paths: user.paths, userID: user.userID, repository: repository, launchAgentRepository: agent,
+            paths: user.paths, userID: user.userID, repository: repository,
+            launchAgentRepository: userRepository, daemonLogRepository: userRepository,
         )
     }
 
