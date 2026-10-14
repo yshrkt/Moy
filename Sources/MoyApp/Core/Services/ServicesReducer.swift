@@ -79,19 +79,22 @@ struct ServicesReducer: InjectableReducer {
             return .none
 
         case .presentCreateService:
-            guard state.editor?.isSaving != true else { return .none }
+            guard state.canOpenEditor else { return .none }
             state.failure = nil
             state.editor = .create(existingIdentifiers: Set(state.services.map(\.identifier.rawValue)))
             return .none
 
         case let .presentEditService(identifier):
-            guard state.editor?.isSaving != true else { return .none }
+            guard state.canOpenEditor else { return .none }
             guard let service = state.services.first(where: { $0.identifier == identifier }) else {
                 return .none
             }
             state.failure = nil
             state.editor = ServiceEditorState(service: service)
             return .none
+
+        case .importService, .receiveImportService, .exportService, .receiveExportService:
+            return reduceTransfer(into: &state, action: action)
 
         case let .editor(.delegate(.cancel(sessionID))):
             guard let editor = state.editor, editor.id == sessionID, !editor.isSaving else { return .none }

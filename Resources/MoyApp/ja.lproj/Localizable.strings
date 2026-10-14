@@ -26,6 +26,13 @@
 "services.title" = "サービス";
 "services.noSelection" = "サービスを選択すると設定を確認できます。";
 "services.newTitle" = "新規サービス";
+"services.new" = "新規";
+"services.import" = "インポート…";
+"services.export" = "エクスポート…";
+"services.importTitle" = "サービスをインポート";
+"services.exportTitle" = "サービスをエクスポート";
+"error.invalidServiceJSON" = "サービスのJSONファイルが正しくありません。";
+"error.unsupportedServiceJSON" = "サービスのJSONファイルの形式バージョンに対応していません。";
 "services.editTitle" = "サービスを編集";
 "services.deleteTitle" = "サービスを削除しますか？";
 "services.deleteMessage" = "サービスを無効化してMoyから削除します。ログファイルは残ります。";

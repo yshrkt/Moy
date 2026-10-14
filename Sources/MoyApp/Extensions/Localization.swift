@@ -50,6 +50,10 @@ extension ServicesFailure {
         switch self {
         case let .moy(error):
             error.localizedMessage
+        case let .serviceJSON(.invalidDocument(reason)):
+            "\(L10n.Error.invalidServiceJSON)\n\(reason)"
+        case let .serviceJSON(.unsupportedSchema(found, supported)):
+            "\(L10n.Error.unsupportedServiceJSON)\n\(found) / \(supported)"
         case .invalidThrottleInterval:
             L10n.Error.invalidThrottle
         case .emptyEnvironmentKey:

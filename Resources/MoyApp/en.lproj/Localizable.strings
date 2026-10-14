@@ -26,6 +26,13 @@
 "services.title" = "Services";
 "services.noSelection" = "Select a service to view its settings.";
 "services.newTitle" = "New Service";
+"services.new" = "New";
+"services.import" = "Import…";
+"services.export" = "Export…";
+"services.importTitle" = "Import a Service";
+"services.exportTitle" = "Export a Service";
+"error.invalidServiceJSON" = "The service JSON file is invalid.";
+"error.unsupportedServiceJSON" = "The service JSON file uses an unsupported format version.";
 "services.editTitle" = "Edit Service";
 "services.deleteTitle" = "Delete Service?";
 "services.deleteMessage" = "The service will be disabled and removed from Moy. Log files will remain.";

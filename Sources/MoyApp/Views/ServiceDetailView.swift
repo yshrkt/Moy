@@ -31,6 +31,13 @@ struct ServiceDetailView: View {
                 } label: {
                     Label(L10n.Common.edit, systemImage: "pencil")
                 }
+                .disabled(!store.state.canOpenEditor)
+                Button {
+                    store.send(.exportService(service.identifier))
+                } label: {
+                    Label(L10n.Services.export, systemImage: "square.and.arrow.up")
+                }
+                .disabled(!store.state.canOpenEditor || store.state.isOperating(service.identifier))
                 Button(role: .destructive) {
                     store.send(.requestDeleteService(service.identifier))
                 } label: {

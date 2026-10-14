@@ -122,12 +122,16 @@ struct ServiceManagementView: View {
 
             Spacer()
 
-            Button {
-                store.send(.presentCreateService)
+            Menu {
+                Button(L10n.Services.new) { store.send(.presentCreateService) }
+                Button(L10n.Services.import) { store.send(.importService) }
             } label: {
                 Image(systemName: "plus")
             }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
             .buttonStyle(.borderless)
+            .disabled(!store.state.canOpenEditor)
             .help(L10n.Common.add)
             .accessibilityLabel(L10n.Common.add)
         }

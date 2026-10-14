@@ -9,6 +9,12 @@ final class ServicesState {
     var statusFailures: Set<ServiceIdentifier> = []
     var selectedIdentifier: ServiceIdentifier?
     var editor: ServiceEditorState?
+    var transferOperation: ServiceTransferOperation?
+
+    var canOpenEditor: Bool {
+        transferOperation == nil && editor == nil
+    }
+
     var pendingDeletion: ServiceIdentifier?
     var operatingIdentifiers: Set<ServiceIdentifier> = []
     var isLoading = false
@@ -45,6 +51,7 @@ struct ServicesSnapshot: Equatable, Sendable {
 
 enum ServicesFailure: Error, Equatable, Sendable {
     case moy(MoyError)
+    case serviceJSON(ServiceJSONError)
     case invalidThrottleInterval
     case emptyEnvironmentKey
     case duplicateEnvironmentKey(String)
@@ -58,6 +65,9 @@ enum ServicesFailure: Error, Equatable, Sendable {
         if let error = error as? MoyError {
             return .moy(error)
         }
+        if let error = error as? ServiceJSONError {
+            return .serviceJSON(error)
+        }
         if let error = error as? AppOperationError {
             switch error {
             case let .fileNotFound(path):
@@ -68,4 +78,9 @@ enum ServicesFailure: Error, Equatable, Sendable {
         }
         return .unexpected(error.localizedDescription)
     }
+}
+
+enum ServiceTransferOperation: Equatable, Sendable {
+    case importService
+    case exportService(ServiceIdentifier)
 }

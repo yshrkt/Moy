@@ -102,6 +102,27 @@ final class ServiceEditorState {
         standardErrorPath = service.standardErrorPath
     }
 
+    static func create(draft: ServiceDraft, existingIdentifiers: Set<String>) -> Self {
+        let state = Self(
+            mode: .create,
+            identifier: draft.identifier.rawValue,
+            displayName: draft.displayName ?? "",
+            serviceDescription: draft.description ?? "",
+            executable: draft.programArguments.first ?? "",
+            arguments: draft.programArguments.dropFirst().map { Argument(value: $0) },
+            workingDirectory: draft.workingDirectory ?? "",
+            environmentVariables: draft.environmentVariables.sorted { $0.key < $1.key }
+                .map { EnvironmentVariable(key: $0.key, value: $0.value) },
+            runAtLoad: draft.runAtLoad,
+            keepAlive: draft.keepAlive,
+            throttleInterval: draft.throttleInterval.map(String.init) ?? "",
+            standardOutPath: draft.standardOutPath ?? "",
+            standardErrorPath: draft.standardErrorPath ?? "",
+        )
+        state.existingIdentifiers = existingIdentifiers
+        return state
+    }
+
     private init(
         mode: ServiceEditorMode,
         identifier: String,

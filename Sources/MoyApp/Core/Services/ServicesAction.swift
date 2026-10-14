@@ -9,6 +9,10 @@ enum ServicesAction: Sendable {
 
     case presentCreateService
     case presentEditService(ServiceIdentifier)
+    case importService
+    case receiveImportService(Result<ServiceDraft?, ServicesFailure>)
+    case exportService(ServiceIdentifier)
+    case receiveExportService(ServiceIdentifier, Result<Void, ServicesFailure>)
     case editor(ServiceEditorAction)
     case receiveSave(UUID, ServiceIdentifier, Result<Void, ServicesFailure>)
 

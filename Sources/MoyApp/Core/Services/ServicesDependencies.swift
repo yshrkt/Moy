@@ -4,6 +4,8 @@ import MoyKit
 
 struct ServicesDependencies: Sendable {
     let serviceManagementUseCase: any ServiceManagementUseCase
+    let serviceTransferUseCase: any ServiceTransferUseCase
+    let transferFilePanelClient: ServiceTransferFilePanelClient
     let editor: ServiceEditorDependencies
     let workspaceClient: WorkspaceClient
     let clipboardClient: ClipboardClient
@@ -11,12 +13,17 @@ struct ServicesDependencies: Sendable {
 
     init(
         serviceManagementUseCase: any ServiceManagementUseCase,
+        serviceTransferUseCase: (any ServiceTransferUseCase)? = nil,
+        transferFilePanelClient: ServiceTransferFilePanelClient = .live,
         editor: ServiceEditorDependencies = .init(),
         workspaceClient: WorkspaceClient = .live,
         clipboardClient: ClipboardClient = .live,
         sleepForCopyToast: @escaping @Sendable (Duration) async throws -> Void = { try await Task.sleep(for: $0) },
     ) {
         self.serviceManagementUseCase = serviceManagementUseCase
+        self.serviceTransferUseCase = serviceTransferUseCase
+            ?? DefaultServiceTransferUseCase(serviceManagementUseCase: serviceManagementUseCase)
+        self.transferFilePanelClient = transferFilePanelClient
         self.editor = editor
         self.workspaceClient = workspaceClient
         self.clipboardClient = clipboardClient
