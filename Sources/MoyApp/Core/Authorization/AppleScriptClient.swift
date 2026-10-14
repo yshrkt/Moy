@@ -26,7 +26,7 @@ struct AppleScriptClient: Sendable {
 private enum AppleScriptExecutor {
     static func execute(source: String, handler: String, arguments: [String]) throws -> String {
         guard let script = NSAppleScript(source: source) else {
-            throw SettingsFailure.cliAuthorizationFailed(L10n.Error.cliInstallationFailed)
+            throw AdministratorAuthorizationError.failed("Could not execute the authorization script.")
         }
 
         let event = NSAppleEventDescriptor(
@@ -47,12 +47,15 @@ private enum AppleScriptExecutor {
         var errorInfo: NSDictionary?
         let result = script.executeAppleEvent(event, error: &errorInfo)
         if let errorInfo {
-            throw SettingsFailure.cliAuthorizationFailed(
-                errorInfo[NSAppleScript.errorMessage] as? String ?? L10n.Error.cliInstallationFailed,
+            if (errorInfo[NSAppleScript.errorNumber] as? NSNumber)?.intValue == -128 {
+                throw CancellationError()
+            }
+            throw AdministratorAuthorizationError.failed(
+                errorInfo[NSAppleScript.errorMessage] as? String ?? "Could not execute the authorization script.",
             )
         }
         guard let output = result.stringValue else {
-            throw SettingsFailure.cliAuthorizationFailed(L10n.Error.cliInstallationFailed)
+            throw AdministratorAuthorizationError.failed("Could not execute the authorization script.")
         }
         return output
     }

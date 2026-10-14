@@ -17,18 +17,20 @@ public struct LaunchctlServiceLabelChecker: ServiceLabelChecking {
     }
 
     public func isLoaded(label: String) async throws -> Bool {
-        let arguments = ["print", "gui/\(userID)/\(label)"]
-        let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
-        if result.status == 0 {
-            return true
+        for domain in ["gui/\(userID)", "system"] {
+            let arguments = ["print", "\(domain)/\(label)"]
+            let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
+            if result.status == 0 {
+                return true
+            }
+            if LaunchctlOutputParser.isMissingService(result.output) {
+                continue
+            }
+            throw MoyError.launchctlFailed(
+                arguments: arguments, status: result.status,
+                message: result.output.isEmpty ? "No error message" : result.output,
+            )
         }
-        if LaunchctlOutputParser.isMissingService(result.output) {
-            return false
-        }
-        throw MoyError.launchctlFailed(
-            arguments: arguments,
-            status: result.status,
-            message: result.output.isEmpty ? "No error message" : result.output,
-        )
+        return false
     }
 }

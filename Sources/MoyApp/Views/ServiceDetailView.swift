@@ -75,24 +75,6 @@ struct ServiceDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(service.name)
-                .font(.largeTitle.bold())
-            Text(service.identifier.rawValue)
-                .font(.body.monospaced())
-                .foregroundStyle(.secondary)
-                .textSelection(.enabled)
-                .accessibilityLabel(L10n.Services.identifier)
-                .accessibilityValue(service.identifier.rawValue)
-            if let description = service.description, !description.isEmpty {
-                Text(description)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-            }
-        }
-    }
-
     private var statusSection: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 24) {
@@ -344,5 +326,43 @@ private struct CopyableValue: View {
             .textSelection(.enabled)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+private extension ServiceDetailView {
+    private var kindLabel: some View {
+        Text(service.kind.localizedName)
+            .font(.caption.weight(.medium))
+            .foregroundStyle(Color.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .overlay {
+                RoundedRectangle(cornerRadius: 5)
+                    .strokeBorder(Color.secondary, lineWidth: 1)
+            }
+            .fixedSize()
+    }
+}
+
+private extension ServiceDetailView {
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(service.name)
+                .font(.largeTitle.bold())
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                kindLabel
+                Text(service.identifier.rawValue)
+                    .font(.body.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .accessibilityLabel(L10n.Services.identifier)
+                    .accessibilityValue(service.identifier.rawValue)
+            }
+            if let description = service.description, !description.isEmpty {
+                Text(description)
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+            }
+        }
     }
 }

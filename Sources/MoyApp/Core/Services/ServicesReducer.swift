@@ -164,7 +164,7 @@ struct ServicesReducer: InjectableReducer {
 
         case let .receiveServiceOperation(identifier, .failure(failure)):
             state.operatingIdentifiers.remove(identifier)
-            state.failure = failure
+            state.failure = failure == .cancelled ? nil : failure
             return .run { .refreshServices }
 
         case let .requestDeleteService(identifier):
@@ -202,7 +202,7 @@ struct ServicesReducer: InjectableReducer {
 
         case let .receiveDeleteService(identifier, .failure(failure)):
             state.operatingIdentifiers.remove(identifier)
-            state.failure = failure
+            state.failure = failure == .cancelled ? nil : failure
             return .run { .refreshServices }
 
         case let .openLog(path):

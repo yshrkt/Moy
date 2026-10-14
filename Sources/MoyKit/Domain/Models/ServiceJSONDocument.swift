@@ -31,6 +31,7 @@ public struct ServiceJSONDocument: Codable, Equatable, Sendable {
     public var draft: ServiceDraft {
         ServiceDraft(
             identifier: service.identifier,
+            kind: service.kind,
             displayName: service.displayName,
             description: service.description,
             programArguments: service.programArguments,

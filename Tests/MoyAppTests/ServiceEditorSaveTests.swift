@@ -22,7 +22,7 @@ struct ServiceEditorSaveTests {
         let reducer = ServicesReducer(dependencies: ServicesDependencies(
             serviceManagementUseCase: DefaultServiceManagementUseCase(
                 serviceRepository: repository,
-                launchAgentRepository: LaunchctlAgentRepository(paths: paths),
+                launchAgentRepository: LaunchctlServiceRepository(paths: paths),
             ),
         ))
         var state = ServicesState()

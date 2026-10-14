@@ -4,6 +4,9 @@ import MoyKit
 struct AddCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "add", abstract: "Add a service definition.")
 
+    @Option(help: "Service kind: launchAgent or launchDaemon (runs as root).")
+    var kind: ServiceKind = .launchAgent
+
     @Option(help: "Unique Moy identifier using lowercase letters, digits, hyphens, or underscores.")
     var identifier: String
 
@@ -32,7 +35,7 @@ struct AddCommand: AsyncParsableCommand {
     )
     var environment: [String] = []
 
-    @Flag(name: .customLong("run-at-load"), help: "Run when the LaunchAgent is loaded.")
+    @Flag(name: .customLong("run-at-load"), help: "Run when the service is loaded.")
     var runAtLoad = false
 
     @Flag(name: .customLong("keep-alive"), help: "Keep the service running.")
@@ -54,6 +57,7 @@ struct AddCommand: AsyncParsableCommand {
         let created = try await CLIContext.services.create(
             ServiceDraft(
                 identifier: CLIParsing.identifier(identifier),
+                kind: kind,
                 displayName: CLIParsing.optionalText(displayName),
                 description: CLIParsing.optionalText(description),
                 programArguments: [program] + arguments,

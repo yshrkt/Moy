@@ -1,6 +1,11 @@
 import Foundation
 
-public enum MoyError: Error, Equatable, Sendable {
+public enum MoyError: Error, Codable, Equatable, Sendable {
+    case administratorRequired
+    case invalidInvokingUser
+    case serviceChanged
+    case kindCannotChange
+    case operationFailed(String)
     case invalidIdentifier(String)
     case serviceNotFound(String)
     case duplicateService(String)
@@ -21,6 +26,16 @@ public enum MoyError: Error, Equatable, Sendable {
 extension MoyError: LocalizedError {
     public var errorDescription: String? {
         switch self {
+        case .administratorRequired:
+            "This LaunchDaemon operation requires administrator privileges. Run this command with sudo."
+        case .invalidInvokingUser:
+            "Could not identify the invoking user. Run sudo from a non-root user account."
+        case .serviceChanged:
+            "The service changed. Reload it before trying again."
+        case .kindCannotChange:
+            "The service kind cannot be changed after creation."
+        case let .operationFailed(reason):
+            reason
         case let .invalidIdentifier(identifier):
             "Invalid service identifier '\(identifier)'. "
                 + "Use 1–64 lowercase letters, digits, hyphens, or underscores; start and end with a letter or digit."

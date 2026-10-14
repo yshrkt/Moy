@@ -4,7 +4,7 @@
 
 **A safe harbor for your local services.**
 
-Moyは、CLIサービスをユーザー単位のLaunchAgentとして登録・管理するmacOS用メニューバーアプリです。登録したサービスは、メニューバーと同梱の`moy` CLIから操作できます。
+Moyは、CLIサービスをLaunchAgent・LaunchDaemonとして登録・管理するmacOS用メニューバーアプリです。登録したサービスは、メニューバーと同梱の`moy` CLIから操作できます。
 
 [English](README.md)
 
@@ -33,7 +33,7 @@ open build/Build/Products/Debug/Moy.app
 - メニューバーから状態確認と標準出力・標準エラーログへのアクセス。
 - GUIとCLIでサービス定義を共有。スクリプト向けのJSON出力にも対応。
 
-- 管理対象はMoyで登録したユーザー単位のLaunchAgentです。
+- 管理対象はMoyで登録したLaunchAgent・LaunchDaemonです。
 - Moyを終了しても、`launchd`によるサービス管理は続きます。
 
 ## 使い方
@@ -41,24 +41,26 @@ open build/Build/Products/Debug/Moy.app
 `Moy.app`を開き、メニューバーから操作します。
 
 1. メニューバーの「サービスを管理」からサービスを追加します。
-2. 一意のIdentifierと実行ファイルの絶対パスを入力し、引数や環境変数を設定します。
+2. サービス種別を選択し、一意のIdentifierと実行ファイルの絶対パスを入力し、引数や環境変数を設定します。
 3. 定義を保存し、必要に応じてサービスの詳細画面から有効化します。
 
 各操作は、次のように動作します。
 
 | 操作 | 動作 |
 | --- | --- |
-| 有効化 | LaunchAgentのplistを作成し、`launchd`に登録。 |
+| 有効化 | サービスのplistを作成し、`launchd`に登録。 |
 | 無効化 | サービスを停止・登録解除し、plistを削除。定義とログは保持。 |
 | 再起動 | 待機中なら起動、実行中なら再起動。有効で読み込み済みのサービスが対象。 |
 | 削除 | サービスを無効化し、定義を削除。ログは保持。 |
 
-- 有効なサービスは次回ログイン時にも読み込まれます。
+- 有効なLaunchAgentは次回ログイン時、LaunchDaemonは次回システム起動時にも読み込まれます。
 - 自動起動は`RunAtLoad`と`KeepAlive`の設定に従います。
+
+LaunchDaemonの変更操作では、GUIの管理者認証またはCLIの`sudo`が必要です。
 
 ### サービス設定
 
-以下のLaunchAgent設定に対応しています。
+以下のlaunchd設定に対応しています。
 
 | 設定 | 用途 |
 | --- | --- |
@@ -66,7 +68,7 @@ open build/Build/Products/Debug/Moy.app
 | `ProgramArguments` | 実行ファイルの絶対パスと、順序付きの引数。 |
 | `WorkingDirectory` | 作業ディレクトリ。任意指定。 |
 | `EnvironmentVariables` | プロセスに渡す環境変数。 |
-| `RunAtLoad` | LaunchAgentの読み込み時に起動。初期値はOFF。 |
+| `RunAtLoad` | サービスの読み込み時に起動。初期値はOFF。 |
 | `KeepAlive` | サービスを起動し、実行状態を維持。初期値はOFF。 |
 | `ThrottleInterval` | 起動間隔の最小秒数。未指定時はOSの既定値。 |
 | `StandardOutPath` / `StandardErrorPath` | ログ保存先。未指定時はMoyの既定ログディレクトリ。 |

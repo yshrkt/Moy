@@ -3,6 +3,40 @@ import Testing
 
 struct CLIEndToEndTests {
     @Test
+    func `daemon definitions are editable without sudo but enable fails before writes`() throws {
+        try withTemporaryEnvironment { environment in
+            let identifier = "daemon-cli-" + UUID().uuidString.lowercased()
+            let add = try runCLI([
+                "add", "--identifier", identifier, "--kind", "launchDaemon", "--program", "/usr/bin/true",
+            ], environment: environment)
+            #expect(add.status == 0)
+            let directory = try URL(filePath: #require(environment["MOY_DATA_DIRECTORY"]))
+            let storage = directory.appending(path: "services.json")
+            let original = try Data(contentsOf: storage)
+            let enable = try runCLI(["enable", identifier], environment: environment)
+            #expect(enable.status != 0)
+            #expect(enable.standardError.contains("sudo"))
+            #expect(try Data(contentsOf: storage) == original)
+            let edit = try runCLI(["edit", identifier, "--run-at-load", "true"], environment: environment)
+            #expect(edit.status == 0)
+            let show = try runCLI(["show", identifier, "--json"], environment: environment)
+            let data = try #require(show.standardOutput.data(using: .utf8))
+            let service = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+            #expect(service["kind"] as? String == "launchDaemon")
+            #expect(service["runAtLoad"] as? Bool == true)
+            #expect((service["standardOutPath"] as? String)?.hasPrefix("/Library/Logs/Moy/") == true)
+            let exported = directory.appending(path: "exported.json")
+            #expect(try runCLI(["export", identifier, "--output", exported.path], environment: environment).status == 0)
+            let exportedData = try Data(contentsOf: exported)
+            let document = try #require(JSONSerialization.jsonObject(with: exportedData) as? [String: Any])
+            let exportedService = try #require(document["service"] as? [String: Any])
+            #expect(exportedService["kind"] as? String == "launchDaemon")
+            #expect(exportedService["standardOutPath"] as? String == "")
+            #expect(try runCLI(["remove", identifier], environment: environment).status == 0)
+        }
+    }
+
+    @Test
     func `adds lists and removes a service`() throws {
         try withTemporaryEnvironment { environment in
             let add = try runCLI(

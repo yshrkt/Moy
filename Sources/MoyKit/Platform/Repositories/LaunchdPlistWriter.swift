@@ -1,6 +1,6 @@
 import Foundation
 
-public struct LaunchAgentPlistWriter {
+public struct LaunchdPlistWriter {
     private let fileManager: FileManager
 
     public init(fileManager: FileManager = .default) {
@@ -17,6 +17,9 @@ public struct LaunchAgentPlistWriter {
             "StandardOutPath": service.standardOutPath,
             "StandardErrorPath": service.standardErrorPath,
         ]
+        if service.kind == .launchDaemon {
+            propertyList["UserName"] = "root"
+        }
         if let workingDirectory = service.workingDirectory, !workingDirectory.isEmpty {
             propertyList["WorkingDirectory"] = workingDirectory
         }

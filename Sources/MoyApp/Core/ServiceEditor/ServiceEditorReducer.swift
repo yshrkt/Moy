@@ -39,7 +39,7 @@ struct ServiceEditorReducer: InjectableReducer {
         case let .receiveSave(result):
             state.isSaving = false
             if case let .failure(failure) = result {
-                state.failure = failure
+                state.failure = failure == .cancelled ? nil : failure
             }
             return .none
 
@@ -61,6 +61,9 @@ struct ServiceEditorReducer: InjectableReducer {
             guard !state.isSaving else { return .none }
             let editor = state
             switch field {
+            case let .kind(value):
+                guard editor.canChangeKind else { return .none }
+                editor.kind = value
             case let .identifier(value):
                 guard case .create = editor.mode else { return .none }
                 editor.identifier = value

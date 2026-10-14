@@ -16,7 +16,9 @@ struct MoyApp: App {
         let store = Store.reducer(
             initialState: ServicesState(),
             reducer: ServicesReducer(dependencies: ServicesDependencies(
-                serviceManagementUseCase: MoyRuntime.makeServiceManagementUseCase(),
+                serviceManagementUseCase: AuthorizedServiceManagementUseCase(
+                    base: MoyRuntime.makeServiceManagementUseCase(),
+                ),
             )),
         )
         _store = State(initialValue: store)

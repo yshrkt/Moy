@@ -73,6 +73,7 @@ enum ServiceEditorPayload: Sendable {
 }
 
 private struct Values {
+    let kind: ServiceKind
     let identifier: ServiceIdentifier
     let displayName: String?
     let description: String?
@@ -89,6 +90,7 @@ private struct Values {
         environmentVariables: [String: String],
         throttleInterval: Int?,
     ) {
+        kind = editor.kind
         self.identifier = identifier
         displayName = editor.displayName.nilIfEmpty
         description = editor.serviceDescription.nilIfEmpty
@@ -107,6 +109,7 @@ private struct Values {
     ) -> ServiceDraft {
         ServiceDraft(
             identifier: identifier,
+            kind: kind,
             displayName: displayName,
             description: description,
             programArguments: programArguments,
@@ -126,6 +129,7 @@ private struct Values {
     ) -> ServiceDefinition {
         ServiceDefinition(
             identifier: identifier,
+            kind: kind,
             displayName: displayName,
             description: description,
             programArguments: programArguments,

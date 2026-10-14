@@ -26,10 +26,10 @@ public actor DefaultServiceTransferUseCase: ServiceTransferUseCase {
 
     public func exportService(identifier: ServiceIdentifier, to url: URL) async throws {
         var service = try await serviceManagementUseCase.find(identifier: identifier)
-        if service.standardOutPath == paths.standardOutFile(identifier: identifier).path {
+        if service.standardOutPath == paths.standardOutFile(identifier: identifier, kind: service.kind).path {
             service.standardOutPath = ""
         }
-        if service.standardErrorPath == paths.standardErrorFile(identifier: identifier).path {
+        if service.standardErrorPath == paths.standardErrorFile(identifier: identifier, kind: service.kind).path {
             service.standardErrorPath = ""
         }
         try await documentRepository.write(ServiceJSONDocument(service: service), to: url)

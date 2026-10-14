@@ -18,7 +18,7 @@ struct AuthorizedCLIInstaller: Sendable {
     let scriptClient: AppleScriptClient
 
     func install(source: URL, destination: URL) async throws {
-        let output = try await scriptClient.execute(
+        let output = try await execute(
             Self.authorizationScript,
             "installcli",
             [Self.linkCommand(source: source, destination: destination)],
@@ -38,7 +38,7 @@ struct AuthorizedCLIInstaller: Sendable {
     }
 
     func uninstall(source: URL, destination: URL, expectedTarget: String) async throws {
-        let output = try await scriptClient.execute(
+        let output = try await execute(
             Self.authorizationScript,
             "uninstallcli",
             [Self.unlinkCommand(source: source, destination: destination, expectedTarget: expectedTarget)],
@@ -48,6 +48,14 @@ struct AuthorizedCLIInstaller: Sendable {
         case "cancelled": throw CancellationError()
         case "changed": throw SettingsFailure.cliLinkChanged
         default: throw SettingsFailure.cliAuthorizationFailed(output)
+        }
+    }
+
+    private func execute(_ source: String, _ handler: String, _ arguments: [String]) async throws -> String {
+        do {
+            return try await scriptClient.execute(source, handler, arguments)
+        } catch let AdministratorAuthorizationError.failed(reason) {
+            throw SettingsFailure.cliAuthorizationFailed(reason)
         }
     }
 
@@ -78,13 +86,13 @@ struct AuthorizedCLIInstaller: Sendable {
     }
 
     private static func shellQuote(_ value: String) -> String {
-        "'" + value.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
+        AdministratorAuthorizationClient.shellQuote(value)
     }
 
-    static let authorizationScript = """
+    static let authorizationScript = AdministratorAuthorizationClient.script + "\n" + """
     on installCLI(command)
         try
-            do shell script command with administrator privileges
+            executeCommand(command)
             return "installed"
         on error errorMessage number errorNumber
             if errorNumber is -128 then return "cancelled"
@@ -96,7 +104,7 @@ struct AuthorizedCLIInstaller: Sendable {
 
     on uninstallCLI(command)
         try
-            do shell script command with administrator privileges
+            executeCommand(command)
             return "uninstalled"
         on error errorMessage number errorNumber
             if errorNumber is -128 then return "cancelled"

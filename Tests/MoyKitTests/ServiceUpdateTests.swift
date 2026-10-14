@@ -70,7 +70,7 @@ private struct UpdateLabelChecker: ServiceLabelChecking {
     }
 }
 
-private actor UpdateLaunchRepository: LaunchAgentRepository {
+private actor UpdateLaunchRepository: LaunchdRepository {
     static let failure = MoyError.launchctlFailed(arguments: ["test"], status: 5, message: "forced failure")
     let failureStep: UpdateStep
     private(set) var calls: [UpdateStep] = []

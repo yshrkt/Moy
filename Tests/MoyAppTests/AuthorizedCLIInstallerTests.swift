@@ -160,7 +160,7 @@ struct AuthorizedCLIInstallerTests {
 
     @Test
     func `native AppleScript reports execution errors`() async throws {
-        await #expect(throws: SettingsFailure.cliAuthorizationFailed("Authorization denied")) {
+        await #expect(throws: AdministratorAuthorizationError.failed("Authorization denied")) {
             try await AppleScriptClient.live.execute(
                 "on failRequest()\nerror \"Authorization denied\" number -1743\nend failRequest",
                 "failRequest",

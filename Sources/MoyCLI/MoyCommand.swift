@@ -4,9 +4,11 @@ import ArgumentParser
 struct MoyCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "moy",
-        abstract: "Manage user LaunchAgents created by Moy.",
+        abstract: "Manage LaunchAgents and root LaunchDaemons created by Moy.",
         version: "0.1.0",
         subcommands: [
+            InternalDaemonCommand.self,
+            InternalRepositoryCommand.self,
             AddCommand.self,
             ImportCommand.self,
             ExportCommand.self,

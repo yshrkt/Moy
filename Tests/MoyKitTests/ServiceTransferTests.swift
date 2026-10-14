@@ -120,7 +120,7 @@ private struct TransferLabelChecker: ServiceLabelChecking {
     }
 }
 
-private actor TransferLaunchRepository: LaunchAgentRepository {
+private actor TransferLaunchRepository: LaunchdRepository {
     private let failEnable: Bool
     private(set) var enabled: [ServiceDefinition] = []
 

@@ -2,13 +2,21 @@ public protocol ServiceRepository: Sendable {
     func list() async throws -> [ServiceDefinition]
     func find(identifier: ServiceIdentifier) async throws -> ServiceDefinition
     func create(_ service: ServiceDraft) async throws -> ServiceDefinition
+    func update(_ service: ServiceDefinition, expected: ServiceDefinition) async throws
     func update(_ service: ServiceDefinition) async throws
     func remove(identifier: ServiceIdentifier) async throws
 }
 
-public protocol LaunchAgentRepository: Sendable {
+public protocol LaunchdRepository: Sendable {
     func status(identifier: ServiceIdentifier) async throws -> ServiceStatus
     func enable(_ service: ServiceDefinition) async throws
     func disable(identifier: ServiceIdentifier) async throws
     func restart(identifier: ServiceIdentifier) async throws
+}
+
+public extension ServiceRepository {
+    func update(_ service: ServiceDefinition, expected: ServiceDefinition) async throws {
+        guard try await find(identifier: service.identifier) == expected else { throw MoyError.serviceChanged }
+        try await update(service)
+    }
 }

@@ -1,5 +1,5 @@
 /// Validation reasons shared by the GUI and CLI, independent of the display language.
-public enum ServiceValidationIssue: CaseIterable, Equatable, Sendable {
+public enum ServiceValidationIssue: String, Codable, CaseIterable, Equatable, Sendable {
     case blankDisplayName
     case missingExecutable
     case relativeExecutable

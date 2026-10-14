@@ -17,7 +17,7 @@ struct ServiceDefinitionTests {
     @Test
     func `plist contains the nine supported keys`() throws {
         let service = try fixtureService()
-        let data = try LaunchAgentPlistWriter().data(for: service)
+        let data = try LaunchdPlistWriter().data(for: service)
         let plist = try #require(
             PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
         )

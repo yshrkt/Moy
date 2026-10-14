@@ -4,7 +4,7 @@
 
 **A safe harbor for your local services.**
 
-Moy is a macOS menu bar app for registering and managing command-line services as user LaunchAgents. Manage your services from the menu bar or the bundled `moy` CLI.
+Moy is a macOS menu bar app for registering and managing command-line services as LaunchAgents / LaunchDaemons. Manage your services from the menu bar or the bundled `moy` CLI.
 
 [日本語](README.ja.md)
 
@@ -33,7 +33,7 @@ open build/Build/Products/Debug/Moy.app
 - Check service status and open stdout/stderr logs from the menu bar.
 - Share service definitions between the GUI and CLI, with JSON output for scripts.
 
-- Manage user LaunchAgents registered through Moy.
+- Manage LaunchAgents / LaunchDaemons registered through Moy.
 - Keep services managed by `launchd` after quitting Moy.
 
 ## Usage
@@ -41,24 +41,26 @@ open build/Build/Products/Debug/Moy.app
 Open `Moy.app` and use the menu bar to manage services.
 
 1. Choose **Manage Services…** and add a service.
-2. Enter a unique identifier and the absolute executable path, then configure arguments and environment variables.
+2. Choose the service kind, enter a unique identifier and the absolute executable path, then configure arguments and environment variables.
 3. Save the definition, then enable it from the service details when needed.
 
 Service actions work as follows.
 
 | Action | Behavior |
 | --- | --- |
-| Enable | Create the LaunchAgent plist and load it into `launchd`. |
+| Enable | Create the service plist and load it into `launchd`. |
 | Disable | Stop and unload the service, then remove its plist. Keep the definition and logs. |
 | Restart | Start a waiting service or restart a running one. Requires an enabled, loaded service. |
 | Remove | Disable the service and delete its definition. Keep logs. |
 
-- Enabled services are loaded again at login.
+- Enabled LaunchAgents are loaded again at login; LaunchDaemons are loaded at system startup.
 - Automatic startup depends on `RunAtLoad` and `KeepAlive`.
+
+LaunchDaemon changes require administrator authentication in the GUI or `sudo` in the CLI.
 
 ### Service settings
 
-Moy supports the following LaunchAgent settings.
+Moy supports the following launchd settings.
 
 | Setting | Purpose |
 | --- | --- |
@@ -66,7 +68,7 @@ Moy supports the following LaunchAgent settings.
 | `ProgramArguments` | Absolute executable path followed by ordered arguments. |
 | `WorkingDirectory` | Optional working directory. |
 | `EnvironmentVariables` | Environment variables passed to the process. |
-| `RunAtLoad` | Start when the LaunchAgent is loaded. Off by default. |
+| `RunAtLoad` | Start when the service is loaded. Off by default. |
 | `KeepAlive` | Start and keep the service running. Off by default. |
 | `ThrottleInterval` | Minimum interval between launches, in seconds. Uses the OS default if omitted. |
 | `StandardOutPath` / `StandardErrorPath` | Log paths. Use Moy’s log directory if omitted. |

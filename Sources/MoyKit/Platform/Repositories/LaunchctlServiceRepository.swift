@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-public actor LaunchctlAgentRepository: LaunchAgentRepository {
+public actor LaunchctlServiceRepository: LaunchdRepository {
     static let defaultUnloadVerificationAttempts = 31
     static let defaultUnloadVerificationDelay: Duration = .seconds(1)
 
@@ -11,21 +11,24 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
         let lastExitStatus: Int32?
     }
 
+    private let kind: ServiceKind
     private let paths: MoyPaths
     private let fileManager: FileManager
     private let processRunner: any ProcessRunning
-    private let plistWriter: LaunchAgentPlistWriter
+    private let plistWriter: LaunchdPlistWriter
     private let userID: uid_t
     private let unloadVerificationAttempts: Int
     private let unloadVerificationDelay: Duration
 
     public init(
         paths: MoyPaths = .defaults(),
+        kind: ServiceKind = .launchAgent,
         fileManager: FileManager = .default,
         processRunner: any ProcessRunning = DefaultProcessRunner(),
-        plistWriter: LaunchAgentPlistWriter = .init(),
+        plistWriter: LaunchdPlistWriter = .init(),
         userID: uid_t = getuid(),
     ) {
+        self.kind = kind
         self.paths = paths
         self.fileManager = fileManager
         self.processRunner = processRunner
@@ -39,11 +42,12 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
         paths: MoyPaths,
         fileManager: FileManager,
         processRunner: any ProcessRunning,
-        plistWriter: LaunchAgentPlistWriter,
+        plistWriter: LaunchdPlistWriter,
         userID: uid_t,
         unloadVerificationAttempts: Int,
         unloadVerificationDelay: Duration,
     ) {
+        kind = .launchAgent
         self.paths = paths
         self.fileManager = fileManager
         self.processRunner = processRunner
@@ -54,7 +58,7 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
     }
 
     public func status(identifier: ServiceIdentifier) async throws -> ServiceStatus {
-        let hasPlist = fileManager.fileExists(atPath: paths.plistFile(identifier: identifier).path)
+        let hasPlist = fileManager.fileExists(atPath: paths.plistFile(identifier: identifier, kind: kind).path)
         let loaded = try await loadedState(identifier: identifier)
         let registration: ServiceStatus.Registration = switch (hasPlist, loaded.isLoaded) {
         case (false, false): .disabled
@@ -78,6 +82,8 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
     }
 
     public func enable(_ service: ServiceDefinition) async throws {
+        guard service.kind == kind else { throw MoyError.kindCannotChange }
+        try requirePrivilege()
         let identifier = service.identifier
         let current = try await status(identifier: identifier)
         switch current.registration {
@@ -90,8 +96,11 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
         }
 
         try prepareOutputDirectories(for: service)
-        let plistURL = paths.plistFile(identifier: identifier)
+        let plistURL = paths.plistFile(identifier: identifier, kind: kind)
         try plistWriter.write(service, to: plistURL)
+        if kind == .launchDaemon {
+            try fileManager.setAttributes([.ownerAccountID: 0, .groupOwnerAccountID: 0], ofItemAtPath: plistURL.path)
+        }
         let arguments = ["bootstrap", domainTarget, plistURL.path]
         do {
             let result = try await processRunner.run(executable: "/bin/launchctl", arguments: arguments)
@@ -112,6 +121,7 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
     }
 
     public func disable(identifier: ServiceIdentifier) async throws {
+        try requirePrivilege()
         let current = try await status(identifier: identifier)
         switch current.registration {
         case .disabled:
@@ -129,7 +139,7 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
             break
         }
 
-        let plistURL = paths.plistFile(identifier: identifier)
+        let plistURL = paths.plistFile(identifier: identifier, kind: kind)
         guard fileManager.fileExists(atPath: plistURL.path) else { return }
         do {
             try fileManager.removeItem(at: plistURL)
@@ -139,6 +149,7 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
     }
 
     public func restart(identifier: ServiceIdentifier) async throws {
+        try requirePrivilege()
         guard try await loadedState(identifier: identifier).isLoaded else {
             throw MoyError.notEnabled(identifier.rawValue)
         }
@@ -150,9 +161,15 @@ public actor LaunchctlAgentRepository: LaunchAgentRepository {
     }
 }
 
-private extension LaunchctlAgentRepository {
+private extension LaunchctlServiceRepository {
+    func requirePrivilege() throws {
+        if kind == .launchDaemon, geteuid() != 0 {
+            throw MoyError.administratorRequired
+        }
+    }
+
     var domainTarget: String {
-        "gui/\(userID)"
+        kind == .launchDaemon ? "system" : "gui/\(userID)"
     }
 
     func serviceTarget(identifier: ServiceIdentifier) -> String {

@@ -12,6 +12,7 @@ enum CLIOutput {
 
     static func service(_ service: ServiceDefinition) {
         print("Identifier:         \(service.identifier.rawValue)")
+        print("Kind:               \(service.kind.rawValue)")
         print("Launchd Label:      \(service.identifier.launchdLabel)")
         print("Name:               \(service.name)")
         print("Description:        \(service.description ?? "-")")

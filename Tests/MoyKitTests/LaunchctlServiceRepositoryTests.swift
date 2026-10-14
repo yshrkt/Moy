@@ -2,7 +2,7 @@ import Foundation
 @testable import MoyKit
 import Testing
 
-struct LaunchctlAgentRepositoryTests {
+struct LaunchctlServiceRepositoryTests {
     @Test
     func `disable waits for launchd to finish unloading before removing plist`() async throws {
         let fixture = try TemporaryPaths()
@@ -40,13 +40,13 @@ struct LaunchctlAgentRepositoryTests {
         let repository = makeRepository(
             paths: fixture.paths,
             runner: runner,
-            attempts: LaunchctlAgentRepository.defaultUnloadVerificationAttempts,
+            attempts: LaunchctlServiceRepository.defaultUnloadVerificationAttempts,
         )
 
         try await repository.disable(identifier: identifier)
 
-        #expect(LaunchctlAgentRepository.defaultUnloadVerificationAttempts == 31)
-        #expect(LaunchctlAgentRepository.defaultUnloadVerificationDelay == .seconds(1))
+        #expect(LaunchctlServiceRepository.defaultUnloadVerificationAttempts == 31)
+        #expect(LaunchctlServiceRepository.defaultUnloadVerificationDelay == .seconds(1))
         #expect(!FileManager.default.fileExists(atPath: fixture.paths.plistFile(identifier: identifier).path))
         #expect(await runner.receivedArguments().filter { $0.first == "print" }.count == loadedChecks + 2)
     }
@@ -76,7 +76,7 @@ struct LaunchctlAgentRepositoryTests {
     }
 }
 
-extension LaunchctlAgentRepositoryTests {
+extension LaunchctlServiceRepositoryTests {
     @Test(arguments: [ProcessResult.loaded, .failure])
     func `failed enable preserves plist when loaded or status cannot be verified`(
         verification: ProcessResult,
@@ -132,9 +132,9 @@ extension LaunchctlAgentRepositoryTests {
         defer { fixture.remove() }
         let service = try fixtureService()
         let runner = ConcurrentEnableRunner()
-        let first = LaunchctlAgentRepository(paths: fixture.paths, processRunner: runner, userID: 501)
+        let first = LaunchctlServiceRepository(paths: fixture.paths, processRunner: runner, userID: 501)
         let second = separateRepositories
-            ? LaunchctlAgentRepository(paths: fixture.paths, processRunner: runner, userID: 501)
+            ? LaunchctlServiceRepository(paths: fixture.paths, processRunner: runner, userID: 501)
             : first
 
         let successes = await withTaskGroup(of: Bool.self, returning: Int.self) { group in
@@ -196,13 +196,13 @@ private actor ConcurrentEnableRunner: ProcessRunning {
     }
 }
 
-private extension LaunchctlAgentRepositoryTests {
+private extension LaunchctlServiceRepositoryTests {
     func makeRepository(
         paths: MoyPaths,
         runner: ScriptedProcessRunner,
         attempts: Int,
-    ) -> LaunchctlAgentRepository {
-        LaunchctlAgentRepository(
+    ) -> LaunchctlServiceRepository {
+        LaunchctlServiceRepository(
             paths: paths,
             fileManager: .default,
             processRunner: runner,

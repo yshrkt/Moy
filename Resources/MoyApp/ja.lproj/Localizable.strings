@@ -67,9 +67,9 @@
 "services.environmentValue" = "値";
 "services.addEnvironment" = "環境変数を追加";
 "services.runAtLoad" = "読み込み時に起動";
-"services.runAtLoadHelp" = "RunAtLoadを有効にすると、LaunchAgentの読み込み時にサービスを起動します。";
+"services.runAtLoadHelp" = "RunAtLoadを有効にすると、サービスの読み込み時にサービスを起動します。";
 "services.keepAlive" = "常時維持";
-"services.keepAliveHelp" = "KeepAliveを有効にすると、LaunchAgentの読み込み時にもサービスが起動することがあります。";
+"services.keepAliveHelp" = "KeepAliveを有効にすると、サービスの読み込み時にもサービスが起動することがあります。";
 "services.throttleInterval" = "再起動抑制時間";
 "services.throttleHelp" = "短時間での再起動の繰り返しを抑えるため、最小起動間隔（秒）を指定します。未指定の場合はOSの既定値を使用します。定期実行の間隔ではありません。";
 "services.seconds" = "秒";
@@ -164,3 +164,12 @@
 "settings.launch_at_login_approval" = "ログイン時起動は登録済みですが、macOSの承認が必要です。システム設定のログイン項目でMoyを許可してください。";
 "settings.open_login_items_settings" = "ログイン項目の設定を開く…";
 "error.launch_at_login_failed" = "ログイン時起動の設定を変更できませんでした。";
+
+"services.kind" = "サービス種別";
+"services.launch_agent" = "LaunchAgent";
+"services.launch_daemon" = "LaunchDaemon";
+"error.authorization_failed" = "管理者認証に失敗しました。";
+"error.administrator_required" = "このLaunchDaemonの操作には管理者権限が必要です。";
+"error.invalid_invoking_user" = "操作元のユーザーを特定できません。";
+"error.kind_cannot_change" = "作成後にサービス種別を変更することはできません。";
+"error.serviceChanged" = "サービスが変更されています。再取得してからやり直してください。";

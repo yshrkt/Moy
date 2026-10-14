@@ -66,6 +66,21 @@ struct ServiceEditorView: View {
 private extension ServiceEditorView {
     private func identitySection(_ editor: ServiceEditorState) -> some View {
         Section {
+            LabeledContent(L10n.Services.kind) {
+                if editor.canChangeKind {
+                    Picker(L10n.Services.kind, selection: Binding(
+                        get: { editor.kind },
+                        set: { store.send(.updateEditor(.kind($0))) },
+                    )) {
+                        Text(ServiceKind.launchAgent.localizedName).tag(ServiceKind.launchAgent)
+                        Text(ServiceKind.launchDaemon.localizedName).tag(ServiceKind.launchDaemon)
+                    }
+                    .labelsHidden()
+                } else {
+                    Text(editor.kind.localizedName)
+                }
+            }
+            .padding(.vertical, 4)
             labelField(editor)
             LabeledContent(L10n.Services.displayName) {
                 TextField(L10n.Services.displayName, text: fieldBinding(
@@ -275,8 +290,8 @@ private extension ServiceEditorView {
         let paths = MoyPaths.defaults()
         let identifier = try? ServiceIdentifier(editor.identifier)
         let url = standardError
-            ? paths.standardErrorFilePreview(identifier: identifier)
-            : paths.standardOutFilePreview(identifier: identifier)
+            ? paths.standardErrorFilePreview(identifier: identifier, kind: editor.kind)
+            : paths.standardOutFilePreview(identifier: identifier, kind: editor.kind)
         return url.path
     }
 

@@ -8,6 +8,7 @@ struct MenuBarServicesView: View {
     private enum Layout {
         static let menuWidth: CGFloat = 280
         static let maximumVisibleServiceCount = 8
+        static let sectionHeaderHeight: CGFloat = 28
         static let serviceRowHeight: CGFloat = 40
         static let actionButtonSize: CGFloat = 24
     }
@@ -69,8 +70,17 @@ struct MenuBarServicesView: View {
     private var services: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(store.state.services) { service in
-                    serviceMenu(service)
+                ForEach(store.state.serviceSections) { section in
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(section.kind.localizedName)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 12)
+                            .frame(maxWidth: .infinity, minHeight: Layout.sectionHeaderHeight, alignment: .leading)
+                        ForEach(section.services) { service in
+                            serviceMenu(service)
+                        }
+                    }
                 }
             }
             .frame(maxWidth: .infinity)
@@ -180,6 +190,7 @@ struct MenuBarServicesView: View {
 
     private var serviceListHeight: CGFloat {
         CGFloat(min(store.state.services.count, Layout.maximumVisibleServiceCount)) * Layout.serviceRowHeight
+            + CGFloat(store.state.serviceSections.count) * Layout.sectionHeaderHeight
     }
 
     private func showDetails(for service: ServiceDefinition) {

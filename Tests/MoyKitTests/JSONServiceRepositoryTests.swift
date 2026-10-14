@@ -53,7 +53,7 @@ struct JSONServiceRepositoryTests {
         }
     }
 
-    @Test(arguments: [nil, "unknown", "launchDaemon"] as [String?])
+    @Test(arguments: [nil, "unknown", "futureKind"] as [String?])
     func `rejects missing or unsupported kind without overwriting JSON`(
         kind: String?,
     ) async throws {

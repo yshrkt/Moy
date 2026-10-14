@@ -1,4 +1,5 @@
-public struct ServiceDraft: Equatable, Sendable {
+public struct ServiceDraft: Codable, Equatable, Sendable {
+    public var kind: ServiceKind
     public var identifier: ServiceIdentifier
     public var displayName: String?
     public var description: String?
@@ -13,6 +14,7 @@ public struct ServiceDraft: Equatable, Sendable {
 
     public init(
         identifier: ServiceIdentifier,
+        kind: ServiceKind = .launchAgent,
         displayName: String? = nil,
         description: String? = nil,
         programArguments: [String],
@@ -24,6 +26,7 @@ public struct ServiceDraft: Equatable, Sendable {
         standardOutPath: String? = nil,
         standardErrorPath: String? = nil,
     ) {
+        self.kind = kind
         self.identifier = identifier
         self.displayName = displayName
         self.description = description

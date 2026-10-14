@@ -1,4 +1,5 @@
 import AppKit
+import MoyKit
 import NanoRedux
 import SwiftUI
 
@@ -83,20 +84,13 @@ struct ServiceManagementView: View {
             get: { store.state.selectedIdentifier },
             set: { store.send(.selectService($0)) },
         )) {
-            ForEach(store.state.services) { service in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(service.name)
-                        .fontWeight(.medium)
-                    Text(service.identifier.rawValue)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                    ServiceStatusView(
-                        status: store.state.statuses[service.identifier],
-                        hasStatusError: store.state.statusFailures.contains(service.identifier),
-                    )
+            ForEach(store.state.serviceSections) { section in
+                Section(section.kind.localizedName) {
+                    ForEach(section.services) { service in
+                        serviceRow(service)
+                            .tag(service.identifier)
+                    }
                 }
-                .padding(.vertical, 3)
-                .tag(service.identifier)
             }
         }
         .overlay {
@@ -110,6 +104,21 @@ struct ServiceManagementView: View {
         .safeAreaInset(edge: .bottom) {
             sidebarBottomBar
         }
+    }
+
+    private func serviceRow(_ service: ServiceDefinition) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(service.name)
+                .fontWeight(.medium)
+            Text(service.identifier.rawValue)
+                .font(.caption.monospaced())
+                .foregroundStyle(.secondary)
+            ServiceStatusView(
+                status: store.state.statuses[service.identifier],
+                hasStatusError: store.state.statusFailures.contains(service.identifier),
+            )
+        }
+        .padding(.vertical, 3)
     }
 
     private var sidebarBottomBar: some View {

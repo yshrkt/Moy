@@ -54,7 +54,7 @@ struct ServiceDocumentRepositoryTests {
             "nullLog": ("standardOutPath", NSNull()),
             "wrongLogType": ("standardOutPath", 42),
             "missingKind": ("kind", nil),
-            "unknownKind": ("kind", "launchDaemon"),
+            "unknownKind": ("kind", "unknownKind"),
             "missingBoolean": ("runAtLoad", nil),
             "wrongBooleanType": ("runAtLoad", "true"),
             "invalidIdentifier": ("identifier", "Invalid"),

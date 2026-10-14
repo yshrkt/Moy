@@ -150,6 +150,7 @@ actor TestServiceManagementUseCase: ServiceManagementUseCase {
     }
 
     private var services: [ServiceDefinition]
+    private let registration: ServiceStatus.Registration
     private let failingStatuses: Set<ServiceIdentifier>
     private var createRequest: CreateRequest?
     private var enableCallCount = 0
@@ -157,7 +158,9 @@ actor TestServiceManagementUseCase: ServiceManagementUseCase {
     init(
         services: [ServiceDefinition] = [],
         failingStatuses: Set<ServiceIdentifier> = [],
+        registration: ServiceStatus.Registration = .disabled,
     ) {
+        self.registration = registration
         self.services = services
         self.failingStatuses = failingStatuses
     }
@@ -177,6 +180,7 @@ actor TestServiceManagementUseCase: ServiceManagementUseCase {
         createRequest = .init(draft: service, enable: enable)
         let definition = ServiceDefinition(
             identifier: service.identifier,
+            kind: service.kind,
             displayName: service.displayName,
             description: service.description,
             programArguments: service.programArguments,
@@ -216,7 +220,7 @@ actor TestServiceManagementUseCase: ServiceManagementUseCase {
         }
         return ServiceStatus(
             identifier: identifier,
-            registration: .disabled,
+            registration: registration,
             runtime: .notLoaded,
         )
     }

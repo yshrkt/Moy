@@ -8,7 +8,7 @@ actor CLIInstaller {
     private let authorizationClient: CLIInstallerAuthorizationClient
 
     init(
-        sourceURL: URL = Bundle.main.bundleURL.appending(path: "Contents/Helpers/moy"),
+        sourceURL: URL = BundledCLI.executableURL(),
         destinationURL: URL = URL(fileURLWithPath: CLIInstaller.installationPath),
         authorizationClient: CLIInstallerAuthorizationClient = .live,
     ) {

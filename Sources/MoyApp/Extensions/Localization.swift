@@ -48,6 +48,10 @@ extension SettingsFailure {
 extension ServicesFailure {
     var localizedMessage: String {
         switch self {
+        case .cancelled:
+            ""
+        case let .authorization(reason):
+            "\(L10n.Error.authorizationFailed)\n\(reason)"
         case let .moy(error):
             error.localizedMessage
         case let .serviceJSON(.invalidDocument(reason)):
@@ -71,6 +75,16 @@ extension ServicesFailure {
 private extension MoyError {
     var localizedMessage: String {
         switch self {
+        case .administratorRequired:
+            L10n.Error.administratorRequired
+        case .invalidInvokingUser:
+            L10n.Error.invalidInvokingUser
+        case .serviceChanged:
+            L10n.Error.serviceChanged
+        case .kindCannotChange:
+            L10n.Error.kindCannotChange
+        case let .operationFailed(reason):
+            "\(L10n.Error.unexpected)\n\(reason)"
         case let .invalidIdentifier(identifier):
             "\(L10n.Error.invalidIdentifier)\n\(identifier)"
         case let .serviceNotFound(identifier):
@@ -124,6 +138,15 @@ extension ServiceValidationIssue {
             L10n.Validation.invalidStandardErrorPath
         case .invalidEnvironmentName:
             L10n.Validation.invalidEnvironmentName
+        }
+    }
+}
+
+extension ServiceKind {
+    var localizedName: String {
+        switch self {
+        case .launchAgent: L10n.Services.launchAgent
+        case .launchDaemon: L10n.Services.launchDaemon
         }
     }
 }

@@ -67,9 +67,9 @@
 "services.environmentValue" = "Value";
 "services.addEnvironment" = "Add Variable";
 "services.runAtLoad" = "Run at Load";
-"services.runAtLoadHelp" = "Enabling RunAtLoad starts the service when its LaunchAgent is loaded.";
+"services.runAtLoadHelp" = "Enabling RunAtLoad starts the service when it is loaded.";
 "services.keepAlive" = "Keep Alive";
-"services.keepAliveHelp" = "KeepAlive can also start the service when its LaunchAgent is loaded.";
+"services.keepAliveHelp" = "KeepAlive can also start the service when it is loaded.";
 "services.throttleInterval" = "Throttle Interval";
 "services.throttleHelp" = "Set the minimum interval between launches in seconds to prevent repeated rapid restarts. If omitted, the OS default is used. This is not a recurring schedule.";
 "services.seconds" = "seconds";
@@ -164,3 +164,12 @@
 "settings.launch_at_login_approval" = "Launch at login is registered but requires macOS approval. Allow Moy in Login Items in System Settings.";
 "settings.open_login_items_settings" = "Open Login Items Settings…";
 "error.launch_at_login_failed" = "Could not change the launch at login setting.";
+
+"services.kind" = "Service kind";
+"services.launch_agent" = "LaunchAgent";
+"services.launch_daemon" = "LaunchDaemon";
+"error.authorization_failed" = "Administrator authorization failed.";
+"error.administrator_required" = "This LaunchDaemon operation requires administrator privileges.";
+"error.invalid_invoking_user" = "Could not identify the invoking user.";
+"error.kind_cannot_change" = "The service kind cannot be changed after creation.";
+"error.serviceChanged" = "The service changed. Reload it before trying again.";

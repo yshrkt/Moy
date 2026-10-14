@@ -4,7 +4,17 @@ import Observation
 
 @Observable
 final class ServicesState {
-    var services: [ServiceDefinition] = []
+    var services: [ServiceDefinition] = [] {
+        didSet {
+            let grouped = Dictionary(grouping: services, by: \.kind)
+            serviceSections = ServiceKind.allCases.compactMap { kind in
+                guard let services = grouped[kind], !services.isEmpty else { return nil }
+                return ServicesSection(kind: kind, services: services)
+            }
+        }
+    }
+
+    private(set) var serviceSections: [ServicesSection] = []
     var statuses: [ServiceIdentifier: ServiceStatus] = [:]
     var statusFailures: Set<ServiceIdentifier> = []
     var selectedIdentifier: ServiceIdentifier?
@@ -50,6 +60,8 @@ struct ServicesSnapshot: Equatable, Sendable {
 }
 
 enum ServicesFailure: Error, Equatable, Sendable {
+    case cancelled
+    case authorization(String)
     case moy(MoyError)
     case serviceJSON(ServiceJSONError)
     case invalidThrottleInterval
@@ -59,6 +71,14 @@ enum ServicesFailure: Error, Equatable, Sendable {
     case unexpected(String)
 
     static func from(_ error: any Error) -> Self {
+        if error is CancellationError {
+            return .cancelled
+        }
+        if let error = error as? AdministratorAuthorizationError {
+            switch error {
+            case let .failed(reason): return .authorization(reason)
+            }
+        }
         if let error = error as? Self {
             return error
         }
@@ -83,4 +103,12 @@ enum ServicesFailure: Error, Equatable, Sendable {
 enum ServiceTransferOperation: Equatable, Sendable {
     case importService
     case exportService(ServiceIdentifier)
+}
+
+struct ServicesSection: Identifiable {
+    let kind: ServiceKind
+    let services: [ServiceDefinition]
+    var id: String {
+        kind.rawValue
+    }
 }

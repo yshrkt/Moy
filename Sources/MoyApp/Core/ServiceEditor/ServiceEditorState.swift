@@ -48,6 +48,8 @@ final class ServiceEditorState {
     }
 
     let mode: ServiceEditorMode
+    var kind: ServiceKind = .launchAgent
+    var canChangeKind = true
     var identifier: String
     var displayName: String
     var serviceDescription: String
@@ -86,6 +88,8 @@ final class ServiceEditorState {
     init(service: ServiceDefinition) {
         identifierIssue = nil
         mode = .edit(service.identifier)
+        kind = service.kind
+        canChangeKind = false
         identifier = service.identifier.rawValue
         displayName = service.displayName ?? ""
         serviceDescription = service.description ?? ""
@@ -119,6 +123,8 @@ final class ServiceEditorState {
             standardOutPath: draft.standardOutPath ?? "",
             standardErrorPath: draft.standardErrorPath ?? "",
         )
+        state.kind = draft.kind
+        state.canChangeKind = false
         state.existingIdentifiers = existingIdentifiers
         return state
     }
@@ -155,6 +161,7 @@ final class ServiceEditorState {
 }
 
 enum ServiceEditorField: Equatable, Sendable {
+    case kind(ServiceKind)
     case identifier(String)
     case displayName(String)
     case description(String)

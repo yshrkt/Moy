@@ -53,11 +53,14 @@ public actor JSONServiceRepository: ServiceRepository {
             var store = try readStore()
             try validateAvailability(of: newService.identifier, in: store)
             let standardOutPath = newService.standardOutPath.nilIfEmpty
-                ?? paths.standardOutFile(identifier: newService.identifier).path
-            let defaultStandardErrorPath = paths.standardErrorFile(identifier: newService.identifier).path
+                ?? paths.standardOutFile(identifier: newService.identifier, kind: newService.kind).path
+            let defaultStandardErrorPath = paths.standardErrorFile(
+                identifier: newService.identifier, kind: newService.kind,
+            ).path
             let standardErrorPath = newService.standardErrorPath.nilIfEmpty ?? defaultStandardErrorPath
             let service = ServiceDefinition(
                 identifier: newService.identifier,
+                kind: newService.kind,
                 displayName: newService.displayName.nilIfEmpty,
                 description: newService.description.nilIfEmpty,
                 programArguments: newService.programArguments,
@@ -77,6 +80,14 @@ public actor JSONServiceRepository: ServiceRepository {
     }
 
     public func update(_ service: ServiceDefinition) async throws {
+        try update(service, expected: nil)
+    }
+
+    public func update(_ service: ServiceDefinition, expected: ServiceDefinition) async throws {
+        try update(service, expected: Optional(expected))
+    }
+
+    private func update(_ service: ServiceDefinition, expected: ServiceDefinition?) throws {
         try validateExecutable(service.programArguments)
         try ServiceValidator.validate(service)
         try withLock {
@@ -84,6 +95,10 @@ public actor JSONServiceRepository: ServiceRepository {
             guard let index = store.services.firstIndex(where: { $0.identifier == service.identifier }) else {
                 throw MoyError.serviceNotFound(service.identifier.rawValue)
             }
+            if let expected, store.services[index] != expected {
+                throw MoyError.serviceChanged
+            }
+            guard store.services[index].kind == service.kind else { throw MoyError.kindCannotChange }
             store.services[index] = service
             try writeStore(store)
         }
@@ -177,7 +192,9 @@ private extension JSONServiceRepository {
 
     private func validateAvailability(of identifier: ServiceIdentifier, in store: Store) throws {
         let isStored = store.services.contains { $0.identifier == identifier }
-        let hasPlist = fileManager.fileExists(atPath: paths.plistFile(identifier: identifier).path)
+        let hasPlist = ServiceKind.allCases.contains {
+            fileManager.fileExists(atPath: paths.plistFile(identifier: identifier, kind: $0).path)
+        }
         if isStored || hasPlist {
             throw MoyError.duplicateService(identifier.rawValue)
         }

@@ -28,3 +28,5 @@ enum CLIParsing {
         return value
     }
 }
+
+extension ServiceKind: @retroactive ExpressibleByArgument {}
