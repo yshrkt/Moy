@@ -23,7 +23,10 @@ struct ServicesCopyFeedbackTests {
         let reducer = makeReducer(requests)
         let identifier = try ServiceIdentifier("worker")
         var state = ServicesState()
-        let copy = reducer.reduce(into: &state, action: .copyValue("1952", item: "PID", identifier: identifier))
+        let copy = reducer.reduce(
+            into: &state,
+            action: .copyFeedback(.copyValue("1952", item: "PID", identifier: identifier)),
+        )
         #expect(state.copyToast == nil)
         let result = try #require(await copy.execute())
         let dismiss = reducer.reduce(into: &state, action: result)
@@ -44,12 +47,18 @@ struct ServicesCopyFeedbackTests {
         let reducer = makeReducer(requests)
         let identifier = try ServiceIdentifier("worker")
         var state = ServicesState()
-        let first = reducer.reduce(into: &state, action: .copyValue("42", item: "PID", identifier: identifier))
+        let first = reducer.reduce(
+            into: &state,
+            action: .copyFeedback(.copyValue("42", item: "PID", identifier: identifier)),
+        )
         let firstResult = try #require(await first.execute())
         let firstTimer = reducer.reduce(into: &state, action: firstResult)
         let oldID = try #require(state.copyToast?.id)
 
-        let second = reducer.reduce(into: &state, action: .copyValue("43", item: "PID", identifier: identifier))
+        let second = reducer.reduce(
+            into: &state,
+            action: .copyFeedback(.copyValue("43", item: "PID", identifier: identifier)),
+        )
         #expect(state.copyToast == nil)
         _ = reducer.reduce(into: &state, action: firstResult)
         #expect(state.copyToast == nil)
@@ -68,18 +77,21 @@ struct ServicesCopyFeedbackTests {
         let identifier = try ServiceIdentifier("worker")
         var state = ServicesState()
         state.selectedIdentifier = identifier
-        let pending = reducer.reduce(into: &state, action: .copyValue("42", item: "PID", identifier: identifier))
+        let pending = reducer.reduce(
+            into: &state,
+            action: .copyFeedback(.copyValue("42", item: "PID", identifier: identifier)),
+        )
         _ = reducer.reduce(into: &state, action: .selectService(nil))
         let result = try #require(await pending.execute())
         _ = reducer.reduce(into: &state, action: result)
         #expect(state.copyToast == nil)
 
-        let next = reducer.reduce(into: &state, action: .copyValue("/tmp/log", item: "StandardOutPath",
-                                                                   identifier: identifier))
+        let next = reducer.reduce(into: &state, action: .copyFeedback(.copyValue("/tmp/log", item: "StandardOutPath",
+                                                                                 identifier: identifier)))
         let nextResult = try #require(await next.execute())
         _ = reducer.reduce(into: &state, action: nextResult)
         #expect(state.copyToast != nil)
-        _ = reducer.reduce(into: &state, action: .clearCopyFeedback)
+        _ = reducer.reduce(into: &state, action: .copyFeedback(.clearCopyFeedback))
         #expect(state.copyToast == nil)
         #expect(state.copyRequestID == nil)
     }

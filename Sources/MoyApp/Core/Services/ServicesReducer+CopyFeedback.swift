@@ -2,7 +2,9 @@ import Foundation
 import NanoRedux
 
 extension ServicesReducer {
-    func reduceCopyFeedback(into state: inout ServicesState, action: ServicesAction) -> Effect<ServicesAction> {
+    func reduceCopyFeedback(
+        into state: inout ServicesState, action: ServicesCopyFeedbackAction,
+    ) -> Effect<ServicesCopyFeedbackAction> {
         switch action {
         case let .copyValue(value, item, identifier):
             let id = UUID()
@@ -36,9 +38,6 @@ extension ServicesReducer {
         case .clearCopyFeedback:
             state.copyRequestID = nil
             state.copyToast = nil
-            return .none
-
-        default:
             return .none
         }
     }

@@ -6,17 +6,8 @@ enum ServiceEditorAction: Sendable {
     case updateEditor(ServiceEditorField)
     case updateExistingIdentifiers(Set<String>)
     case receiveIdentifierValidation(UUID, String, ServiceEditorIdentifierIssue?)
-    case selectArgument(UUID?)
-    case moveArgument(UUID, toIndex: Int)
-    case dropArgument(UUID, insertionIndex: Int)
-    case addArgument
-    case updateArgument(UUID, String)
-    case removeArgument(UUID)
-    case selectEnvironmentVariable(UUID?)
-    case addEnvironmentVariable
-    case updateEnvironmentKey(UUID, String)
-    case updateEnvironmentValue(UUID, String)
-    case removeEnvironmentVariable(UUID)
+    case arguments(ServiceEditorArgumentsAction)
+    case environment(ServiceEditorEnvironmentAction)
     case chooseEditorPath(ServiceEditorPath)
     case receiveEditorPath(UUID, ServiceEditorPath, String?)
     case saveService

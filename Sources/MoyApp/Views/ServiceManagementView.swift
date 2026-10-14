@@ -124,7 +124,7 @@ struct ServiceManagementView: View {
 
             Menu {
                 Button(L10n.Services.new) { store.send(.presentCreateService) }
-                Button(L10n.Services.import) { store.send(.importService) }
+                Button(L10n.Services.import) { store.send(.transfer(.importService)) }
             } label: {
                 Image(systemName: "plus")
             }

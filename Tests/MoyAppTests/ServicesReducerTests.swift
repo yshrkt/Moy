@@ -17,13 +17,16 @@ struct ServicesReducerTests {
         _ = reducer.reduce(into: &state, action: validated)
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.displayName("API Server"))))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/python3"))))
-        _ = reducer.reduce(into: &state, action: .editor(.addArgument))
+        _ = reducer.reduce(into: &state, action: .editor(.arguments(.addArgument)))
         let argumentID = try #require(state.editor?.arguments.first?.id)
-        _ = reducer.reduce(into: &state, action: .editor(.updateArgument(argumentID, "")))
-        _ = reducer.reduce(into: &state, action: .editor(.addEnvironmentVariable))
+        _ = reducer.reduce(into: &state, action: .editor(.arguments(.updateArgument(argumentID, ""))))
+        _ = reducer.reduce(into: &state, action: .editor(.environment(.addEnvironmentVariable)))
         let variableID = try #require(state.editor?.environmentVariables.first?.id)
-        _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentKey(variableID, "MODE")))
-        _ = reducer.reduce(into: &state, action: .editor(.updateEnvironmentValue(variableID, "development")))
+        _ = reducer.reduce(into: &state, action: .editor(.environment(.updateEnvironmentKey(variableID, "MODE"))))
+        _ = reducer.reduce(
+            into: &state,
+            action: .editor(.environment(.updateEnvironmentValue(variableID, "development"))),
+        )
 
         let effect = reducer.reduce(into: &state, action: .editor(.saveService))
         #expect(state.editor?.isSaving == true)

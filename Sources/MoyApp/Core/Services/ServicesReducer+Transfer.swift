@@ -2,7 +2,9 @@ import MoyKit
 import NanoRedux
 
 extension ServicesReducer {
-    func reduceTransfer(into state: inout ServicesState, action: ServicesAction) -> Effect<ServicesAction> {
+    func reduceTransfer(
+        into state: inout ServicesState, action: ServicesTransferAction,
+    ) -> Effect<ServicesTransferAction> {
         switch action {
         case .importService:
             return startImport(into: &state)
@@ -20,12 +22,10 @@ extension ServicesReducer {
                 state.failure = failure
             }
             return .none
-
-        default: return .none
         }
     }
 
-    private func startImport(into state: inout ServicesState) -> Effect<ServicesAction> {
+    private func startImport(into state: inout ServicesState) -> Effect<ServicesTransferAction> {
         guard state.canOpenEditor else { return .none }
         state.failure = nil
         state.transferOperation = .importService
@@ -44,7 +44,7 @@ extension ServicesReducer {
 
     private func startExport(
         _ identifier: ServiceIdentifier, into state: inout ServicesState,
-    ) -> Effect<ServicesAction> {
+    ) -> Effect<ServicesTransferAction> {
         guard state.canOpenEditor, !state.isOperating(identifier),
               state.services.contains(where: { $0.identifier == identifier }) else { return .none }
         state.failure = nil
@@ -66,7 +66,7 @@ extension ServicesReducer {
 
     private func finishImport(
         _ result: Result<ServiceDraft?, ServicesFailure>, into state: inout ServicesState,
-    ) -> Effect<ServicesAction> {
+    ) -> Effect<ServicesTransferAction> {
         guard state.transferOperation == .importService else { return .none }
         state.transferOperation = nil
         switch result {

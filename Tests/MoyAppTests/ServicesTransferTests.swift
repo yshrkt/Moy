@@ -12,10 +12,10 @@ struct ServicesTransferTests {
         let management = TestServiceManagementUseCase()
         let reducer = makeReducer(transfer: transfer, management: management)
         var state = ServicesState()
-        let effect = reducer.reduce(into: &state, action: .importService)
+        let effect = reducer.reduce(into: &state, action: .transfer(.importService))
         #expect(state.transferOperation == .importService)
         #expect(!state.canOpenEditor)
-        let duplicate = reducer.reduce(into: &state, action: .importService)
+        let duplicate = reducer.reduce(into: &state, action: .transfer(.importService))
         #expect(await duplicate.execute() == nil)
         _ = reducer.reduce(into: &state, action: .presentCreateService)
         #expect(state.editor == nil)
@@ -52,7 +52,7 @@ struct ServicesTransferTests {
         let reducer = makeReducer(transfer: TransferUseCaseStub(draft: draft), management: management)
         var state = ServicesState()
         state.services = [definition(draft)]
-        let effect = reducer.reduce(into: &state, action: .importService)
+        let effect = reducer.reduce(into: &state, action: .transfer(.importService))
         _ = try reducer.reduce(into: &state, action: #require(await effect.execute()))
         let editor = try #require(state.editor)
         #expect(editor.identifierIssue == .duplicate)
@@ -80,7 +80,7 @@ struct ServicesTransferTests {
             transferFilePanelClient: .init(chooseImportFile: { nil }, chooseExportFile: { _ in nil }),
         ))
         var state = ServicesState()
-        let effect = reducer.reduce(into: &state, action: .importService)
+        let effect = reducer.reduce(into: &state, action: .transfer(.importService))
         _ = try reducer.reduce(into: &state, action: #require(await effect.execute()))
         #expect(state.editor == nil)
         #expect(state.failure == nil)
@@ -94,7 +94,7 @@ struct ServicesTransferTests {
         let transfer = try TransferUseCaseStub(draft: makeDraft(), readError: error)
         let reducer = makeReducer(transfer: transfer)
         var state = ServicesState()
-        let effect = reducer.reduce(into: &state, action: .importService)
+        let effect = reducer.reduce(into: &state, action: .transfer(.importService))
         _ = try reducer.reduce(into: &state, action: #require(await effect.execute()))
         #expect(state.editor == nil)
         #expect(state.transferOperation == nil)
@@ -120,8 +120,8 @@ struct ServicesTransferTests {
         ))
         var state = ServicesState()
         state.services = [definition(draft)]
-        let effect = reducer.reduce(into: &state, action: .exportService(draft.identifier))
-        let duplicate = reducer.reduce(into: &state, action: .exportService(draft.identifier))
+        let effect = reducer.reduce(into: &state, action: .transfer(.exportService(draft.identifier)))
+        let duplicate = reducer.reduce(into: &state, action: .transfer(.exportService(draft.identifier)))
         #expect(await duplicate.execute() == nil)
         _ = try reducer.reduce(into: &state, action: .selectService(ServiceIdentifier("other")))
         _ = try reducer.reduce(into: &state, action: #require(await effect.execute()))
@@ -144,7 +144,7 @@ struct ServicesTransferTests {
         let reducer = makeReducer(transfer: TransferUseCaseStub(draft: draft, exportError: error))
         var state = ServicesState()
         state.services = [definition(draft)]
-        let effect = reducer.reduce(into: &state, action: .exportService(draft.identifier))
+        let effect = reducer.reduce(into: &state, action: .transfer(.exportService(draft.identifier)))
         _ = reducer.reduce(into: &state, action: .presentEditService(draft.identifier))
         #expect(state.editor == nil)
         _ = try reducer.reduce(into: &state, action: #require(await effect.execute()))
@@ -152,7 +152,7 @@ struct ServicesTransferTests {
         #expect(state.canOpenEditor)
         _ = reducer.reduce(into: &state, action: .presentCreateService)
         let editor = state.editor
-        let importEffect = reducer.reduce(into: &state, action: .importService)
+        let importEffect = reducer.reduce(into: &state, action: .transfer(.importService))
         #expect(await importEffect.execute() == nil)
         #expect(state.editor === editor)
     }

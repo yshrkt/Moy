@@ -86,10 +86,12 @@ struct ServiceEditorReducer: InjectableReducer {
             }
             return .none
 
-        case .selectArgument, .moveArgument, .dropArgument, .addArgument, .updateArgument, .removeArgument,
-             .selectEnvironmentVariable, .addEnvironmentVariable, .updateEnvironmentKey,
-             .updateEnvironmentValue, .removeEnvironmentVariable:
-            reduceEditorList(into: &state, action: action)
+        case let .arguments(action):
+            reduceArguments(into: &state, action: action)
+            return .none
+
+        case let .environment(action):
+            reduceEnvironment(into: &state, action: action)
             return .none
 
         case let .chooseEditorPath(path):

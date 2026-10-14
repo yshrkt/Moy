@@ -41,6 +41,7 @@ Tests/
 - JSON保存とlaunchd操作の実装にはactorを使用し、同一プロセス内の操作を直列化する。
 - Actionは`enableService`などの動詞＋対象、UseCaseは`...UseCase`、既定実装は`Default...UseCase`とする。
 - 機能ごとにAction／State／Reducer／Dependenciesを別ファイルにする。
+- 同じStateを扱う処理をReducerのextensionへ切り出す場合は、関連するActionをサブActionにまとめ、担当するサブActionを網羅的にswitchする。無関係なActionを`default`で無視しない。サービスのインポート・エクスポート、コピー通知、編集画面の引数リスト、環境変数リストはそれぞれ別のサブActionとする。
 - 製品名は`Moy.app`と`moy`。CLIをアプリに同梱する。
 - mise＋Tuistで依存解決・プロジェクト生成を管理し、`generate`、`build`、`test`、`format`、`lint`を用意する。フォーマット設定もMiroCalを基準にする。
 - アプリは`LSUIElement`を有効にし、ユーザーのLaunchAgentsを操作するためApp Sandboxを無効にする。

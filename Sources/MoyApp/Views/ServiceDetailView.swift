@@ -22,7 +22,7 @@ struct ServiceDetailView: View {
             }
         }
         .onDisappear {
-            store.send(.clearCopyFeedback)
+            store.send(.copyFeedback(.clearCopyFeedback))
         }
         .toolbar {
             ToolbarItemGroup {
@@ -33,7 +33,7 @@ struct ServiceDetailView: View {
                 }
                 .disabled(!store.state.canOpenEditor)
                 Button {
-                    store.send(.exportService(service.identifier))
+                    store.send(.transfer(.exportService(service.identifier)))
                 } label: {
                     Label(L10n.Services.export, systemImage: "square.and.arrow.up")
                 }

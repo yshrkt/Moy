@@ -12,7 +12,7 @@ struct CopyValueButton: View {
     var body: some View {
         let isCopied = store.state.copyToast?.showsSuccess(for: identifier, item: item) == true
         Button {
-            store.send(.copyValue(value, item: item, identifier: identifier))
+            store.send(.copyFeedback(.copyValue(value, item: item, identifier: identifier)))
         } label: {
             CopyValueButtonLabel(isCopied: isCopied, reduceMotion: reduceMotion)
         }

@@ -9,10 +9,7 @@ enum ServicesAction: Sendable {
 
     case presentCreateService
     case presentEditService(ServiceIdentifier)
-    case importService
-    case receiveImportService(Result<ServiceDraft?, ServicesFailure>)
-    case exportService(ServiceIdentifier)
-    case receiveExportService(ServiceIdentifier, Result<Void, ServicesFailure>)
+    case transfer(ServicesTransferAction)
     case editor(ServiceEditorAction)
     case receiveSave(UUID, ServiceIdentifier, Result<Void, ServicesFailure>)
 
@@ -30,8 +27,5 @@ enum ServicesAction: Sendable {
     case revealLog(String)
     case receiveFileOperation(Result<Void, ServicesFailure>)
     case dismissFailure
-    case copyValue(String, item: String, identifier: ServiceIdentifier)
-    case receiveCopyValue(CopyToast)
-    case dismissCopyToast(UUID)
-    case clearCopyFeedback
+    case copyFeedback(ServicesCopyFeedbackAction)
 }

@@ -15,7 +15,7 @@ struct ServiceEditorReducerTests {
         let effect = reducer.reduce(into: &state, action: .saveService)
         #expect(state.isSaving)
         _ = reducer.reduce(into: &state, action: .updateEditor(.displayName("changed")))
-        _ = reducer.reduce(into: &state, action: .addArgument)
+        _ = reducer.reduce(into: &state, action: .arguments(.addArgument))
         #expect(state.displayName.isEmpty)
         #expect(state.arguments.isEmpty)
         let duplicate = reducer.reduce(into: &state, action: .saveService)

@@ -93,8 +93,9 @@ struct ServicesReducer: InjectableReducer {
             state.editor = ServiceEditorState(service: service)
             return .none
 
-        case .importService, .receiveImportService, .exportService, .receiveExportService:
+        case let .transfer(action):
             return reduceTransfer(into: &state, action: action)
+                .map(namespace: Self.self) { .transfer($0) }
 
         case let .editor(.delegate(.cancel(sessionID))):
             guard let editor = state.editor, editor.id == sessionID, !editor.isSaving else { return .none }
@@ -237,8 +238,9 @@ struct ServicesReducer: InjectableReducer {
             state.failure = nil
             return .none
 
-        case .copyValue, .receiveCopyValue, .dismissCopyToast, .clearCopyFeedback:
+        case let .copyFeedback(action):
             return reduceCopyFeedback(into: &state, action: action)
+                .map(namespace: Self.self) { .copyFeedback($0) }
         }
     }
 }
