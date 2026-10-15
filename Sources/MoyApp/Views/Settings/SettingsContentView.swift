@@ -38,10 +38,6 @@ struct SettingsContentView: View {
 
             Section {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(L10n.Settings.cliDescription)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-
                     HStack {
                         Text(L10n.Settings.cliCommand)
                         Spacer()
@@ -61,6 +57,12 @@ struct SettingsContentView: View {
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
+
+                    Divider()
+
+                    Text(L10n.Settings.cliDescription)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 6)
             } header: {

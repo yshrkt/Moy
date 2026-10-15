@@ -156,7 +156,7 @@
 /* Launch at login */
 "settings.general_title" = "General";
 "settings.launch_at_login_title" = "Launch at Login";
-"settings.launch_at_login_description" = "Automatically start Moy in the menu bar when you log in to your Mac. Service startup is configured separately with RunAtLoad and KeepAlive.";
+"settings.launch_at_login_description" = "Automatically start Moy in the menu bar when you log in to your Mac.";
 "settings.launch_at_login_updating" = "Checking or updating launch at login";
 "settings.launch_at_login_approval" = "Launch at login is registered but requires macOS approval. Allow Moy in Login Items in System Settings.";
 "settings.open_login_items_settings" = "Open Login Items Settings…";

@@ -156,7 +156,7 @@
 /* Launch at login */
 "settings.general_title" = "一般";
 "settings.launch_at_login_title" = "ログイン時に起動する";
-"settings.launch_at_login_description" = "MacにログインしたときにMoyをメニューバーに自動で起動します。サービスの起動条件は各サービスのRunAtLoad／KeepAliveで設定します。";
+"settings.launch_at_login_description" = "MacにログインしたときにMoyをメニューバーに自動で起動します。";
 "settings.launch_at_login_updating" = "ログイン時起動の設定を確認・更新中";
 "settings.launch_at_login_approval" = "ログイン時起動は登録済みですが、macOSの承認が必要です。システム設定のログイン項目でMoyを許可してください。";
 "settings.open_login_items_settings" = "ログイン項目の設定を開く…";
