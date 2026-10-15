@@ -361,6 +361,7 @@ private extension ServiceDetailView {
             if let description = service.description, !description.isEmpty {
                 Text(description)
                     .foregroundStyle(.secondary)
+                    .lineSpacing(4)
                     .textSelection(.enabled)
             }
         }

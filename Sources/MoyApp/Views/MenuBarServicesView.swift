@@ -8,7 +8,7 @@ struct MenuBarServicesView: View {
     private enum Layout {
         static let menuWidth: CGFloat = 280
         static let maximumVisibleServiceCount = 8
-        static let sectionHeaderHeight: CGFloat = 28
+        static let sectionHeaderHeight: CGFloat = 22
         static let serviceRowHeight: CGFloat = 40
         static let actionButtonSize: CGFloat = 24
     }
@@ -76,6 +76,7 @@ struct MenuBarServicesView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 12)
+                            .padding(.top, 8)
                             .frame(maxWidth: .infinity, minHeight: Layout.sectionHeaderHeight, alignment: .leading)
                         ForEach(section.services) { service in
                             serviceMenu(service)
@@ -139,6 +140,7 @@ struct MenuBarServicesView: View {
         .frame(maxWidth: .infinity, minHeight: Layout.serviceRowHeight, alignment: .leading)
         .overlay(alignment: .bottom) {
             Divider()
+                .padding(.leading, 28)
         }
     }
 
