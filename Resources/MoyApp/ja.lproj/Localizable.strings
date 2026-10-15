@@ -123,9 +123,6 @@
 "settings.cliInstalled" = "インストール済み";
 "settings.cliDestination" = "インストール先";
 "settings.cliConflict" = "別のファイル、フォルダ、または利用できないリンクがあります。Finderで確認して移動または削除してから、設定を開き直してください。Moyは削除・上書きしません。";
-"settings.cliPathTitle" = "ターミナルの設定";
-"settings.cliPathHelp" = "通常、/usr/local/bin はPATHに含まれています。インストール後、新しいターミナルで次のコマンドを実行してください。";
-"settings.cliVerifyHelp" = "moy が見つからない場合は、シェルのPATHに /usr/local/bin が含まれているか確認してください。";
 "settings.versionFormat" = "バージョン: %1$@ (%2$@)";
 "error.cliInstallationFailed" = "インストールしたコマンドを確認できませんでした。状態を更新してから再試行してください。";
 "error.cliAuthorizationFailed" = "管理者権限でCLIの操作を完了できませんでした。";
@@ -173,3 +170,14 @@
 "error.invalid_invoking_user" = "操作元のユーザーを特定できません。";
 "error.kind_cannot_change" = "作成後にサービス種別を変更することはできません。";
 "error.serviceChanged" = "サービスが変更されています。再取得してからやり直してください。";
+
+/* Log rotation */
+"settings.logRotationTitle" = "ログローテーション";
+"settings.logRotationEnabled" = "自動ローテーション";
+"settings.logRotationSize" = "ファイルサイズの目安";
+"settings.logRotationGenerations" = "過去ログの保存世代数";
+"settings.logRotationDescription" = "~/Library/Logs/Moy 直下の .log ファイルを1時間ごとに確認し、設定に従いローテーションします。";
+"settings.logRotationFailure" = "ログローテーションの処理に失敗しました。";
+"settings.logRotationInvalidSettings" = "サイズは1〜100,000 MB、保存世代数は1〜100で指定してください。";
+"settings.logRotationUpdateFailed" = "ログローテーションの登録・解除に失敗しました。状態を確認して、もう一度操作してください。";
+"settings.logRotationStateUnavailable" = "ログローテーションの登録状態を確認できませんでした。設定画面を開き直して、もう一度お試しください。";

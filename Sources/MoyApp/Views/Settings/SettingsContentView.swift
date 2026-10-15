@@ -67,22 +67,7 @@ struct SettingsContentView: View {
                 Text(L10n.Settings.cliTitle)
             }
 
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(L10n.Settings.cliPathHelp)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                    Text(verbatim: "moy --help")
-                        .font(.callout.monospaced())
-                        .textSelection(.enabled)
-                    Text(L10n.Settings.cliVerifyHelp)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 6)
-            } header: {
-                Text(L10n.Settings.cliPathTitle)
-            }
+            LogRotationSettingsView(store: store)
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)

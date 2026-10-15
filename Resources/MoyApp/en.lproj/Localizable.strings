@@ -123,9 +123,6 @@
 "settings.cliInstalled" = "Installed";
 "settings.cliDestination" = "Install location";
 "settings.cliConflict" = "Another file, folder, or unavailable link exists at this location. Inspect it in Finder, move or remove it, then reopen settings. Moy will not remove or overwrite it.";
-"settings.cliPathTitle" = "Terminal setup";
-"settings.cliPathHelp" = "/usr/local/bin is usually already in PATH. After installation, open a new Terminal session and run:";
-"settings.cliVerifyHelp" = "If moy is not found, check that /usr/local/bin is included in your shell’s PATH.";
 "settings.versionFormat" = "Version: %1$@ (%2$@)";
 "error.cliInstallationFailed" = "The installed command could not be verified. Refresh the status and try again.";
 "error.cliAuthorizationFailed" = "The CLI operation could not be completed with administrator privileges.";
@@ -173,3 +170,14 @@
 "error.invalid_invoking_user" = "Could not identify the invoking user.";
 "error.kind_cannot_change" = "The service kind cannot be changed after creation.";
 "error.serviceChanged" = "The service changed. Reload it before trying again.";
+
+/* Log rotation */
+"settings.logRotationTitle" = "Log Rotation";
+"settings.logRotationEnabled" = "Automatic rotation";
+"settings.logRotationSize" = "File size threshold";
+"settings.logRotationGenerations" = "Archives to keep";
+"settings.logRotationDescription" = "Checks .log files directly in ~/Library/Logs/Moy every hour and rotates them according to your settings.";
+"settings.logRotationFailure" = "Log rotation failed.";
+"settings.logRotationInvalidSettings" = "Set a size from 1 to 100,000 MB and keep 1 to 100 archives.";
+"settings.logRotationUpdateFailed" = "Could not register or unregister log rotation. Check the current state and try again.";
+"settings.logRotationStateUnavailable" = "Could not check the log rotation registration status. Reopen Settings to try again.";

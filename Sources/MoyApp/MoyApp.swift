@@ -22,10 +22,12 @@ struct MoyApp: App {
             )),
         )
         _store = State(initialValue: store)
-        _settingsStore = State(initialValue: Store.reducer(
+        let settingsStore = Store.reducer(
             initialState: SettingsState(),
             reducer: SettingsReducer(dependencies: SettingsDependencies()),
-        ))
+        )
+        _settingsStore = State(initialValue: settingsStore)
+        Task { @MainActor in settingsStore.send(.logRotation(.refresh)) }
     }
 
     var body: some Scene {

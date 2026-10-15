@@ -31,17 +31,20 @@ struct SettingsView: View {
         .task {
             store.send(.appear)
             store.send(.refreshLaunchAtLoginStatus)
+            store.send(.logRotation(.refresh))
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
                 store.send(.refreshCLIStatus)
                 store.send(.refreshLaunchAtLoginStatus)
+                store.send(.logRotation(.refresh))
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // A menu bar app's scenePhase may stay active while Finder has focus.
             store.send(.refreshCLIStatus)
             store.send(.refreshLaunchAtLoginStatus)
+            store.send(.logRotation(.refresh))
         }
         .alert(
             L10n.Settings.uninstallCLITitle,

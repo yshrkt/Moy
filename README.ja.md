@@ -32,6 +32,7 @@ open build/Build/Products/Debug/Moy.app
 - サービスの登録・編集・有効化・無効化・再起動。
 - メニューバーから状態確認と標準出力・標準エラーログへのアクセス。
 - GUIとCLIでサービス定義を共有。スクリプト向けのJSON出力にも対応。
+- ログの自動ローテーション機能。
 
 - 管理対象はMoyで登録したLaunchAgent・LaunchDaemonです。
 - Moyを終了しても、`launchd`によるサービス管理は続きます。

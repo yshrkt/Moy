@@ -7,6 +7,9 @@ struct SettingsReducer: InjectableReducer {
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     func reduce(into state: inout SettingsState, action: SettingsAction) -> Effect<SettingsAction> {
         switch action {
+        case let .logRotation(action):
+            return reduceLogRotation(into: &state, action: action)
+
         case .refreshLaunchAtLoginStatus:
             guard !state.isOperatingLaunchAtLogin else { return .none }
             state.isCheckingLaunchAtLogin = true

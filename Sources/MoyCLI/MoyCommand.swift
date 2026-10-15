@@ -8,6 +8,7 @@ struct MoyCommand: AsyncParsableCommand {
         version: "0.1.0",
         subcommands: [
             InternalDaemonCommand.self,
+            InternalRotateLogsCommand.self,
             InternalRepositoryCommand.self,
             AddCommand.self,
             ImportCommand.self,

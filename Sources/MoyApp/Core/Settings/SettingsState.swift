@@ -18,6 +18,10 @@ enum CLIInstallationStatus: Equatable, Sendable {
 
 @Observable
 final class SettingsState {
+    var logRotationSettings: LogRotationSettings?
+    var isLogRotationRegistrationUnknown = false
+    var logRotationFailures: [String] = []
+    var isOperatingLogRotation = false
     var selectedTab: SettingsTab = .settings
     var launchAtLoginStatus: LaunchAtLoginStatus?
     var isCheckingLaunchAtLogin = false
@@ -39,6 +43,10 @@ final class SettingsState {
 }
 
 enum SettingsFailure: Error, Equatable, Sendable {
+    case logRotationStateUnavailable(String)
+    case logRotationUpdateFailed(LogRotationSettings, String)
+    case logRotationFailed(String)
+    case invalidLogRotationSettings
     case launchAtLoginFailed(String)
     case cliNotBundled
     case cliDestinationExists
@@ -49,6 +57,21 @@ enum SettingsFailure: Error, Equatable, Sendable {
     case unexpected(String)
 
     static func from(_ error: any Error) -> Self {
-        error as? Self ?? .unexpected(error.localizedDescription)
+        if let error = error as? Self {
+            return error
+        }
+        if let error = error as? LogRotationError {
+            if case let .jobUpdateFailed(settings, reason) = error {
+                return .logRotationUpdateFailed(settings, reason)
+            }
+            if case let .jobStateUnavailable(reason) = error {
+                return .logRotationStateUnavailable(reason)
+            }
+            if error == .invalidSettings {
+                return .invalidLogRotationSettings
+            }
+            return .logRotationFailed(error.localizedDescription)
+        }
+        return .unexpected(error.localizedDescription)
     }
 }

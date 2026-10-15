@@ -32,6 +32,7 @@ open build/Build/Products/Debug/Moy.app
 - Add, edit, enable, disable, and restart services.
 - Check service status and open stdout/stderr logs from the menu bar.
 - Share service definitions between the GUI and CLI, with JSON output for scripts.
+- Automatic log rotation.
 
 - Manage LaunchAgents / LaunchDaemons registered through Moy.
 - Keep services managed by `launchd` after quitting Moy.

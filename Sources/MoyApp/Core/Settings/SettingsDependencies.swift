@@ -1,6 +1,10 @@
+import Foundation
 import MoyKit
 
 struct SettingsDependencies: Sendable {
+    var logRotationUseCase: any LogRotationUseCase = DefaultLogRotationUseCase(
+        executable: Bundle.main.bundleURL.appending(path: "Contents/Helpers/moy").path,
+    )
     var launchAtLoginUseCase: any LaunchAtLoginUseCase = DefaultLaunchAtLoginUseCase()
     var cliInstallerClient: CLIInstallerClient = .live
     var workspaceClient: WorkspaceClient = .live

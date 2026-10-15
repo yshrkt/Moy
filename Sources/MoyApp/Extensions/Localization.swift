@@ -25,6 +25,14 @@ extension ServiceIdentifierValidationIssue {
 extension SettingsFailure {
     var localizedMessage: String {
         switch self {
+        case let .logRotationStateUnavailable(message):
+            "\(L10n.Settings.logRotationStateUnavailable)\n\(message)"
+        case let .logRotationUpdateFailed(_, message):
+            "\(L10n.Settings.logRotationUpdateFailed)\n\(message)"
+        case .invalidLogRotationSettings:
+            L10n.Settings.logRotationInvalidSettings
+        case let .logRotationFailed(message):
+            "\(L10n.Settings.logRotationFailure)\n\(message)"
         case let .launchAtLoginFailed(message):
             "\(L10n.Error.launchAtLoginFailed)\n\(message)"
         case .cliNotBundled:

@@ -1,6 +1,7 @@
 import MoyKit
 
 enum SettingsAction: Sendable {
+    case logRotation(LogRotationAction)
     case refreshLaunchAtLoginStatus
     case receiveLaunchAtLoginStatus(LaunchAtLoginStatus)
     case setLaunchAtLogin(Bool)
@@ -21,4 +22,12 @@ enum SettingsAction: Sendable {
     case revealCLI
     case receiveCLIReveal(Result<Void, SettingsFailure>)
     case dismissFailure
+}
+
+enum LogRotationAction: Sendable {
+    case refresh
+    case setEnabled(Bool)
+    case setMaximumSize(Int)
+    case setGenerations(Int)
+    case receive(Result<LogRotationStatus, SettingsFailure>)
 }
