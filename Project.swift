@@ -22,7 +22,7 @@ let project = Project(
             deploymentTargets: .macOS("26.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "Moy",
-                "CFBundleShortVersionString": "0.1.0",
+                "CFBundleShortVersionString": "0.2.0",
                 "CFBundleVersion": "1",
                 "LSUIElement": true,
                 "UTExportedTypeDeclarations": .array([
