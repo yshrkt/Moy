@@ -12,7 +12,7 @@ struct LogRotationSettingsView: View {
                 set: { store.send(.logRotation(.setEnabled($0))) },
             ))
             .toggleStyle(.switch)
-            .disabled(store.state.logRotationSettings == nil || store.state.isLogRotationRegistrationUnknown)
+            .disabled(isDisabled)
 
             Stepper(value: Binding(
                 get: { store.state.logRotationSettings?.maximumSizeMB ?? 10 },
@@ -23,6 +23,7 @@ struct LogRotationSettingsView: View {
                         .monospacedDigit()
                 }
             }
+            .disabled(isDisabled)
 
             Stepper(value: Binding(
                 get: { store.state.logRotationSettings?.generations ?? 5 },
@@ -33,6 +34,7 @@ struct LogRotationSettingsView: View {
                         .monospacedDigit()
                 }
             }
+            .disabled(isDisabled)
 
             Text(L10n.Settings.logRotationDescription)
                 .font(.callout)
@@ -47,6 +49,10 @@ struct LogRotationSettingsView: View {
         } header: {
             Text(L10n.Settings.logRotationTitle)
         }
-        .disabled(store.state.isOperatingLogRotation || store.state.isLogRotationRegistrationUnknown)
+    }
+
+    private var isDisabled: Bool {
+        store.state.logRotationSettings == nil
+            || store.state.isLogRotationRegistrationUnknown
     }
 }
