@@ -13,7 +13,7 @@ struct ServicesReducerTests {
 
         _ = reducer.reduce(into: &state, action: .presentCreateService)
         let validation = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("api-server"))))
-        let validated = try #require(await validation.execute())
+        let validated = try #require(await validation.executeForTesting())
         _ = reducer.reduce(into: &state, action: validated)
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.displayName("API Server"))))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/python3"))))
@@ -30,9 +30,9 @@ struct ServicesReducerTests {
 
         let effect = reducer.reduce(into: &state, action: .editor(.saveService))
         #expect(state.editor?.isSaving == true)
-        let response = try #require(await effect.execute())
+        let response = try #require(await effect.executeForTesting())
         let saveEffect = reducer.reduce(into: &state, action: response)
-        let saveResult = try #require(await saveEffect.execute())
+        let saveResult = try #require(await saveEffect.executeForTesting())
         _ = reducer.reduce(into: &state, action: saveResult)
 
         let request = try #require(await useCase.lastCreateRequest())
@@ -55,12 +55,12 @@ struct ServicesReducerTests {
         let first = reducer.reduce(into: &state, action: .enableService(identifier))
         let second = reducer.reduce(into: &state, action: .enableService(identifier))
         #expect(state.isOperating(identifier))
-        let duplicateResponse = await second.execute()
+        let duplicateResponse = await second.executeForTesting()
         if case .some = duplicateResponse {
             Issue.record("A duplicate operation unexpectedly produced an action")
         }
 
-        let response = try #require(await first.execute())
+        let response = try #require(await first.executeForTesting())
         _ = reducer.reduce(into: &state, action: response)
 
         #expect(await useCase.enableCount() == 1)
@@ -79,7 +79,7 @@ struct ServicesReducerTests {
         var state = ServicesState()
 
         let effect = reducer.reduce(into: &state, action: .refreshServices)
-        let response = try #require(await effect.execute())
+        let response = try #require(await effect.executeForTesting())
         _ = reducer.reduce(into: &state, action: response)
 
         #expect(state.services.map(\.identifier) == [first.identifier, second.identifier])
@@ -109,10 +109,10 @@ struct ServicesReducerTests {
         let paths = ["/tmp/standard out.log", "/tmp/standard 'error'.log"]
         for path in paths {
             let open = reducer.reduce(into: &state, action: .openLog(path))
-            let openResponse = try #require(await open.execute())
+            let openResponse = try #require(await open.executeForTesting())
             _ = reducer.reduce(into: &state, action: openResponse)
             let reveal = reducer.reduce(into: &state, action: .revealLog(path))
-            let revealResponse = try #require(await reveal.execute())
+            let revealResponse = try #require(await reveal.executeForTesting())
             _ = reducer.reduce(into: &state, action: revealResponse)
         }
         #expect(await requests.opened == paths)

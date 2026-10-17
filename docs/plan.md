@@ -34,7 +34,7 @@ Tests/
 ```
 
 - 依存関係は`MoyApp → MoyKit`、`MoyCLI → MoyKit`とする。
-- NanoReduxはMoyAppのみで使用し、確認済みの`0.1.2`をSPM経由で導入する。
+- NanoReduxはMoyAppのみで使用し、確認済みの`0.1.3`をSPM経由で導入する。
 - Domainにはモデルとprotocol、PlatformにはJSON保存・launchd操作などの具体実装を置く。
 - 作成時の入力は`ServiceDraft`、保存済みの完全な定義は`ServiceDefinition`で表現する。
 - RepositoryとUseCaseの公開メソッドは`async throws`とし、NanoReduxのEffectから`await`で呼び出す。

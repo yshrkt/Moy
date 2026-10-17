@@ -10,7 +10,7 @@ import PackageDescription
 let package = Package(
     name: "Moy",
     dependencies: [
-        .package(url: "https://github.com/yshrkt/NanoRedux", exact: "0.1.2"),
+        .package(url: "https://github.com/yshrkt/NanoRedux", exact: "0.1.3"),
         .package(url: "https://github.com/apple/swift-argument-parser", exact: "1.8.2"),
     ],
 )

@@ -20,7 +20,7 @@ struct ServiceEditorIdentifierValidationTests {
         #expect(editor.validatingIdentifier != nil)
         #expect(editor.identifierIssue == nil)
         #expect(!editor.canSave)
-        _ = try reducer.reduce(into: &editor, action: #require(await effect.execute()))
+        _ = try reducer.reduce(into: &editor, action: #require(await effect.executeForTesting()))
         #expect(editor.identifierIssue == .invalidFormat(.empty))
         #expect(!editor.canSave)
     }
@@ -36,17 +36,17 @@ struct ServiceEditorIdentifierValidationTests {
         #expect(editor.identifierIssue == .invalidFormat(.empty))
         #expect(!editor.canSave)
         let pendingSave = reducer.reduce(into: &editor, action: .saveService)
-        #expect(await pendingSave.execute() == nil)
+        #expect(await pendingSave.executeForTesting() == nil)
         #expect(!editor.isSaving)
-        _ = try reducer.reduce(into: &editor, action: #require(await update.execute()))
+        _ = try reducer.reduce(into: &editor, action: #require(await update.executeForTesting()))
         #expect(editor.identifierIssue != nil)
         let invalidSave = reducer.reduce(into: &editor, action: .saveService)
-        #expect(await invalidSave.execute() == nil)
+        #expect(await invalidSave.executeForTesting() == nil)
         let previousIssue = try #require(editor.identifierIssue)
         let correction = reducer.reduce(into: &editor, action: .updateEditor(.identifier("worker")))
         #expect(editor.identifierIssue == previousIssue)
         #expect(!editor.canSave)
-        _ = try reducer.reduce(into: &editor, action: #require(await correction.execute()))
+        _ = try reducer.reduce(into: &editor, action: #require(await correction.executeForTesting()))
         #expect(editor.identifierIssue == nil)
         #expect(editor.canSave)
     }
@@ -60,12 +60,12 @@ struct ServiceEditorIdentifierValidationTests {
         _ = reducer.reduce(into: &state, action: .presentCreateService)
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
         let update = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("worker"))))
-        _ = try reducer.reduce(into: &state, action: #require(await update.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await update.executeForTesting()))
         let editor = try #require(state.editor)
         #expect(editor.identifierIssue == .duplicate)
         #expect(!editor.canSave)
         let save = reducer.reduce(into: &state, action: .editor(.saveService))
-        #expect(await save.execute() == nil)
+        #expect(await save.executeForTesting() == nil)
         #expect(await useCase.lastCreateRequest() == nil)
         #expect(!editor.isSaving)
         #expect(editor.failure == nil)
@@ -80,13 +80,13 @@ struct ServiceEditorIdentifierValidationTests {
         let refreshed = reducer.reduce(into: &editor, action: .updateExistingIdentifiers(["worker"]))
         let input = editor.validatingIdentifier
         let unchanged = reducer.reduce(into: &editor, action: .updateExistingIdentifiers(["worker"]))
-        #expect(await unchanged.execute() == nil)
+        #expect(await unchanged.executeForTesting() == nil)
         #expect(editor.validatingIdentifier == input)
         #expect(!editor.canSave)
-        _ = try reducer.reduce(into: &editor, action: #require(await refreshed.execute()))
+        _ = try reducer.reduce(into: &editor, action: #require(await refreshed.executeForTesting()))
         #expect(editor.identifierIssue == .duplicate)
         let removed = reducer.reduce(into: &editor, action: .updateExistingIdentifiers([]))
-        _ = try reducer.reduce(into: &editor, action: #require(await removed.execute()))
+        _ = try reducer.reduce(into: &editor, action: #require(await removed.executeForTesting()))
         #expect(editor.canSave)
     }
 
@@ -96,7 +96,7 @@ struct ServiceEditorIdentifierValidationTests {
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
         let input = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("worker"))))
-        _ = try reducer.reduce(into: &state, action: #require(await input.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await input.executeForTesting()))
         _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/true"))))
         let editor = try #require(state.editor)
         let refreshed = try reducer.reduce(into: &state, action: .receiveServices(.success(.init(
@@ -104,7 +104,7 @@ struct ServiceEditorIdentifierValidationTests {
         ))))
         #expect(state.editor === editor)
         #expect(!editor.canSave)
-        _ = try reducer.reduce(into: &state, action: #require(await refreshed.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await refreshed.executeForTesting()))
         #expect(editor.identifierIssue == .duplicate)
     }
 
@@ -114,7 +114,7 @@ struct ServiceEditorIdentifierValidationTests {
         var editor = ServiceEditorState.create()
         editor.executable = "/usr/bin/true"
         let old = reducer.reduce(into: &editor, action: .updateEditor(.identifier("worker")))
-        let oldResult = try #require(await old.execute())
+        let oldResult = try #require(await old.executeForTesting())
         _ = reducer.reduce(into: &editor, action: .updateEditor(.identifier("other")))
         _ = reducer.reduce(into: &editor, action: oldResult)
         #expect(editor.validatingIdentifier == "other")
@@ -123,7 +123,7 @@ struct ServiceEditorIdentifierValidationTests {
         _ = reducer.reduce(into: &editor, action: oldResult)
         #expect(editor.validatingIdentifier == nil)
         #expect(editor.canSave)
-        let latestResult = try #require(await latest.execute())
+        let latestResult = try #require(await latest.executeForTesting())
         _ = reducer.reduce(into: &editor, action: latestResult)
         #expect(editor.canSave)
         editor = .create()
@@ -172,7 +172,7 @@ struct ServiceEditorIdentifierValidationTests {
         editor: inout ServiceEditorState,
     ) async throws {
         let effect = reducer.reduce(into: &editor, action: .updateEditor(.identifier(value)))
-        _ = try reducer.reduce(into: &editor, action: #require(await effect.execute()))
+        _ = try reducer.reduce(into: &editor, action: #require(await effect.executeForTesting()))
     }
 
     private func service(_ identifier: String) throws -> ServiceDefinition {

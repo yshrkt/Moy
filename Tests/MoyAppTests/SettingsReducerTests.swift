@@ -11,12 +11,12 @@ struct SettingsReducerTests {
 
         let first = reducer.reduce(into: &state, action: .appear)
         #expect(state.isCheckingCLI)
-        _ = try reducer.reduce(into: &state, action: #require(await first.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await first.executeForTesting()))
         #expect(state.cliStatus == .installed)
 
         await client.setStatus(.notInstalled)
         let second = reducer.reduce(into: &state, action: .appear)
-        _ = try reducer.reduce(into: &state, action: #require(await second.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await second.executeForTesting()))
         #expect(state.cliStatus == .notInstalled)
         #expect(!state.isCheckingCLI)
     }
@@ -32,9 +32,9 @@ struct SettingsReducerTests {
         #expect(state.isInstallingCLI)
         let duplicate = reducer.reduce(into: &state, action: .installCLI)
         let refresh = reducer.reduce(into: &state, action: .refreshCLIStatus)
-        #expect(await duplicate.execute() == nil)
-        #expect(await refresh.execute() == nil)
-        _ = try reducer.reduce(into: &state, action: #require(await install.execute()))
+        #expect(await duplicate.executeForTesting() == nil)
+        #expect(await refresh.executeForTesting() == nil)
+        _ = try reducer.reduce(into: &state, action: #require(await install.executeForTesting()))
         #expect(await client.installCount == 1)
         #expect(state.cliStatus == .installed)
         #expect(!state.isInstallingCLI)
@@ -50,11 +50,11 @@ struct SettingsReducerTests {
         state.cliStatus = .notInstalled
 
         let install = reducer.reduce(into: &state, action: .installCLI)
-        let refresh = try reducer.reduce(into: &state, action: #require(await install.execute()))
+        let refresh = try reducer.reduce(into: &state, action: #require(await install.executeForTesting()))
         #expect(!state.isInstallingCLI)
         #expect(state.failure == .cliDestinationExists)
-        let check = try reducer.reduce(into: &state, action: #require(await refresh.execute()))
-        _ = try reducer.reduce(into: &state, action: #require(await check.execute()))
+        let check = try reducer.reduce(into: &state, action: #require(await refresh.executeForTesting()))
+        _ = try reducer.reduce(into: &state, action: #require(await check.executeForTesting()))
         #expect(state.cliStatus == .conflict)
         #expect(state.failure == .cliDestinationExists)
         _ = reducer.reduce(into: &state, action: .dismissFailure)
@@ -73,11 +73,11 @@ struct SettingsReducerTests {
         var state = SettingsState()
         state.cliStatus = .notInstalled
         let install = reducer.reduce(into: &state, action: .installCLI)
-        let refresh = try reducer.reduce(into: &state, action: #require(await install.execute()))
+        let refresh = try reducer.reduce(into: &state, action: #require(await install.executeForTesting()))
         #expect(!state.isInstallingCLI)
         #expect(state.failure == nil)
-        let check = try reducer.reduce(into: &state, action: #require(await refresh.execute()))
-        _ = try reducer.reduce(into: &state, action: #require(await check.execute()))
+        let check = try reducer.reduce(into: &state, action: #require(await refresh.executeForTesting()))
+        _ = try reducer.reduce(into: &state, action: #require(await check.executeForTesting()))
         #expect(state.cliStatus == .notInstalled)
         _ = reducer.reduce(into: &state, action: .installCLI)
         #expect(state.isInstallingCLI)
@@ -95,7 +95,7 @@ struct SettingsReducerTests {
         var state = SettingsState()
         state.cliStatus = .installed
         let check = reducer.reduce(into: &state, action: .appear)
-        _ = try reducer.reduce(into: &state, action: #require(await check.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await check.executeForTesting()))
         #expect(state.cliStatus == nil)
         #expect(!state.isCheckingCLI)
         #expect(state.failure == .unexpected("Permission denied"))
@@ -115,7 +115,7 @@ struct SettingsReducerTests {
         )))
         var state = SettingsState()
         state.cliStatus = .installed
-        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).execute() == nil)
+        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).executeForTesting() == nil)
         _ = reducer.reduce(into: &state, action: .requestCLIUninstallation)
         #expect(state.isConfirmingCLIUninstallation)
         _ = reducer.reduce(into: &state, action: .dismissCLIUninstallation)
@@ -124,15 +124,15 @@ struct SettingsReducerTests {
         let uninstall = reducer.reduce(into: &state, action: .uninstallCLI)
         #expect(state.isUninstallingCLI)
         #expect(!state.isConfirmingCLIUninstallation)
-        #expect(await reducer.reduce(into: &state, action: .refreshCLIStatus).execute() == nil)
-        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).execute() == nil)
-        let followup = try reducer.reduce(into: &state, action: #require(await uninstall.execute()))
+        #expect(await reducer.reduce(into: &state, action: .refreshCLIStatus).executeForTesting() == nil)
+        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).executeForTesting() == nil)
+        let followup = try reducer.reduce(into: &state, action: #require(await uninstall.executeForTesting()))
         #expect(!state.isUninstallingCLI)
         if outcome == "success" {
             #expect(state.cliStatus == .notInstalled)
         } else {
-            let check = try reducer.reduce(into: &state, action: #require(await followup.execute()))
-            _ = try reducer.reduce(into: &state, action: #require(await check.execute()))
+            let check = try reducer.reduce(into: &state, action: #require(await followup.executeForTesting()))
+            _ = try reducer.reduce(into: &state, action: #require(await check.executeForTesting()))
             #expect(state.cliStatus == (outcome == "failure" ? .conflict : .installed))
         }
         #expect(state.failure == (outcome == "failure" ? .cliLinkChanged : nil))
@@ -155,9 +155,9 @@ struct SettingsReducerTests {
         state.cliStatus = .conflict
         _ = reducer.reduce(into: &state, action: .requestCLIUninstallation)
         #expect(!state.isConfirmingCLIUninstallation)
-        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).execute() == nil)
+        #expect(await reducer.reduce(into: &state, action: .uninstallCLI).executeForTesting() == nil)
         let reveal = reducer.reduce(into: &state, action: .revealCLI)
-        _ = try reducer.reduce(into: &state, action: #require(await reveal.execute()))
+        _ = try reducer.reduce(into: &state, action: #require(await reveal.executeForTesting()))
         #expect(state.failure == nil)
     }
 

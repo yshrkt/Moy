@@ -28,14 +28,14 @@ struct ServicesCopyFeedbackTests {
             action: .copyFeedback(.copyValue("1952", item: "PID", identifier: identifier)),
         )
         #expect(state.copyToast == nil)
-        let result = try #require(await copy.execute())
+        let result = try #require(await copy.executeForTesting())
         let dismiss = reducer.reduce(into: &state, action: result)
         let toast = try #require(state.copyToast)
         #expect(toast.item == "PID")
         #expect(toast.identifier == identifier)
         #expect(toast.succeeded == succeeded)
         #expect(await requests.values == ["1952"])
-        let expiration = try #require(await dismiss.execute())
+        let expiration = try #require(await dismiss.executeForTesting())
         #expect(await requests.duration == .milliseconds(1500))
         _ = reducer.reduce(into: &state, action: expiration)
         #expect(state.copyToast == nil)
@@ -51,7 +51,7 @@ struct ServicesCopyFeedbackTests {
             into: &state,
             action: .copyFeedback(.copyValue("42", item: "PID", identifier: identifier)),
         )
-        let firstResult = try #require(await first.execute())
+        let firstResult = try #require(await first.executeForTesting())
         let firstTimer = reducer.reduce(into: &state, action: firstResult)
         let oldID = try #require(state.copyToast?.id)
 
@@ -62,11 +62,11 @@ struct ServicesCopyFeedbackTests {
         #expect(state.copyToast == nil)
         _ = reducer.reduce(into: &state, action: firstResult)
         #expect(state.copyToast == nil)
-        let secondResult = try #require(await second.execute())
+        let secondResult = try #require(await second.executeForTesting())
         _ = reducer.reduce(into: &state, action: secondResult)
         #expect(state.copyToast?.id != oldID)
         let newest = state.copyToast
-        let staleExpiration = try #require(await firstTimer.execute())
+        let staleExpiration = try #require(await firstTimer.executeForTesting())
         _ = reducer.reduce(into: &state, action: staleExpiration)
         #expect(state.copyToast == newest)
     }
@@ -82,13 +82,13 @@ struct ServicesCopyFeedbackTests {
             action: .copyFeedback(.copyValue("42", item: "PID", identifier: identifier)),
         )
         _ = reducer.reduce(into: &state, action: .selectService(nil))
-        let result = try #require(await pending.execute())
+        let result = try #require(await pending.executeForTesting())
         _ = reducer.reduce(into: &state, action: result)
         #expect(state.copyToast == nil)
 
         let next = reducer.reduce(into: &state, action: .copyFeedback(.copyValue("/tmp/log", item: "StandardOutPath",
                                                                                  identifier: identifier)))
-        let nextResult = try #require(await next.execute())
+        let nextResult = try #require(await next.executeForTesting())
         _ = reducer.reduce(into: &state, action: nextResult)
         #expect(state.copyToast != nil)
         _ = reducer.reduce(into: &state, action: .copyFeedback(.clearCopyFeedback))
