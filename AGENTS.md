@@ -1,6 +1,6 @@
 # プロジェクト概要
 
-Moyは、CLIで動くサービスをユーザー単位のLaunchAgentとして管理するmacOS用メニューバーアプリです。GUIと同梱CLIから、共通のサービス定義と操作を利用します。
+Moyは、CLIで動くサービスをLaunchAgent・LaunchDaemonとして管理するmacOS用メニューバーアプリです。GUIと同梱CLIから、共通のサービス定義と操作を利用します。
 
 ## 仕様・実装方針の参照先
 
@@ -37,7 +37,7 @@ mise install
 - `mise run format`: フォーマッターの実行。
 - `mise run lint`: lintの実行。
 
-初期構築時にこれらのタスクを用意してください。実行前に`mise.toml`の定義を確認し、生成済みのXcodeプロジェクトや文字列アクセサーを直接編集せず、Tuist定義や元のリソースを変更してください。
+実行前に`mise.toml`の定義を確認し、生成済みのXcodeプロジェクトや文字列アクセサーを直接編集せず、Tuist定義や元のリソースを変更してください。
 
 # モジュール構成・ファイル配置
 
@@ -60,6 +60,7 @@ mise install
 
 - 依存関係は`MoyApp → MoyKit`、`MoyCLI → MoyKit`としてください。
 - NanoReduxはMoyAppだけで使用し、MoyKitとMoyCLIには依存させないでください。
+- MoyAppのCoreには状態管理と依存の窓口を置き、認証・CLI導入などの具体実装はMoyAppのPlatformに配置してください。Coreからは依存注入したUseCase・Client経由で呼び出してください。GUIとCLIで共用する処理はMoyKitに配置してください。
 - DomainのprotocolとPlatformの具体実装を分離し、テストで差し替えられるようにしてください。
 - JSON保存・Label生成・plist生成・launchctl操作はMoyKitに集約し、GUIとCLIで重複実装しないでください。
 
@@ -69,20 +70,28 @@ mise install
 
 機能ごとにAction／State／Reducer／Dependenciesを分割し、`Sources/MoyApp/Core`配下の同じ機能ディレクトリに配置してください。
 
-例：
+`Sources/MoyApp/Core/Services`の配置例：
 
-- `ServicesAction.swift`
+- `Actions/ServicesAction.swift`
+- `Actions/ServicesOperationAction.swift`
 - `ServicesState.swift`
 - `ServicesReducer.swift`
+- `ServicesReducer+Operation.swift`
 - `ServicesDependencies.swift`
 
 メニューバーと管理ウィンドウでStoreを共有し、機能ごとにscopeしてください。画面の変更はAction／Reducerを通し、保存・launchd操作・状態取得はEffectから依存注入したUseCaseを呼び出してください。
+
+- 同じState・Dependenciesを使う関連Actionを整理する場合は、サブActionにまとめ、親Reducerの機能別extensionで処理してください。担当するサブActionを網羅的にswitchし、無関係なActionを`default`で無視しないでください。
+- 独立したState・Dependenciesと画面の責務を持つ機能は、子Reducerとして分離してください。子のEffectは親Actionへmapし、親へ依頼する保存・画面終了などはdelegate Actionで伝えてください。
+- Action数だけで判断せず、独立した状態と責務があるかを基準にしてください。SettingsのCLI・ログイン時起動はサブAction＋extension、Services配下のServiceEditorは子Reducerの例です。
+- Actionファイルは`Core/<機能名>/Actions`にまとめてください。
 
 ## Store Action
 
 原則として`verbObject`形式で統一してください。
 
-- 使用例：`appear`、`enableService`、`disableService`、`restartService`、`receiveServiceStatuses`、`openSettings`。
+- サブActionのcase名は、親で明らかな対象名・接頭辞・接尾辞を省略し、意味の区別に必要な名前は残してください。例：`operation(.enable(...))`、`arguments(.add)`、`environment(.updateKey(...))`。
+- 使用例：`appear`、`refreshServices`、`operation(.enable(...))`、`operation(.restart(...))`、`editor(.updateField(...))`、`deletion(.request(...))`。
 - 避ける例：`onAppear`、`didAppear`、`enableServiceTapped`、`didTapEnableService`。
 
 ## UseCase
