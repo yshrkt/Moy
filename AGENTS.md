@@ -44,6 +44,7 @@ mise install
 | 配置 | 責務 |
 |---|---|
 | `Sources/MoyApp/Core/<機能名>` | NanoReduxのAction／State／Reducer／Dependencies |
+| `Sources/MoyApp/Platform` | 認証・CLI導入などのmacOS固有実装 |
 | `Sources/MoyApp/Views` | SwiftUIの画面・コンポーネント |
 | `Sources/MoyApp/MoyApp.swift` | アプリのエントリーポイントと依存の組み立て |
 | `Sources/MoyCLI` | CLIの引数解析・表示・エントリーポイント |

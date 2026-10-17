@@ -10,6 +10,7 @@ MiroCalの責務分離・命名規則・Tuist設定を参考に、以下の3モ�
 Sources/
   MoyApp/
     Core/<機能名>/       # Action・State・Reducer・Dependencies
+    Platform/           # 認証・CLI導入などのmacOS固有実装
     Views/              # SwiftUIの画面
     MoyApp.swift        # アプリのエントリーポイント
   MoyCLI/               # 引数解析・表示・エントリーポイント
@@ -211,7 +212,7 @@ JSONは`schemaVersion`とサービス一覧を持ち、各サービスに必須�
 - `LaunchdRepository`／`LaunchctlServiceRepository`と`LaunchdPlistWriter`でAgent／Daemonの処理を共用する。登録時の重複検査は両種別のplistとlaunchdドメインを対象とする。
 - GUIでは認証付きの同梱CLI内部操作へ、認証前に取得した定義と変更内容を渡す。認証後に定義の一致を確認し、読み直した別の実行設定を無確認で適用しない。更新時はファイルロック内でも元の定義と比較し、不一致なら保存前に再取得を促す。
 - GUIから実行する同梱CLIは`Contents/Helpers/moy`を明示して解決する。補助実行ファイルの名前検索は、大文字・小文字を区別しない環境でGUI本体の`Moy`に一致するため使用しない。
-- 認証処理は`Core/Authorization`に配置する。CLIリンク操作とDaemon操作でAppleScript実行・引数渡し・認証・ウィンドウ復帰・キャンセル／失敗の処理を共用する。
+- MoyAppの認証処理は`Platform/Authorization`に配置する。CLIリンク操作とDaemon操作でAppleScript実行・引数渡し・認証・ウィンドウ復帰・キャンセル／失敗の処理を共用する。CLIの導入・解除とその認証処理の具体実装は`Platform/CLIInstallation`に置く。SettingsのAction・State・Reducer・Dependenciesは`Core/Settings`に残し、依存注入したClient経由で呼び出す。
 - Daemonの有効化では、権限取得と状態確認の後、plist配置・bootstrapの前に標準出力／標準エラーのログを元ユーザー権限で準備する。GUIの認証キャンセルやCLIの権限不足ではログも作成しない。有効な設定の反映による再有効化でも同じ準備処理を使う。
 - `ServiceLogRepository`／`LocalServiceLogRepository`でログ準備を共用し、root側からは`UserServiceRepository`の子プロセスで呼び出す。既定・独自パスの親ディレクトリを作り、新規の通常ファイルはユーザー所有・600の権限で排他的に作成する。既存の通常ファイルはユーザー権限で書き込み可否を確認し、内容・所有者・権限を変更しない。シンボリックリンク・ディレクトリ・特殊ファイルや作成／書き込み不可のパスは通常のファイル操作エラーにする。失敗時はrootによるログ作成へフォールバックせず、plist配置・登録前に終了する。
 - 既存定義の絶対パスやログは自動移行しない。以前の`/Library/Logs/Moy`を使う定義もその値を維持し、ユーザー権限で準備できなければエラーを返す。事前作成は有効化時のみとし、後からログが削除された場合の自動修復は行わない。
