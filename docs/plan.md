@@ -41,7 +41,10 @@ Tests/
 - JSON保存とlaunchd操作の実装にはactorを使用し、同一プロセス内の操作を直列化する。
 - Actionは`enableService`などの動詞＋対象、UseCaseは`...UseCase`、既定実装は`Default...UseCase`とする。
 - 機能ごとにAction／State／Reducer／Dependenciesを別ファイルにする。
+- Settings・ServiceEditor・ServicesのActionファイルは、それぞれ`Core/<機能名>/Actions`にまとめる。State・Reducer・Dependenciesは各機能ディレクトリの直下に置く。
+- サブActionのcase名は、親のActionで明らかな対象名・接頭辞・接尾辞を省略する。例は`editor(.updateField(...))`、`editor(.save)`、`arguments(.add)`、`environment(.updateKey(...))`、`copyFeedback(.clear)`とする。Identifier検証の対象やインポート・エクスポートの区別など、意味を明確にする名前は残す。
 - 同じStateを扱う処理をReducerのextensionへ切り出す場合は、関連するActionをサブActionにまとめ、担当するサブActionを網羅的にswitchする。無関係なActionを`default`で無視しない。サービスのインポート・エクスポート、コピー通知、編集画面の引数リスト、環境変数リストはそれぞれ別のサブActionとする。
+- サービスの有効化・無効化・再起動と結果受信は`operation(ServicesOperationAction)`、削除の要求・キャンセル・確定・結果受信は`deletion(ServicesDeletionAction)`にまとめ、ServicesReducerの機能別extensionで処理する。処理中のIdentifier管理、削除後の選択解除、成功・失敗・認証キャンセル後の一覧更新は従来の挙動を維持する。これらのextensionは、結果受信用のサブActionと親の`refreshServices`を送るため`Effect<ServicesAction>`を返す。
 - 製品名は`Moy.app`と`moy`。CLIをアプリに同梱する。
 - mise＋Tuistで依存解決・プロジェクト生成を管理し、`generate`、`build`、`test`、`format`、`lint`を用意する。フォーマット設定もMiroCalを基準にする。
 - アプリは`LSUIElement`を有効にし、ユーザーのLaunchAgentsを操作するためApp Sandboxを無効にする。
@@ -317,6 +320,7 @@ Label・ProgramArguments・WorkingDirectory・EnvironmentVariables・StandardOut
 - ログイン項目の状態はmacOSを正本とし、独自のBooleanを永続化しない。設定を開いたとき・再びアクティブになったときに取得し、取得・更新中はスイッチ操作を無効にする。登録後・解除後・失敗後にも実際の状態を取得する。承認待ちは登録済みとしてスイッチをONにし、起動可能な状態と区別して承認の説明とシステム設定のログイン項目を開くボタンを表示する。未登録・項目不在の状態では注意文を表示せず、スイッチと通常の説明だけを表示する。変更失敗は設定ウィンドウ内の日英エラーにOSの理由を併記する。
 - ログイン時起動のUseCaseはMoyKitのDomain／Platformに分離し、SettingsのEffectから呼び出す。Moy自身のログイン項目はサービス定義のJSON・plist・一覧に含めず、登録サービスのRunAtLoad／KeepAliveやサービス操作には影響させない。
 - 設定機能のAction／State／Reducer／DependenciesはServicesから分離し、アプリでSettingsのStoreを保持する。設定内のエラーは設定ウィンドウで表示する。
+- SettingsActionはログイン時起動・CLI・ログローテーションをそれぞれLaunchAtLoginAction・CLIAction・LogRotationActionのサブActionに分ける。各Actionは個別ファイルに置き、SettingsReducerの機能別extensionで網羅的に処理する。各extensionは担当するサブAction型のEffectを返し、親ReducerでSettingsActionへ変換する。State・Dependencies・Storeは共有し、appear・タブ選択・共通エラーの解除は親Reducerで扱う。appearでは従来どおりCLI状態を取得し、ログイン時起動・ログローテーションの初期取得はViewから各サブActionを送る。
 - 標準出力・標準エラーに「開く」「Finderで表示」を提供する。
 - Moyを終了しても、launchdによるサービス管理は継続する。
 

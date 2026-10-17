@@ -152,21 +152,21 @@ struct MenuBarServicesView: View {
     ) -> some View {
         if status?.allowsEnable == true {
             Button(L10n.Common.enable) {
-                store.send(.enableService(service.identifier))
+                store.send(.operation(.enable(service.identifier)))
             }
             .disabled(isOperating)
         }
 
         if status?.allowsDisable == true {
             Button(L10n.Common.disable) {
-                store.send(.disableService(service.identifier))
+                store.send(.operation(.disable(service.identifier)))
             }
             .disabled(isOperating)
         }
 
         if status?.allowsRestart == true {
             Button(L10n.Common.restart) {
-                store.send(.restartService(service.identifier))
+                store.send(.operation(.restart(service.identifier)))
             }
             .disabled(isOperating)
         }

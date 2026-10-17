@@ -3,14 +3,14 @@ import MoyKit
 
 enum ServiceEditorAction: Sendable {
     case cancel
-    case updateEditor(ServiceEditorField)
+    case updateField(ServiceEditorField)
     case updateExistingIdentifiers(Set<String>)
     case receiveIdentifierValidation(UUID, String, ServiceEditorIdentifierIssue?)
     case arguments(ServiceEditorArgumentsAction)
     case environment(ServiceEditorEnvironmentAction)
-    case chooseEditorPath(ServiceEditorPath)
-    case receiveEditorPath(UUID, ServiceEditorPath, String?)
-    case saveService
+    case choosePath(ServiceEditorPath)
+    case receivePath(UUID, ServiceEditorPath, String?)
+    case save
     case dismissFailure
     case receiveSave(Result<Void, ServicesFailure>)
     case delegate(Delegate)

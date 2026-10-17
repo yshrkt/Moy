@@ -6,24 +6,24 @@ extension ServiceEditorReducer {
         guard !state.isSaving else { return }
         let editor = state
         switch action {
-        case let .selectEnvironmentVariable(id):
+        case let .select(id):
             guard id == nil || editor.environmentVariables.contains(where: { $0.id == id }) else { return }
             editor.selectedEnvironmentVariableID = id
 
-        case .addEnvironmentVariable:
+        case .add:
             let variable = ServiceEditorState.EnvironmentVariable()
             editor.environmentVariables.append(variable)
             editor.selectedEnvironmentVariableID = variable.id
 
-        case let .updateEnvironmentKey(id, key):
+        case let .updateKey(id, key):
             guard let index = editor.environmentVariables.firstIndex(where: { $0.id == id }) else { return }
             editor.environmentVariables[index].key = key
 
-        case let .updateEnvironmentValue(id, value):
+        case let .updateValue(id, value):
             guard let index = editor.environmentVariables.firstIndex(where: { $0.id == id }) else { return }
             editor.environmentVariables[index].value = value
 
-        case let .removeEnvironmentVariable(id):
+        case let .remove(id):
             guard let index = editor.environmentVariables.firstIndex(where: { $0.id == id }) else { return }
             editor.environmentVariables.remove(at: index)
             if editor.selectedEnvironmentVariableID == id {

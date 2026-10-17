@@ -43,16 +43,16 @@ struct ServiceManagementView: View {
                 get: { store.state.pendingDeletion != nil },
                 set: { isPresented in
                     if !isPresented {
-                        store.send(.cancelDeleteService)
+                        store.send(.deletion(.cancel))
                     }
                 },
             ),
         ) {
             Button(L10n.Common.cancel, role: .cancel) {
-                store.send(.cancelDeleteService)
+                store.send(.deletion(.cancel))
             }
             Button(L10n.Common.delete, role: .destructive) {
-                store.send(.confirmDeleteService)
+                store.send(.deletion(.confirm))
             }
         } message: {
             Text(L10n.Services.deleteMessage)

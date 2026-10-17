@@ -13,14 +13,14 @@ struct ServiceEnvironmentList: View {
             emptyMessage: L10n.Services.noEnvironmentVariables,
             addLabel: L10n.Services.addEnvironment,
             removeLabel: L10n.Services.removeEnvironment,
-            select: { store.send(.environment(.selectEnvironmentVariable($0))) },
+            select: { store.send(.environment(.select($0))) },
             update: { id, column, value in
                 let action: ServiceEditorEnvironmentAction = column == 0
-                    ? .updateEnvironmentKey(id, value) : .updateEnvironmentValue(id, value)
+                    ? .updateKey(id, value) : .updateValue(id, value)
                 store.send(.environment(action))
             },
-            add: { store.send(.environment(.addEnvironmentVariable)) },
-            remove: { store.send(.environment(.removeEnvironmentVariable($0))) },
+            add: { store.send(.environment(.add)) },
+            remove: { store.send(.environment(.remove($0))) },
         )
         .disabled(store.state.isSaving)
     }

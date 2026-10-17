@@ -143,67 +143,11 @@ struct ServicesReducer: InjectableReducer {
             }
             return .none
 
-        case let .enableService(identifier):
-            return serviceOperation(into: &state, identifier: identifier) {
-                try await dependencies.serviceManagementUseCase.enable(identifier: identifier)
-            }
+        case let .operation(action):
+            return reduceOperation(into: &state, action: action)
 
-        case let .disableService(identifier):
-            return serviceOperation(into: &state, identifier: identifier) {
-                try await dependencies.serviceManagementUseCase.disable(identifier: identifier)
-            }
-
-        case let .restartService(identifier):
-            return serviceOperation(into: &state, identifier: identifier) {
-                try await dependencies.serviceManagementUseCase.restart(identifier: identifier)
-            }
-
-        case let .receiveServiceOperation(identifier, .success):
-            state.operatingIdentifiers.remove(identifier)
-            return .run { .refreshServices }
-
-        case let .receiveServiceOperation(identifier, .failure(failure)):
-            state.operatingIdentifiers.remove(identifier)
-            state.failure = failure == .cancelled ? nil : failure
-            return .run { .refreshServices }
-
-        case let .requestDeleteService(identifier):
-            state.pendingDeletion = identifier
-            return .none
-
-        case .cancelDeleteService:
-            state.pendingDeletion = nil
-            return .none
-
-        case .confirmDeleteService:
-            guard let identifier = state.pendingDeletion,
-                  !state.operatingIdentifiers.contains(identifier)
-            else {
-                return .none
-            }
-            state.pendingDeletion = nil
-            state.operatingIdentifiers.insert(identifier)
-            let serviceManagementUseCase = dependencies.serviceManagementUseCase
-            return .run {
-                do {
-                    try await serviceManagementUseCase.remove(identifier: identifier)
-                    return .receiveDeleteService(identifier, .success(()))
-                } catch {
-                    return .receiveDeleteService(identifier, .failure(.from(error)))
-                }
-            }
-
-        case let .receiveDeleteService(identifier, .success):
-            state.operatingIdentifiers.remove(identifier)
-            if state.selectedIdentifier == identifier {
-                state.selectedIdentifier = nil
-            }
-            return .run { .refreshServices }
-
-        case let .receiveDeleteService(identifier, .failure(failure)):
-            state.operatingIdentifiers.remove(identifier)
-            state.failure = failure == .cancelled ? nil : failure
-            return .run { .refreshServices }
+        case let .deletion(action):
+            return reduceDeletion(into: &state, action: action)
 
         case let .openLog(path):
             let workspaceClient = dependencies.workspaceClient
@@ -241,25 +185,6 @@ struct ServicesReducer: InjectableReducer {
         case let .copyFeedback(action):
             return reduceCopyFeedback(into: &state, action: action)
                 .map(namespace: Self.self) { .copyFeedback($0) }
-        }
-    }
-}
-
-private extension ServicesReducer {
-    func serviceOperation(
-        into state: inout ServicesState,
-        identifier: ServiceIdentifier,
-        operation: @escaping @Sendable () async throws -> Void,
-    ) -> Effect<ServicesAction> {
-        guard !state.operatingIdentifiers.contains(identifier) else { return .none }
-        state.operatingIdentifiers.insert(identifier)
-        return .run {
-            do {
-                try await operation()
-                return .receiveServiceOperation(identifier, .success(()))
-            } catch {
-                return .receiveServiceOperation(identifier, .failure(.from(error)))
-            }
         }
     }
 }

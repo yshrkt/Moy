@@ -13,15 +13,8 @@ enum ServicesAction: Sendable {
     case editor(ServiceEditorAction)
     case receiveSave(UUID, ServiceIdentifier, Result<Void, ServicesFailure>)
 
-    case enableService(ServiceIdentifier)
-    case disableService(ServiceIdentifier)
-    case restartService(ServiceIdentifier)
-    case receiveServiceOperation(ServiceIdentifier, Result<Void, ServicesFailure>)
-
-    case requestDeleteService(ServiceIdentifier)
-    case cancelDeleteService
-    case confirmDeleteService
-    case receiveDeleteService(ServiceIdentifier, Result<Void, ServicesFailure>)
+    case operation(ServicesOperationAction)
+    case deletion(ServicesDeletionAction)
 
     case openLog(String)
     case revealLog(String)

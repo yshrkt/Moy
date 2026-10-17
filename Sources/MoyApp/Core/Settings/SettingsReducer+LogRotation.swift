@@ -2,7 +2,7 @@ import MoyKit
 import NanoRedux
 
 extension SettingsReducer {
-    func reduceLogRotation(into state: inout SettingsState, action: LogRotationAction) -> Effect<SettingsAction> {
+    func reduceLogRotation(into state: inout SettingsState, action: LogRotationAction) -> Effect<LogRotationAction> {
         switch action {
         case let .receive(result):
             state.isOperatingLogRotation = false
@@ -49,7 +49,7 @@ extension SettingsReducer {
 
     private func operateLogRotation(
         into state: inout SettingsState, settings: LogRotationSettings?,
-    ) -> Effect<SettingsAction> {
+    ) -> Effect<LogRotationAction> {
         guard !state.isOperatingLogRotation else { return .none }
         state.isOperatingLogRotation = true
         let useCase = dependencies.logRotationUseCase
@@ -60,9 +60,9 @@ extension SettingsReducer {
                 } else {
                     try await useCase.refresh()
                 }
-                return .logRotation(.receive(.success(status)))
+                return .receive(.success(status))
             } catch {
-                return .logRotation(.receive(.failure(.from(error))))
+                return .receive(.failure(.from(error)))
             }
         }
     }

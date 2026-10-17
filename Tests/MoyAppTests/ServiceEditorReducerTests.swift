@@ -12,13 +12,13 @@ struct ServiceEditorReducerTests {
         var state = ServiceEditorState.create()
         state.identifier = "worker"
         state.executable = "/usr/bin/true"
-        let effect = reducer.reduce(into: &state, action: .saveService)
+        let effect = reducer.reduce(into: &state, action: .save)
         #expect(state.isSaving)
-        _ = reducer.reduce(into: &state, action: .updateEditor(.displayName("changed")))
-        _ = reducer.reduce(into: &state, action: .arguments(.addArgument))
+        _ = reducer.reduce(into: &state, action: .updateField(.displayName("changed")))
+        _ = reducer.reduce(into: &state, action: .arguments(.add))
         #expect(state.displayName.isEmpty)
         #expect(state.arguments.isEmpty)
-        let duplicate = reducer.reduce(into: &state, action: .saveService)
+        let duplicate = reducer.reduce(into: &state, action: .save)
         #expect(await duplicate.executeForTesting() == nil)
         let action = try #require(await effect.executeForTesting())
         guard case let .delegate(.save(id, .create(identifier, draft))) = action else {
@@ -36,13 +36,13 @@ struct ServiceEditorReducerTests {
             filePanelClient: FilePanelClient(choosePath: { _ in "/usr/bin/true" }),
         ))
         var state = ServiceEditorState.create()
-        let effect = reducer.reduce(into: &state, action: .chooseEditorPath(.executable))
+        let effect = reducer.reduce(into: &state, action: .choosePath(.executable))
         state = .create()
         let action = try #require(await effect.executeForTesting())
         let ignored = reducer.reduce(into: &state, action: action)
         #expect(await ignored.executeForTesting() == nil)
         #expect(state.executable.isEmpty)
-        let current = reducer.reduce(into: &state, action: .chooseEditorPath(.executable))
+        let current = reducer.reduce(into: &state, action: .choosePath(.executable))
         let selected = try #require(await current.executeForTesting())
         _ = reducer.reduce(into: &state, action: selected)
         #expect(state.executable == "/usr/bin/true")
@@ -58,7 +58,7 @@ struct ServiceEditorReducerTests {
         )
         var state = ServiceEditorState(service: service)
         let reducer = ServiceEditorReducer(dependencies: .init())
-        _ = reducer.reduce(into: &state, action: .updateEditor(.identifier("other")))
+        _ = reducer.reduce(into: &state, action: .updateField(.identifier("other")))
         #expect(state.identifier == "worker")
     }
 

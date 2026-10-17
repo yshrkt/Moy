@@ -17,7 +17,7 @@ struct ServiceEditorReducer: InjectableReducer {
             state.failure = nil
             return .none
 
-        case .saveService:
+        case .save:
             guard !state.isSaving, state.validatingIdentifier == nil else { return .none }
             state.failure = nil
             if case .create = state.mode {
@@ -57,7 +57,7 @@ struct ServiceEditorReducer: InjectableReducer {
             state.identifierIssue = issue
             return .none
 
-        case let .updateEditor(field):
+        case let .updateField(field):
             guard !state.isSaving else { return .none }
             let editor = state
             switch field {
@@ -97,16 +97,16 @@ struct ServiceEditorReducer: InjectableReducer {
             reduceEnvironment(into: &state, action: action)
             return .none
 
-        case let .chooseEditorPath(path):
+        case let .choosePath(path):
             guard !state.isSaving else { return .none }
             let sessionID = state.id
             let filePanelClient = dependencies.filePanelClient
             return .run(lifetime: .replaceable("serviceEditor.choosePath")) {
                 let selectedPath = await filePanelClient.choosePath(path)
-                return .receiveEditorPath(sessionID, path, selectedPath)
+                return .receivePath(sessionID, path, selectedPath)
             }
 
-        case let .receiveEditorPath(sessionID, path, selectedPath):
+        case let .receivePath(sessionID, path, selectedPath):
             guard state.id == sessionID else { return .none }
             guard let selectedPath else { return .none }
             let field: ServiceEditorField = switch path {
@@ -115,7 +115,7 @@ struct ServiceEditorReducer: InjectableReducer {
             case .standardOut: .standardOutPath(selectedPath)
             case .standardError: .standardErrorPath(selectedPath)
             }
-            return reduce(into: &state, action: .updateEditor(field))
+            return reduce(into: &state, action: .updateField(field))
         }
     }
 

@@ -12,7 +12,7 @@ struct SettingsContentView: View {
                         store.state.launchAtLoginStatus == .enabled
                             || store.state.launchAtLoginStatus == .requiresApproval
                     },
-                    set: { store.send(.setLaunchAtLogin($0)) },
+                    set: { store.send(.launchAtLogin(.setEnabled($0))) },
                 ))
                 .toggleStyle(.switch)
                 .disabled(store.state.isOperatingLaunchAtLogin || store.state.launchAtLoginStatus == nil)
@@ -30,7 +30,7 @@ struct SettingsContentView: View {
                     Text(L10n.Settings.launchAtLoginApproval)
                         .font(.callout)
                         .foregroundStyle(.secondary)
-                    Button(L10n.Settings.openLoginItemsSettings) { store.send(.openLoginItemsSettings) }
+                    Button(L10n.Settings.openLoginItemsSettings) { store.send(.launchAtLogin(.openSystemSettings)) }
                 }
             } header: {
                 Text(L10n.Settings.generalTitle)
@@ -99,13 +99,13 @@ struct SettingsContentView: View {
             case .installed:
                 Label(L10n.Settings.cliInstalled, systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
-                Button(L10n.Settings.uninstallCLI) { store.send(.requestCLIUninstallation) }
+                Button(L10n.Settings.uninstallCLI) { store.send(.cli(.requestUninstallation)) }
             case .notInstalled:
-                Button(L10n.Settings.installCLI) { store.send(.installCLI) }
+                Button(L10n.Settings.installCLI) { store.send(.cli(.install)) }
             case .conflict:
-                Button(L10n.Common.reveal) { store.send(.revealCLI) }
+                Button(L10n.Common.reveal) { store.send(.cli(.reveal)) }
             case nil:
-                Button(L10n.Common.refresh) { store.send(.refreshCLIStatus) }
+                Button(L10n.Common.refresh) { store.send(.cli(.refreshStatus)) }
             }
         }
     }

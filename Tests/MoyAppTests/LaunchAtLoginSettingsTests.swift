@@ -10,11 +10,15 @@ struct LaunchAtLoginSettingsTests {
         let reducer = makeReducer(useCase)
         var state = SettingsState()
         #expect(state.launchAtLoginStatus == nil)
-        #expect(await reducer.reduce(into: &state, action: .setLaunchAtLogin(true)).executeForTesting() == nil)
-        let refresh = reducer.reduce(into: &state, action: .refreshLaunchAtLoginStatus)
+        #expect(await reducer.reduce(
+            into: &state, action: .launchAtLogin(.setEnabled(true)),
+        ).executeForTesting() == nil)
+        let refresh = reducer.reduce(into: &state, action: .launchAtLogin(.refreshStatus))
         #expect(state.isCheckingLaunchAtLogin)
-        #expect(await reducer.reduce(into: &state, action: .refreshLaunchAtLoginStatus).executeForTesting() == nil)
-        #expect(await reducer.reduce(into: &state, action: .setLaunchAtLogin(true)).executeForTesting() == nil)
+        #expect(await reducer.reduce(into: &state, action: .launchAtLogin(.refreshStatus)).executeForTesting() == nil)
+        #expect(await reducer.reduce(
+            into: &state, action: .launchAtLogin(.setEnabled(true)),
+        ).executeForTesting() == nil)
         _ = try reducer.reduce(into: &state, action: #require(await refresh.executeForTesting()))
         #expect(state.launchAtLoginStatus == status)
         #expect(!state.isCheckingLaunchAtLogin)
@@ -27,11 +31,13 @@ struct LaunchAtLoginSettingsTests {
         let reducer = makeReducer(useCase)
         var state = SettingsState()
         state.launchAtLoginStatus = .notRegistered
-        let update = reducer.reduce(into: &state, action: .setLaunchAtLogin(true))
+        let update = reducer.reduce(into: &state, action: .launchAtLogin(.setEnabled(true)))
         #expect(state.isUpdatingLaunchAtLogin)
         #expect(state.launchAtLoginStatus == .notRegistered)
-        #expect(await reducer.reduce(into: &state, action: .setLaunchAtLogin(true)).executeForTesting() == nil)
-        #expect(await reducer.reduce(into: &state, action: .refreshLaunchAtLoginStatus).executeForTesting() == nil)
+        #expect(await reducer.reduce(
+            into: &state, action: .launchAtLogin(.setEnabled(true)),
+        ).executeForTesting() == nil)
+        #expect(await reducer.reduce(into: &state, action: .launchAtLogin(.refreshStatus)).executeForTesting() == nil)
         _ = try reducer.reduce(into: &state, action: #require(await update.executeForTesting()))
         #expect(state.launchAtLoginStatus == result)
         #expect(!state.isUpdatingLaunchAtLogin)
@@ -46,8 +52,10 @@ struct LaunchAtLoginSettingsTests {
         let reducer = makeReducer(useCase)
         var state = SettingsState()
         state.launchAtLoginStatus = initial
-        #expect(await reducer.reduce(into: &state, action: .setLaunchAtLogin(true)).executeForTesting() == nil)
-        let update = reducer.reduce(into: &state, action: .setLaunchAtLogin(false))
+        #expect(await reducer.reduce(
+            into: &state, action: .launchAtLogin(.setEnabled(true)),
+        ).executeForTesting() == nil)
+        let update = reducer.reduce(into: &state, action: .launchAtLogin(.setEnabled(false)))
         _ = try reducer.reduce(into: &state, action: #require(await update.executeForTesting()))
         #expect(state.launchAtLoginStatus == .notRegistered)
         #expect(await useCase.requestedEnabled == false)
@@ -63,7 +71,7 @@ struct LaunchAtLoginSettingsTests {
         let reducer = makeReducer(useCase)
         var state = SettingsState()
         state.launchAtLoginStatus = .enabled
-        let update = reducer.reduce(into: &state, action: .setLaunchAtLogin(false))
+        let update = reducer.reduce(into: &state, action: .launchAtLogin(.setEnabled(false)))
         _ = try reducer.reduce(into: &state, action: #require(await update.executeForTesting()))
         #expect(state.launchAtLoginStatus == .requiresApproval)
         #expect(state.failure == .launchAtLoginFailed("Operation denied"))
@@ -71,7 +79,7 @@ struct LaunchAtLoginSettingsTests {
         #expect(!state.isUpdatingLaunchAtLogin)
         _ = reducer.reduce(into: &state, action: .dismissFailure)
         #expect(state.failure == nil)
-        _ = reducer.reduce(into: &state, action: .setLaunchAtLogin(false))
+        _ = reducer.reduce(into: &state, action: .launchAtLogin(.setEnabled(false)))
         #expect(state.isUpdatingLaunchAtLogin)
     }
 
@@ -81,12 +89,12 @@ struct LaunchAtLoginSettingsTests {
         let reducer = makeReducer(useCase)
         var state = SettingsState()
         state.launchAtLoginStatus = .requiresApproval
-        let open = reducer.reduce(into: &state, action: .openLoginItemsSettings)
+        let open = reducer.reduce(into: &state, action: .launchAtLogin(.openSystemSettings))
         let refresh = try reducer.reduce(into: &state, action: #require(await open.executeForTesting()))
         _ = try reducer.reduce(into: &state, action: #require(await refresh.executeForTesting()))
         #expect(await useCase.openCount == 1)
         await useCase.setStatus(.enabled)
-        let recheck = reducer.reduce(into: &state, action: .refreshLaunchAtLoginStatus)
+        let recheck = reducer.reduce(into: &state, action: .launchAtLogin(.refreshStatus))
         _ = try reducer.reduce(into: &state, action: #require(await recheck.executeForTesting()))
         #expect(state.launchAtLoginStatus == .enabled)
         #expect(await useCase.updateCount == 0)

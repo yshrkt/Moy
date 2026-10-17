@@ -28,7 +28,7 @@ struct ServiceEditorView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L10n.Common.save) {
-                        store.send(.saveService)
+                        store.send(.save)
                     }
                     .disabled(!editor.canSave)
                 }
@@ -70,7 +70,7 @@ private extension ServiceEditorView {
                 if editor.canChangeKind {
                     Picker(L10n.Services.kind, selection: Binding(
                         get: { editor.kind },
-                        set: { store.send(.updateEditor(.kind($0))) },
+                        set: { store.send(.updateField(.kind($0))) },
                     )) {
                         Text(ServiceKind.launchAgent.localizedName).tag(ServiceKind.launchAgent)
                         Text(ServiceKind.launchDaemon.localizedName).tag(ServiceKind.launchDaemon)
@@ -93,7 +93,7 @@ private extension ServiceEditorView {
             VStack(alignment: .leading, spacing: 8) {
                 Text(L10n.Services.description)
                 ServiceDescriptionEditor(value: editor.serviceDescription) { value in
-                    store.send(.updateEditor(.description(value)))
+                    store.send(.updateField(.description(value)))
                 }
                 .font(.body)
                 .scrollContentBackground(.hidden)
@@ -158,7 +158,7 @@ private extension ServiceEditorView {
                         isInline: true,
                         value: fieldBinding(value: editor.executable, field: ServiceEditorField.executable),
                     ) {
-                        store.send(.chooseEditorPath(.executable))
+                        store.send(.choosePath(.executable))
                     }
                     ServiceArgumentsList(store: store, editor: editor)
                 }
@@ -171,7 +171,7 @@ private extension ServiceEditorView {
                     field: ServiceEditorField.workingDirectory,
                 ),
             ) {
-                store.send(.chooseEditorPath(.workingDirectory))
+                store.send(.choosePath(.workingDirectory))
             }
             .padding(.vertical, 4)
             VStack(alignment: .leading, spacing: 8) {
@@ -258,7 +258,7 @@ private extension ServiceEditorView {
                     field: ServiceEditorField.standardOutPath,
                 ),
             ) {
-                store.send(.chooseEditorPath(.standardOut))
+                store.send(.choosePath(.standardOut))
             }
             .padding(.vertical, 4)
             PathField(
@@ -269,7 +269,7 @@ private extension ServiceEditorView {
                     field: ServiceEditorField.standardErrorPath,
                 ),
             ) {
-                store.send(.chooseEditorPath(.standardError))
+                store.send(.choosePath(.standardError))
             }
             .padding(.vertical, 4)
             if case .create = editor.mode {
@@ -308,7 +308,7 @@ private extension ServiceEditorView {
     ) -> Binding<String> {
         Binding(
             get: { value },
-            set: { store.send(.updateEditor(field($0))) },
+            set: { store.send(.updateField(field($0))) },
         )
     }
 
@@ -318,7 +318,7 @@ private extension ServiceEditorView {
     ) -> Binding<Bool> {
         Binding(
             get: { value },
-            set: { store.send(.updateEditor(field($0))) },
+            set: { store.send(.updateField(field($0))) },
         )
     }
 

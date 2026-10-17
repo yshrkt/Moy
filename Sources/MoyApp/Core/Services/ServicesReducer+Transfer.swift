@@ -9,13 +9,13 @@ extension ServicesReducer {
         case .importService:
             return startImport(into: &state)
 
-        case let .receiveImportService(result):
+        case let .receiveImport(result):
             return finishImport(result, into: &state)
 
         case let .exportService(identifier):
             return startExport(identifier, into: &state)
 
-        case let .receiveExportService(identifier, result):
+        case let .receiveExport(identifier, result):
             guard state.transferOperation == .exportService(identifier) else { return .none }
             state.transferOperation = nil
             if case let .failure(failure) = result {
@@ -32,12 +32,12 @@ extension ServicesReducer {
         let panels = dependencies.transferFilePanelClient
         let transfer = dependencies.serviceTransferUseCase
         return .run {
-            guard let url = await panels.chooseImportFile() else { return .receiveImportService(.success(nil)) }
+            guard let url = await panels.chooseImportFile() else { return .receiveImport(.success(nil)) }
             do {
                 let draft = try await transfer.readService(from: url)
-                return .receiveImportService(.success(draft))
+                return .receiveImport(.success(draft))
             } catch {
-                return .receiveImportService(.failure(.from(error)))
+                return .receiveImport(.failure(.from(error)))
             }
         }
     }
@@ -53,13 +53,13 @@ extension ServicesReducer {
         let transfer = dependencies.serviceTransferUseCase
         return .run {
             guard let url = await panels.chooseExportFile(identifier) else {
-                return .receiveExportService(identifier, .success(()))
+                return .receiveExport(identifier, .success(()))
             }
             do {
                 try await transfer.exportService(identifier: identifier, to: url)
-                return .receiveExportService(identifier, .success(()))
+                return .receiveExport(identifier, .success(()))
             } catch {
-                return .receiveExportService(identifier, .failure(.from(error)))
+                return .receiveExport(identifier, .failure(.from(error)))
             }
         }
     }

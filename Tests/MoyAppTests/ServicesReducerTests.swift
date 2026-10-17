@@ -12,23 +12,23 @@ struct ServicesReducerTests {
         var state = ServicesState()
 
         _ = reducer.reduce(into: &state, action: .presentCreateService)
-        let validation = reducer.reduce(into: &state, action: .editor(.updateEditor(.identifier("api-server"))))
+        let validation = reducer.reduce(into: &state, action: .editor(.updateField(.identifier("api-server"))))
         let validated = try #require(await validation.executeForTesting())
         _ = reducer.reduce(into: &state, action: validated)
-        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.displayName("API Server"))))
-        _ = reducer.reduce(into: &state, action: .editor(.updateEditor(.executable("/usr/bin/python3"))))
-        _ = reducer.reduce(into: &state, action: .editor(.arguments(.addArgument)))
+        _ = reducer.reduce(into: &state, action: .editor(.updateField(.displayName("API Server"))))
+        _ = reducer.reduce(into: &state, action: .editor(.updateField(.executable("/usr/bin/python3"))))
+        _ = reducer.reduce(into: &state, action: .editor(.arguments(.add)))
         let argumentID = try #require(state.editor?.arguments.first?.id)
-        _ = reducer.reduce(into: &state, action: .editor(.arguments(.updateArgument(argumentID, ""))))
-        _ = reducer.reduce(into: &state, action: .editor(.environment(.addEnvironmentVariable)))
+        _ = reducer.reduce(into: &state, action: .editor(.arguments(.update(argumentID, ""))))
+        _ = reducer.reduce(into: &state, action: .editor(.environment(.add)))
         let variableID = try #require(state.editor?.environmentVariables.first?.id)
-        _ = reducer.reduce(into: &state, action: .editor(.environment(.updateEnvironmentKey(variableID, "MODE"))))
+        _ = reducer.reduce(into: &state, action: .editor(.environment(.updateKey(variableID, "MODE"))))
         _ = reducer.reduce(
             into: &state,
-            action: .editor(.environment(.updateEnvironmentValue(variableID, "development"))),
+            action: .editor(.environment(.updateValue(variableID, "development"))),
         )
 
-        let effect = reducer.reduce(into: &state, action: .editor(.saveService))
+        let effect = reducer.reduce(into: &state, action: .editor(.save))
         #expect(state.editor?.isSaving == true)
         let response = try #require(await effect.executeForTesting())
         let saveEffect = reducer.reduce(into: &state, action: response)
@@ -52,8 +52,8 @@ struct ServicesReducerTests {
         let reducer = makeReducer(useCase: useCase)
         var state = ServicesState()
 
-        let first = reducer.reduce(into: &state, action: .enableService(identifier))
-        let second = reducer.reduce(into: &state, action: .enableService(identifier))
+        let first = reducer.reduce(into: &state, action: .operation(.enable(identifier)))
+        let second = reducer.reduce(into: &state, action: .operation(.enable(identifier)))
         #expect(state.isOperating(identifier))
         let duplicateResponse = await second.executeForTesting()
         if case .some = duplicateResponse {
@@ -61,10 +61,74 @@ struct ServicesReducerTests {
         }
 
         let response = try #require(await first.executeForTesting())
-        _ = reducer.reduce(into: &state, action: response)
+        let refresh = reducer.reduce(into: &state, action: response)
 
         #expect(await useCase.enableCount() == 1)
         #expect(!state.isOperating(identifier))
+        guard case .refreshServices = await refresh.executeForTesting() else {
+            Issue.record("Completing an operation must refresh the service list")
+            return
+        }
+    }
+
+    @Test
+    func `deletion confirms once and refreshes services after clearing selection`() async throws {
+        let service = try makeService(identifier: "worker")
+        let useCase = TestServiceManagementUseCase(services: [service])
+        let reducer = makeReducer(useCase: useCase)
+        var state = ServicesState()
+        state.services = [service]
+        state.selectedIdentifier = service.identifier
+
+        let unconfirmed = reducer.reduce(into: &state, action: .deletion(.confirm))
+        #expect(await unconfirmed.executeForTesting() == nil)
+        _ = reducer.reduce(into: &state, action: .deletion(.request(service.identifier)))
+        #expect(state.pendingDeletion == service.identifier)
+        _ = reducer.reduce(into: &state, action: .deletion(.cancel))
+        #expect(state.pendingDeletion == nil)
+        _ = reducer.reduce(into: &state, action: .deletion(.request(service.identifier)))
+        let deletion = reducer.reduce(into: &state, action: .deletion(.confirm))
+        #expect(state.pendingDeletion == nil)
+        #expect(state.isOperating(service.identifier))
+        let duplicate = reducer.reduce(into: &state, action: .deletion(.confirm))
+        let overlap = reducer.reduce(into: &state, action: .operation(.enable(service.identifier)))
+        #expect(await duplicate.executeForTesting() == nil)
+        #expect(await overlap.executeForTesting() == nil)
+
+        let response = try #require(await deletion.executeForTesting())
+        let refresh = reducer.reduce(into: &state, action: response)
+        #expect(!state.isOperating(service.identifier))
+        #expect(state.selectedIdentifier == nil)
+        let refreshAction = try #require(await refresh.executeForTesting())
+        guard case .refreshServices = refreshAction else {
+            Issue.record("Completing deletion must refresh the service list")
+            return
+        }
+        let load = reducer.reduce(into: &state, action: refreshAction)
+        _ = try reducer.reduce(into: &state, action: #require(await load.executeForTesting()))
+        #expect(state.services.isEmpty)
+    }
+
+    @Test(arguments: [ServicesFailure.cancelled, .unexpected("test failure")])
+    func `failed operations preserve selection and refresh the service list`(failure: ServicesFailure) async throws {
+        let identifier = try ServiceIdentifier("worker")
+        let reducer = makeReducer(useCase: TestServiceManagementUseCase())
+        for action in [
+            ServicesAction.operation(.receive(identifier, .failure(failure))),
+            .deletion(.receive(identifier, .failure(failure))),
+        ] {
+            var state = ServicesState()
+            state.selectedIdentifier = identifier
+            state.operatingIdentifiers.insert(identifier)
+            let refresh = reducer.reduce(into: &state, action: action)
+            #expect(!state.isOperating(identifier))
+            #expect(state.selectedIdentifier == identifier)
+            #expect(state.failure == (failure == .cancelled ? nil : failure))
+            guard case .refreshServices = await refresh.executeForTesting() else {
+                Issue.record("Failure or cancellation must refresh the service list")
+                return
+            }
+        }
     }
 
     @Test

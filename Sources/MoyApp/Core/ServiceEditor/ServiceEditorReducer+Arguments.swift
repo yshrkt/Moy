@@ -6,21 +6,21 @@ extension ServiceEditorReducer {
         guard !state.isSaving else { return }
         let editor = state
         switch action {
-        case let .selectArgument(id):
+        case let .select(id):
             guard id == nil || editor.arguments.contains(where: { $0.id == id }) else { return }
             editor.selectedArgumentID = id
 
-        case .addArgument:
+        case .add:
             let argument = ServiceEditorState.Argument()
             let index = editor.arguments.firstIndex { $0.id == editor.selectedArgumentID }
             editor.arguments.insert(argument, at: index.map { $0 + 1 } ?? editor.arguments.count)
             editor.selectedArgumentID = argument.id
 
-        case let .updateArgument(id, value):
+        case let .update(id, value):
             guard let index = editor.arguments.firstIndex(where: { $0.id == id }) else { return }
             editor.arguments[index].value = value
 
-        case let .removeArgument(id):
+        case let .remove(id):
             guard let index = editor.arguments.firstIndex(where: { $0.id == id }) else { return }
             editor.arguments.remove(at: index)
             if editor.selectedArgumentID == id {
@@ -28,10 +28,10 @@ extension ServiceEditorReducer {
                 editor.selectedArgumentID = editor.arguments.isEmpty ? nil : editor.arguments[nextIndex].id
             }
 
-        case let .moveArgument(id, destination):
+        case let .move(id, destination):
             moveArgument(in: editor, id: id, destination: destination)
 
-        case let .dropArgument(id, insertion):
+        case let .drop(id, insertion):
             guard (0 ... editor.arguments.count).contains(insertion),
                   let source = editor.arguments.firstIndex(where: { $0.id == id })
             else { return }

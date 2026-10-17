@@ -22,7 +22,7 @@ struct ServiceDetailView: View {
             }
         }
         .onDisappear {
-            store.send(.copyFeedback(.clearCopyFeedback))
+            store.send(.copyFeedback(.clear))
         }
         .toolbar {
             ToolbarItemGroup {
@@ -39,7 +39,7 @@ struct ServiceDetailView: View {
                 }
                 .disabled(!store.state.canOpenEditor || store.state.isOperating(service.identifier))
                 Button(role: .destructive) {
-                    store.send(.requestDeleteService(service.identifier))
+                    store.send(.deletion(.request(service.identifier)))
                 } label: {
                     Label(L10n.Common.delete, systemImage: "trash")
                 }

@@ -9,13 +9,13 @@ struct DaemonAuthorizationTests {
     func `kind is selectable only for ordinary creation`() throws {
         let reducer = ServiceEditorReducer(dependencies: .init())
         var editor = ServiceEditorState.create()
-        _ = reducer.reduce(into: &editor, action: .updateEditor(.kind(.launchDaemon)))
+        _ = reducer.reduce(into: &editor, action: .updateField(.kind(.launchDaemon)))
         #expect(editor.kind == .launchDaemon)
         let draft = try ServiceDraft(
             identifier: ServiceIdentifier("import-daemon"), kind: .launchDaemon, programArguments: ["/usr/bin/true"],
         )
         editor = .create(draft: draft, existingIdentifiers: [])
-        _ = reducer.reduce(into: &editor, action: .updateEditor(.kind(.launchAgent)))
+        _ = reducer.reduce(into: &editor, action: .updateField(.kind(.launchAgent)))
         #expect(editor.kind == .launchDaemon)
         if case let .create(_, saved) = try ServiceEditorPayload(editor: editor) {
             #expect(saved.kind == .launchDaemon)
@@ -23,7 +23,7 @@ struct DaemonAuthorizationTests {
             Issue.record("Expected a create payload")
         }
         editor = try .init(service: daemon())
-        _ = reducer.reduce(into: &editor, action: .updateEditor(.kind(.launchAgent)))
+        _ = reducer.reduce(into: &editor, action: .updateField(.kind(.launchAgent)))
         #expect(editor.kind == .launchDaemon)
         if case let .update(saved) = try ServiceEditorPayload(editor: editor) {
             #expect(saved.kind == .launchDaemon)
