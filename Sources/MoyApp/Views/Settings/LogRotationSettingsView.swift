@@ -14,27 +14,31 @@ struct LogRotationSettingsView: View {
             .toggleStyle(.switch)
             .disabled(isDisabled)
 
-            Stepper(value: Binding(
-                get: { store.state.logRotationSettings?.maximumSizeMB ?? 10 },
-                set: { store.send(.logRotation(.setMaximumSize($0))) },
-            ), in: 1 ... 100_000) {
-                LabeledContent(L10n.Settings.logRotationSize) {
+            LabeledContent(L10n.Settings.logRotationSize) {
+                HStack {
                     Text("\(store.state.logRotationSettings?.maximumSizeMB ?? 10) MB")
                         .monospacedDigit()
+                    Stepper(L10n.Settings.logRotationSize, value: Binding(
+                        get: { store.state.logRotationSettings?.maximumSizeMB ?? 10 },
+                        set: { store.send(.logRotation(.setMaximumSize($0))) },
+                    ), in: 1 ... 100_000)
+                        .labelsHidden()
+                        .disabled(isDisabled)
                 }
             }
-            .disabled(isDisabled)
 
-            Stepper(value: Binding(
-                get: { store.state.logRotationSettings?.generations ?? 5 },
-                set: { store.send(.logRotation(.setGenerations($0))) },
-            ), in: 1 ... 100) {
-                LabeledContent(L10n.Settings.logRotationGenerations) {
+            LabeledContent(L10n.Settings.logRotationGenerations) {
+                HStack {
                     Text((store.state.logRotationSettings?.generations ?? 5).formatted())
                         .monospacedDigit()
+                    Stepper(L10n.Settings.logRotationGenerations, value: Binding(
+                        get: { store.state.logRotationSettings?.generations ?? 5 },
+                        set: { store.send(.logRotation(.setGenerations($0))) },
+                    ), in: 1 ... 100)
+                        .labelsHidden()
+                        .disabled(isDisabled)
                 }
             }
-            .disabled(isDisabled)
 
             Text(L10n.Settings.logRotationDescription)
                 .font(.callout)
