@@ -16,9 +16,6 @@ struct ListCommand: AsyncParsableCommand {
             print("No services registered.")
             return
         }
-        print("IDENTIFIER\tNAME\tPROGRAM")
-        for service in services {
-            print("\(service.identifier.rawValue)\t\(service.name)\t\(service.programArguments[0])")
-        }
+        print(CLIListTable.render(services))
     }
 }

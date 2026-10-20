@@ -53,6 +53,7 @@ struct CLIEndToEndTests {
             let service = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
             #expect(service["kind"] as? String == "launchDaemon")
             #expect(service["runAtLoad"] as? Bool == true)
+
             let logs = try #require(environment["MOY_LOG_DIRECTORY"])
             #expect((service["standardOutPath"] as? String)?.hasPrefix(logs + "/") == true)
             let exported = directory.appending(path: "exported.json")
@@ -99,6 +100,14 @@ struct CLIEndToEndTests {
             #expect(service["programArguments"] as? [String] == ["/usr/bin/python3", "-m", "http.server"])
             #expect(service["environmentVariables"] as? [String: String] == ["TOKEN": "a=b=c"])
             #expect(service["runAtLoad"] as? Bool == true)
+
+            let table = try runCLI(["list"], environment: environment)
+            #expect(table.status == 0)
+            #expect(table.standardOutput == """
+            IDENTIFIER  KIND         NAME        PROGRAM
+            web-server  LaunchAgent  Web server  /usr/bin/python3
+
+            """)
 
             let remove = try runCLI(["remove", identifier], environment: environment)
             #expect(remove.status == 0)
@@ -184,7 +193,7 @@ struct CLIEndToEndTests {
     }
 }
 
-private struct CLIResult {
+struct CLIResult {
     let status: Int32
     let standardOutput: String
     let standardError: String
@@ -192,7 +201,7 @@ private struct CLIResult {
 
 private final class TestBundleToken: NSObject {}
 
-private func runCLI(_ arguments: [String], environment: [String: String]) throws -> CLIResult {
+func runCLI(_ arguments: [String], environment: [String: String]) throws -> CLIResult {
     let executable = Bundle(for: TestBundleToken.self)
         .bundleURL
         .deletingLastPathComponent()
@@ -222,7 +231,7 @@ private func runCLI(_ arguments: [String], environment: [String: String]) throws
     )
 }
 
-private func withTemporaryEnvironment(_ body: ([String: String]) throws -> Void) throws {
+func withTemporaryEnvironment(_ body: ([String: String]) throws -> Void) throws {
     let root = FileManager.default.temporaryDirectory.appending(path: "MoyCLITests-\(UUID().uuidString)")
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: root) }
