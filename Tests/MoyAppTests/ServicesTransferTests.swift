@@ -157,6 +157,85 @@ struct ServicesTransferTests {
         #expect(state.editor === editor)
     }
 
+    @Test(arguments: ServiceKind.allCases)
+    func `duplicate opens with empty identifier and saves without enabling`(kind: ServiceKind) async throws {
+        var draft = try makeDraft()
+        draft.kind = kind
+        let transfer = TransferUseCaseStub(draft: draft)
+        let management = TestServiceManagementUseCase()
+        let reducer = makeReducer(transfer: transfer, management: management)
+        var state = ServicesState()
+        let source = definition(draft)
+        state.services = [source]
+        let effect = reducer.reduce(into: &state, action: .transfer(.duplicateService(source.identifier)))
+        #expect(!state.canOpenEditor)
+        let duplicate = reducer.reduce(into: &state, action: .transfer(.duplicateService(source.identifier)))
+        #expect(await duplicate.executeForTesting() == nil)
+        _ = reducer.reduce(into: &state, action: .transfer(.importService))
+        _ = reducer.reduce(into: &state, action: .presentCreateService)
+        #expect(state.editor == nil)
+        _ = reducer.reduce(into: &state, action: .selectService(nil))
+        _ = try reducer.reduce(into: &state, action: #require(await effect.executeForTesting()))
+        let editor = try #require(state.editor)
+        #expect(editor.mode == .create)
+        #expect(editor.identifier.isEmpty)
+        #expect(editor.identifierIssue == .invalidFormat(.empty))
+        #expect(!editor.canSave)
+        #expect(editor.kind == kind)
+        #expect(!editor.canChangeKind)
+        #expect(editor.standardOutPath.isEmpty)
+        #expect(editor.standardErrorPath == draft.standardErrorPath)
+        #expect(await transfer.sourceReads == [source.identifier])
+        #expect(await management.lastCreateRequest() == nil)
+        let correction = reducer.reduce(into: &state, action: .editor(.updateField(.identifier("new-service"))))
+        _ = try reducer.reduce(into: &state, action: #require(await correction.executeForTesting()))
+        let save = reducer.reduce(into: &state, action: .editor(.save))
+        let create = try reducer.reduce(into: &state, action: #require(await save.executeForTesting()))
+        _ = try reducer.reduce(into: &state, action: #require(await create.executeForTesting()))
+        let request = try #require(await management.lastCreateRequest())
+        draft.identifier = try ServiceIdentifier("new-service")
+        #expect(request.draft == draft)
+        #expect(!request.enable)
+        #expect(state.editor == nil)
+        #expect(state.selectedIdentifier == draft.identifier)
+        #expect(state.services == [source])
+    }
+
+    @Test
+    func `duplicate failures release transfer and operating services cannot be duplicated`() async throws {
+        let draft = try makeDraft()
+        let transfer = TransferUseCaseStub(draft: draft, sourceError: .serviceNotFound(draft.identifier.rawValue))
+        let reducer = makeReducer(transfer: transfer)
+        var state = ServicesState()
+        state.services = [definition(draft)]
+        state.operatingIdentifiers.insert(draft.identifier)
+        let blocked = reducer.reduce(into: &state, action: .transfer(.duplicateService(draft.identifier)))
+        #expect(await blocked.executeForTesting() == nil)
+        #expect(state.transferOperation == nil)
+        state.operatingIdentifiers.remove(draft.identifier)
+        let effect = reducer.reduce(into: &state, action: .transfer(.duplicateService(draft.identifier)))
+        _ = try reducer.reduce(into: &state, action: #require(await effect.executeForTesting()))
+        #expect(state.editor == nil)
+        #expect(state.canOpenEditor)
+        #expect(state.failure == .moy(.serviceNotFound(draft.identifier.rawValue)))
+    }
+
+    @Test
+    func `duplicate cancellation discards editor without saving`() async throws {
+        let draft = try makeDraft()
+        let management = TestServiceManagementUseCase()
+        let reducer = makeReducer(transfer: TransferUseCaseStub(draft: draft), management: management)
+        var state = ServicesState()
+        state.services = [definition(draft)]
+        let effect = reducer.reduce(into: &state, action: .transfer(.duplicateService(draft.identifier)))
+        _ = try reducer.reduce(into: &state, action: #require(await effect.executeForTesting()))
+        let cancel = reducer.reduce(into: &state, action: .editor(.cancel))
+        _ = try reducer.reduce(into: &state, action: #require(await cancel.executeForTesting()))
+        #expect(state.editor == nil)
+        #expect(state.failure == nil)
+        #expect(await management.lastCreateRequest() == nil)
+    }
+
     private func makeReducer(
         transfer: TransferUseCaseStub,
         management: TestServiceManagementUseCase = TestServiceManagementUseCase(),
@@ -204,14 +283,20 @@ private actor TransferUseCaseStub: ServiceTransferUseCase {
     let draft: ServiceDraft
     let readError: ServiceJSONError?
     let exportError: MoyError?
+    let sourceError: MoyError?
+    private(set) var sourceReads: [ServiceIdentifier] = []
     private(set) var reads: [URL] = []
     private(set) var exports: [Export] = []
     private(set) var importCalls = 0
 
-    init(draft: ServiceDraft, readError: ServiceJSONError? = nil, exportError: MoyError? = nil) {
+    init(
+        draft: ServiceDraft, readError: ServiceJSONError? = nil, exportError: MoyError? = nil,
+        sourceError: MoyError? = nil,
+    ) {
         self.draft = draft
         self.readError = readError
         self.exportError = exportError
+        self.sourceError = sourceError
     }
 
     func readService(from url: URL) async throws -> ServiceDraft {
@@ -220,6 +305,21 @@ private actor TransferUseCaseStub: ServiceTransferUseCase {
             throw readError
         }
         return draft
+    }
+
+    func readService(identifier: ServiceIdentifier) async throws -> ServiceDraft {
+        sourceReads.append(identifier)
+        if let sourceError {
+            throw sourceError
+        }
+        return draft
+    }
+
+    func copyService(
+        from _: ServiceIdentifier, to _: ServiceIdentifier, enable _: Bool,
+    ) async throws -> ServiceDefinition {
+        Issue.record("GUI duplication should only read settings")
+        throw MoyError.serviceNotFound("unused")
     }
 
     func importService(from _: URL, enable _: Bool) async throws -> ServiceDefinition {

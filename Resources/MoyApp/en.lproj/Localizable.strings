@@ -27,6 +27,8 @@
 "services.noSelection" = "Select a service to view its settings.";
 "services.newTitle" = "New Service";
 "services.new" = "New";
+"services.duplicate" = "Duplicate";
+"services.sharedLogHelp" = "Custom log paths are preserved. If a path matches the original service, both services write to the same log file.";
 "services.import" = "Import…";
 "services.export" = "Export…";
 "services.importTitle" = "Import a Service";

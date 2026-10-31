@@ -27,6 +27,8 @@
 "services.noSelection" = "サービスを選択すると設定を確認できます。";
 "services.newTitle" = "新規サービス";
 "services.new" = "新規";
+"services.duplicate" = "複製";
+"services.sharedLogHelp" = "独自のログ保存先は引き継がれます。元のサービスと同じパスの場合、ログは同じファイルに書き込まれます。";
 "services.import" = "インポート…";
 "services.export" = "エクスポート…";
 "services.importTitle" = "サービスをインポート";

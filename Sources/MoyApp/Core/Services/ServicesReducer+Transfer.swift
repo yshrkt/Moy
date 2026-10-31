@@ -6,6 +6,12 @@ extension ServicesReducer {
         into state: inout ServicesState, action: ServicesTransferAction,
     ) -> Effect<ServicesTransferAction> {
         switch action {
+        case let .duplicateService(identifier):
+            return startDuplicate(identifier, into: &state)
+
+        case let .receiveDuplicate(identifier, result):
+            return finishDuplicate(identifier, result: result, into: &state)
+
         case .importService:
             return startImport(into: &state)
 
@@ -23,6 +29,37 @@ extension ServicesReducer {
             }
             return .none
         }
+    }
+
+    private func startDuplicate(
+        _ identifier: ServiceIdentifier, into state: inout ServicesState,
+    ) -> Effect<ServicesTransferAction> {
+        guard state.canOpenEditor, !state.isOperating(identifier),
+              state.services.contains(where: { $0.identifier == identifier }) else { return .none }
+        state.failure = nil
+        state.transferOperation = .duplicateService(identifier)
+        let transfer = dependencies.serviceTransferUseCase
+        return .run {
+            do {
+                let draft = try await transfer.readService(identifier: identifier)
+                return .receiveDuplicate(identifier, .success(draft))
+            } catch {
+                return .receiveDuplicate(identifier, .failure(.from(error)))
+            }
+        }
+    }
+
+    private func finishDuplicate(
+        _ identifier: ServiceIdentifier, result: Result<ServiceDraft, ServicesFailure>, into state: inout ServicesState,
+    ) -> Effect<ServicesTransferAction> {
+        guard state.transferOperation == .duplicateService(identifier) else { return .none }
+        state.transferOperation = nil
+        switch result {
+        case let .success(draft):
+            openEditor(draft: draft, clearingIdentifier: true, into: &state)
+        case let .failure(failure): state.failure = failure
+        }
+        return .none
     }
 
     private func startImport(into state: inout ServicesState) -> Effect<ServicesTransferAction> {
@@ -71,15 +108,24 @@ extension ServicesReducer {
         state.transferOperation = nil
         switch result {
         case let .success(draft?):
-            let identifiers = Set(state.services.map(\.identifier.rawValue))
-            let editor = ServiceEditorState.create(draft: draft, existingIdentifiers: identifiers)
-            editor.identifierIssue = ServiceEditorIdentifierValidator.validate(
-                editor.identifier, existingIdentifiers: identifiers,
-            )
-            state.editor = editor
+            openEditor(draft: draft, into: &state)
         case .success(nil): break
         case let .failure(failure): state.failure = failure
         }
         return .none
+    }
+
+    private func openEditor(
+        draft: ServiceDraft, clearingIdentifier: Bool = false, into state: inout ServicesState,
+    ) {
+        let identifiers = Set(state.services.map(\.identifier.rawValue))
+        let editor = ServiceEditorState.create(draft: draft, existingIdentifiers: identifiers)
+        if clearingIdentifier {
+            editor.identifier = ""
+        }
+        editor.identifierIssue = ServiceEditorIdentifierValidator.validate(
+            editor.identifier, existingIdentifiers: identifiers,
+        )
+        state.editor = editor
     }
 }

@@ -33,6 +33,12 @@ struct ServiceDetailView: View {
                 }
                 .disabled(!store.state.canOpenEditor)
                 Button {
+                    store.send(.transfer(.duplicateService(service.identifier)))
+                } label: {
+                    Label(L10n.Services.duplicate, systemImage: "plus.square.on.square")
+                }
+                .disabled(!store.state.canOpenEditor || store.state.isOperating(service.identifier))
+                Button {
                     store.send(.transfer(.exportService(service.identifier)))
                 } label: {
                     Label(L10n.Services.export, systemImage: "square.and.arrow.up")

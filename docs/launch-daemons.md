@@ -4,7 +4,7 @@ Moyに登録したサービスをroot権限のLaunchDaemonとして管理でき�
 
 ## 新規作成と編集
 
-GUIの新規作成でサービス種別を「LaunchDaemon」にする。既存サービスの編集とJSONインポートではkindを変更できない。インポートではファイルに指定されたkindを維持する。
+GUIの新規作成でサービス種別を「LaunchDaemon」にする。既存サービスの編集・JSONインポート・複製ではkindを変更できない。インポートではファイルに指定されたkindを、複製では元サービスのkindを維持する。
 
 CLIの新規作成では`--kind launchDaemon`を指定する。省略時はLaunchAgentとなる。
 

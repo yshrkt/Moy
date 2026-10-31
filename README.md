@@ -122,6 +122,7 @@ The following subcommands are available.
 | `show` | Show a service definition. |
 | `add` | Add a service definition. |
 | `edit` | Update service settings. |
+| `copy` | Duplicate an existing service. |
 | `import` | Import a service from a JSON file. |
 | `export` | Export a service to a JSON file. |
 | `remove` | Disable the service and delete its definition. |

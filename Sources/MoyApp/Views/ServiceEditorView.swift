@@ -275,6 +275,10 @@ private extension ServiceEditorView {
             if case .create = editor.mode {
                 fieldHelp(L10n.Services.defaultLogHelp)
                     .padding(.vertical, 4)
+                if !editor.canChangeKind, !editor.standardOutPath.isEmpty || !editor.standardErrorPath.isEmpty {
+                    fieldHelp(L10n.Services.sharedLogHelp)
+                        .padding(.vertical, 4)
+                }
             }
         } header: {
             Text(L10n.Services.logs)

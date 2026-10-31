@@ -12,6 +12,7 @@ struct MoyCommand: AsyncParsableCommand {
             InternalRepositoryCommand.self,
             AddCommand.self,
             ImportCommand.self,
+            CopyCommand.self,
             ExportCommand.self,
             EditCommand.self,
             RemoveCommand.self,

@@ -101,6 +101,7 @@ enum ServicesFailure: Error, Equatable, Sendable {
 }
 
 enum ServiceTransferOperation: Equatable, Sendable {
+    case duplicateService(ServiceIdentifier)
     case importService
     case exportService(ServiceIdentifier)
 }

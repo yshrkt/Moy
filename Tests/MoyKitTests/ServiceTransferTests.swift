@@ -106,10 +106,76 @@ struct ServiceTransferTests {
         #expect(try await management.list().isEmpty)
     }
 
+    @Test(arguments: [false, true], ServiceKind.allCases)
+    func `copy preserves settings regenerates default logs and enables only when requested`(
+        enable: Bool, kind: ServiceKind,
+    ) async throws {
+        let fixture = try TemporaryPaths()
+        defer { fixture.remove() }
+        let launch = TransferLaunchRepository()
+        let management = makeManagement(paths: fixture.paths, launch: launch)
+        let source = try await management.create(ServiceDraft(
+            identifier: ServiceIdentifier("copy-source"), kind: kind, displayName: "Source", description: "Description",
+            programArguments: ["/usr/bin/printf", "", "hello world", "$PORT"], workingDirectory: "/tmp",
+            environmentVariables: ["TOKEN": "a=b"], runAtLoad: true, keepAlive: true,
+            throttleInterval: 12, standardErrorPath: "/tmp/shared.stderr.log",
+        ))
+        let transfer = DefaultServiceTransferUseCase(serviceManagementUseCase: management, paths: fixture.paths)
+        let destination = try ServiceIdentifier("copy-destination")
+        let copied = try await transfer.copyService(from: source.identifier, to: destination, enable: enable)
+        let expected = ServiceDefinition(
+            identifier: destination, kind: kind, displayName: source.displayName, description: source.description,
+            programArguments: source.programArguments, workingDirectory: source.workingDirectory,
+            environmentVariables: source.environmentVariables, runAtLoad: source.runAtLoad, keepAlive: source.keepAlive,
+            throttleInterval: source.throttleInterval,
+            standardOutPath: fixture.paths.standardOutFile(identifier: destination, kind: kind).path,
+            standardErrorPath: source.standardErrorPath,
+        )
+        #expect(copied == expected)
+        #expect(try await management.find(identifier: source.identifier) == source)
+        #expect(await launch.enabled == (enable ? [copied] : []))
+        await #expect(throws: MoyError.duplicateService(destination.rawValue)) {
+            _ = try await transfer.copyService(from: source.identifier, to: destination)
+        }
+        #expect(try await management.list().count == 2)
+    }
+
+    @Test
+    func `copy handles missing source missing executable and enable failure without changing source`() async throws {
+        let fixture = try TemporaryPaths()
+        defer { fixture.remove() }
+        let management = makeManagement(paths: fixture.paths, launch: TransferLaunchRepository(failEnable: true))
+        let transfer = DefaultServiceTransferUseCase(serviceManagementUseCase: management, paths: fixture.paths)
+        let destination = try ServiceIdentifier("copy-destination")
+        await #expect(throws: MoyError.serviceNotFound("missing")) {
+            _ = try await transfer.copyService(from: ServiceIdentifier("missing"), to: destination)
+        }
+        let executable = fixture.root.appending(path: "tool")
+        try Data("#!/bin/sh\nexit 0\n".utf8).write(to: executable)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: executable.path)
+        let source = try await management.create(ServiceDraft(
+            identifier: ServiceIdentifier("copy-source"), programArguments: [executable.path],
+            standardOutPath: "/tmp/shared.stdout.log",
+        ))
+        await #expect(throws: MoyError.self) {
+            _ = try await transfer.copyService(from: source.identifier, to: destination, enable: true)
+        }
+        #expect(try await management.list() == [source])
+        try FileManager.default.removeItem(at: executable)
+        let draft = try await transfer.readService(identifier: source.identifier)
+        #expect(draft.programArguments == [executable.path])
+        #expect(draft.standardOutPath == source.standardOutPath)
+        #expect(draft.standardErrorPath == nil)
+        await #expect(throws: MoyError.executableNotFound(executable.path)) {
+            _ = try await transfer.copyService(from: source.identifier, to: destination)
+        }
+        #expect(try await management.list() == [source])
+    }
+
     private func makeManagement(paths: MoyPaths, launch: TransferLaunchRepository) -> DefaultServiceManagementUseCase {
         DefaultServiceManagementUseCase(
             serviceRepository: JSONServiceRepository(paths: paths, labelChecker: TransferLabelChecker()),
-            launchAgentRepository: launch,
+            launchAgentRepository: launch, requireAdministrator: {},
         )
     }
 }
