@@ -3,7 +3,7 @@ import MoyKit
 import NanoRedux
 import Observation
 
-typealias SettingsStore = Store<SettingsState, SettingsAction>
+typealias SettingsStore = any Store<SettingsState, SettingsAction>
 
 enum SettingsTab: Hashable, Sendable {
     case settings

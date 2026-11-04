@@ -1,4 +1,5 @@
 import AppKit
+import NanoRedux
 import SwiftUI
 
 @MainActor
@@ -82,7 +83,7 @@ struct SettingsView: View {
 
 #if DEBUG
     #Preview {
-        SettingsView(store: .reducer(
+        SettingsView(store: StoreBuilder.reducer(
             initialState: SettingsState(),
             reducer: SettingsReducer(dependencies: SettingsDependencies(
                 cliInstallerClient: CLIInstallerClient(status: { .notInstalled }, install: {}, uninstall: {}),

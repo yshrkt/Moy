@@ -137,7 +137,7 @@ struct ServiceEditorIdentifierValidationTests {
     func `runtime waits for settled input before accepting the latest validation`() async throws {
         let editor = ServiceEditorState.create()
         editor.executable = "/usr/bin/true"
-        let store = Store.reducer(initialState: editor, reducer: ServiceEditorReducer(dependencies: .init()))
+        let store = StoreBuilder.reducer(initialState: editor, reducer: ServiceEditorReducer(dependencies: .init()))
         store.send(.updateField(.identifier("API")))
         try await Task.sleep(for: .milliseconds(100))
         #expect(editor.identifier == "API")

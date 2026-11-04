@@ -32,7 +32,7 @@ struct ServiceDetailRenderingTests {
         state.copyToast = CopyToast(
             id: UUID(), identifier: service.identifier, item: "ProgramArguments", succeeded: true,
         )
-        let store = Store.reducer(
+        let store = StoreBuilder.reducer(
             initialState: state,
             reducer: ServicesReducer(dependencies: ServicesDependencies(
                 serviceManagementUseCase: TestServiceManagementUseCase(),

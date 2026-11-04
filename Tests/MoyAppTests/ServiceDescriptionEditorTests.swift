@@ -14,7 +14,7 @@ struct ServiceDescriptionEditorTests {
         state.editor = .create()
         let original = "先頭😀末尾"
         state.editor?.serviceDescription = original
-        let store = Store.reducer(
+        let store = StoreBuilder.reducer(
             initialState: state,
             reducer: ServicesReducer(dependencies: ServicesDependencies(
                 serviceManagementUseCase: TestServiceManagementUseCase(),

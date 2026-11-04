@@ -13,7 +13,7 @@ struct MoyApp: App {
     @State private var settingsStore: SettingsStore
 
     init() {
-        let store = Store.reducer(
+        let store = StoreBuilder.reducer(
             initialState: ServicesState(),
             reducer: ServicesReducer(dependencies: ServicesDependencies(
                 serviceManagementUseCase: AuthorizedServiceManagementUseCase(
@@ -22,7 +22,7 @@ struct MoyApp: App {
             )),
         )
         _store = State(initialValue: store)
-        let settingsStore = Store.reducer(
+        let settingsStore = StoreBuilder.reducer(
             initialState: SettingsState(),
             reducer: SettingsReducer(dependencies: SettingsDependencies()),
         )

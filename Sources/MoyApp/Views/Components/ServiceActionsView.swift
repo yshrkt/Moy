@@ -2,7 +2,7 @@ import MoyKit
 import NanoRedux
 import SwiftUI
 
-typealias ServicesStore = Store<ServicesState, ServicesAction>
+typealias ServicesStore = any Store<ServicesState, ServicesAction>
 
 struct ServiceActionsView: View {
     let store: ServicesStore

@@ -3,7 +3,7 @@ import MoyKit
 import NanoRedux
 import Observation
 
-typealias ServiceEditorStore = Store<ServiceEditorState, ServiceEditorAction>
+typealias ServiceEditorStore = any Store<ServiceEditorState, ServiceEditorAction>
 
 enum ServiceEditorMode: Equatable, Sendable {
     case create

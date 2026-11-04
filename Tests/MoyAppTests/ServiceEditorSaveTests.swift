@@ -101,7 +101,7 @@ struct ServiceEditorSaveTests {
     func `editor presents its own error alert`() async throws {
         let state = ServicesState()
         state.editor = .create()
-        let store = Store.reducer(
+        let store = StoreBuilder.reducer(
             initialState: state,
             reducer: ServicesReducer(dependencies: ServicesDependencies(
                 serviceManagementUseCase: TestServiceManagementUseCase(),
