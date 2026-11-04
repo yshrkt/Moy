@@ -49,6 +49,14 @@
 "services.behavior" = "動作";
 "services.logs" = "ログ";
 "services.status" = "状態";
+"services.metrics.cpu" = "CPU";
+"services.metrics.memory" = "メモリ";
+"services.metrics.measuring" = "計測中…";
+"services.metrics.unavailable" = "リソース使用量を取得できません。";
+"services.metrics.cpuHelp" = "このプロセスのCPU使用率と直近60秒の推移です。1コアを使い切ると100%になります。子プロセスは含みません。";
+"services.metrics.memoryHelp" = "このプロセスのメモリ使用量と直近60秒の推移です。分母はMacの搭載メモリで、サービスの使用上限ではありません。子プロセスは含みません。";
+"services.metrics.memoryUsage" = "%1$@ / %2$@";
+"services.metrics.historyRange" = "直近60秒: %1$@〜%2$@";
 "services.identifier" = "Identifier";
 "validation.identifier.empty" = "Identifierを入力してください。";
 "validation.identifier.tooLong" = "64文字以内で入力してください。";

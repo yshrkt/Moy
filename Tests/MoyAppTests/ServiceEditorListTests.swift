@@ -228,7 +228,7 @@ struct ServiceEditorListTests {
 
     private func makeReducer() -> ServicesReducer {
         ServicesReducer(dependencies: ServicesDependencies(
-            serviceManagementUseCase: TestServiceManagementUseCase(),
+            serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
             editor: ServiceEditorDependencies(filePanelClient: FilePanelClient(choosePath: { _ in nil })),
             workspaceClient: WorkspaceClient(open: { _ in }, reveal: { _ in }),
         ))

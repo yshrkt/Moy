@@ -23,7 +23,7 @@ struct ServiceEditorSaveTests {
             serviceManagementUseCase: DefaultServiceManagementUseCase(
                 serviceRepository: repository,
                 launchAgentRepository: LaunchctlServiceRepository(paths: paths),
-            ),
+            ), metricsClient: .idle,
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
@@ -72,7 +72,7 @@ struct ServiceEditorSaveTests {
         var updated = service
         updated.programArguments = ["/usr/bin/true", "argument"]
         let reducer = ServicesReducer(dependencies: ServicesDependencies(
-            serviceManagementUseCase: TestServiceManagementUseCase(services: [updated]),
+            serviceManagementUseCase: TestServiceManagementUseCase(services: [updated]), metricsClient: .idle,
         ))
         var state = ServicesState()
         state.services = [service]
@@ -104,7 +104,7 @@ struct ServiceEditorSaveTests {
         let store = StoreBuilder.reducer(
             initialState: state,
             reducer: ServicesReducer(dependencies: ServicesDependencies(
-                serviceManagementUseCase: TestServiceManagementUseCase(),
+                serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
             )),
         )
         let editor = try #require(state.editor)
@@ -139,7 +139,7 @@ struct ServiceEditorSaveTests {
     @Test
     func `payload validation failures retain input and clear when dismissed`() async throws {
         let reducer = ServicesReducer(dependencies: ServicesDependencies(
-            serviceManagementUseCase: TestServiceManagementUseCase(),
+            serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)

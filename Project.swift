@@ -54,6 +54,7 @@ let project = Project(
             ],
             dependencies: [
                 .target(name: "MoyKit"),
+                .target(name: "MoyMetrics"),
                 .target(name: "MoyCLI"),
                 .external(name: "NanoRedux"),
             ],

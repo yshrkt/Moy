@@ -19,6 +19,7 @@ struct MoyApp: App {
                 serviceManagementUseCase: AuthorizedServiceManagementUseCase(
                     base: MoyRuntime.makeServiceManagementUseCase(),
                 ),
+                metricsClient: .live,
             )),
         )
         _store = State(initialValue: store)

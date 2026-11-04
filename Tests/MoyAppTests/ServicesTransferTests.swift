@@ -76,7 +76,9 @@ struct ServicesTransferTests {
     func `cancelled import is silent and does not read any file`() async throws {
         let transfer = try TransferUseCaseStub(draft: makeDraft())
         let reducer = ServicesReducer(dependencies: .init(
-            serviceManagementUseCase: TestServiceManagementUseCase(), serviceTransferUseCase: transfer,
+            serviceManagementUseCase: TestServiceManagementUseCase(),
+            metricsClient: .idle,
+            serviceTransferUseCase: transfer,
             transferFilePanelClient: .init(chooseImportFile: { nil }, chooseExportFile: { _ in nil }),
         ))
         var state = ServicesState()
@@ -112,7 +114,9 @@ struct ServicesTransferTests {
         let panelRequests = ExportPanelRequests()
         let url = URL(filePath: "/tmp/export.json")
         let reducer = ServicesReducer(dependencies: .init(
-            serviceManagementUseCase: TestServiceManagementUseCase(), serviceTransferUseCase: transfer,
+            serviceManagementUseCase: TestServiceManagementUseCase(),
+            metricsClient: .idle,
+            serviceTransferUseCase: transfer,
             transferFilePanelClient: .init(chooseImportFile: { nil }, chooseExportFile: { identifier in
                 await panelRequests.record(identifier)
                 return cancel ? nil : url
@@ -235,13 +239,17 @@ struct ServicesTransferTests {
         #expect(state.failure == nil)
         #expect(await management.lastCreateRequest() == nil)
     }
+}
 
-    private func makeReducer(
+private extension ServicesTransferTests {
+    func makeReducer(
         transfer: TransferUseCaseStub,
         management: TestServiceManagementUseCase = TestServiceManagementUseCase(),
     ) -> ServicesReducer {
         ServicesReducer(dependencies: .init(
-            serviceManagementUseCase: management, serviceTransferUseCase: transfer,
+            serviceManagementUseCase: management,
+            metricsClient: .idle,
+            serviceTransferUseCase: transfer,
             transferFilePanelClient: .init(
                 chooseImportFile: { URL(filePath: "/tmp/import.json") },
                 chooseExportFile: { _ in URL(filePath: "/tmp/export.json") },
@@ -249,7 +257,7 @@ struct ServicesTransferTests {
         ))
     }
 
-    private func makeDraft() throws -> ServiceDraft {
+    func makeDraft() throws -> ServiceDraft {
         try ServiceDraft(
             identifier: ServiceIdentifier("imported-service"),
             displayName: "Imported service", description: "Description",
@@ -259,7 +267,7 @@ struct ServicesTransferTests {
         )
     }
 
-    private func definition(_ draft: ServiceDraft) -> ServiceDefinition {
+    func definition(_ draft: ServiceDraft) -> ServiceDefinition {
         ServiceDefinition(
             identifier: draft.identifier, programArguments: draft.programArguments,
             standardOutPath: "/tmp/out", standardErrorPath: "/tmp/err",

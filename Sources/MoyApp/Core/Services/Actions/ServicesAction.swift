@@ -6,6 +6,7 @@ enum ServicesAction: Sendable {
     case refreshServices
     case receiveServices(Result<ServicesSnapshot, ServicesFailure>)
     case selectService(ServiceIdentifier?)
+    case metrics(ServicesMetricsAction)
 
     case presentCreateService
     case presentEditService(ServiceIdentifier)

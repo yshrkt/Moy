@@ -98,7 +98,7 @@ struct ServicesCopyFeedbackTests {
 
     private func makeReducer(_ requests: CopyRequests) -> ServicesReducer {
         ServicesReducer(dependencies: ServicesDependencies(
-            serviceManagementUseCase: TestServiceManagementUseCase(),
+            serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
             clipboardClient: ClipboardClient(copy: { await requests.copy($0) }),
             sleepForCopyToast: { await requests.recordDelay($0) },
         ))

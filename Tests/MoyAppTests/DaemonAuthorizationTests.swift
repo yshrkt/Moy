@@ -44,7 +44,7 @@ struct DaemonAuthorizationTests {
         changed.runAtLoad = true
         await #expect(throws: CancellationError.self) { try await services.update(changed) }
         #expect(try await base.find(identifier: original.identifier) == original)
-        let reducer = ServicesReducer(dependencies: .init(serviceManagementUseCase: services))
+        let reducer = ServicesReducer(dependencies: .init(serviceManagementUseCase: services, metricsClient: .idle))
         var state = ServicesState()
         state.editor = .init(service: changed)
         let editor = try #require(state.editor)

@@ -49,6 +49,14 @@
 "services.behavior" = "Behavior";
 "services.logs" = "Logs";
 "services.status" = "Status";
+"services.metrics.cpu" = "CPU";
+"services.metrics.memory" = "Memory";
+"services.metrics.measuring" = "Measuring…";
+"services.metrics.unavailable" = "Resource usage could not be retrieved.";
+"services.metrics.cpuHelp" = "CPU usage of this process and its last 60 seconds of history. Using one CPU core fully is 100%. Child processes are not included.";
+"services.metrics.memoryHelp" = "Memory footprint of this process and its last 60 seconds of history. The denominator is your Mac’s installed memory, not a limit for this service. Child processes are not included.";
+"services.metrics.memoryUsage" = "%1$@ / %2$@";
+"services.metrics.historyRange" = "Last 60 seconds: %1$@–%2$@";
 "services.identifier" = "Identifier";
 "validation.identifier.empty" = "Enter an identifier.";
 "validation.identifier.tooLong" = "Use no more than 64 characters.";

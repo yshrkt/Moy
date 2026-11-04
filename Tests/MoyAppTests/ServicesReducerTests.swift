@@ -153,7 +153,7 @@ struct ServicesReducerTests {
 
     private func makeReducer(useCase: TestServiceManagementUseCase) -> ServicesReducer {
         ServicesReducer(dependencies: ServicesDependencies(
-            serviceManagementUseCase: useCase,
+            serviceManagementUseCase: useCase, metricsClient: .idle,
             editor: ServiceEditorDependencies(filePanelClient: FilePanelClient(choosePath: { _ in nil })),
             workspaceClient: WorkspaceClient(open: { _ in }, reveal: { _ in }),
         ))
@@ -163,7 +163,7 @@ struct ServicesReducerTests {
     func `log operations forward the original paths`() async throws {
         let requests = LogOperationRequests()
         let reducer = ServicesReducer(dependencies: ServicesDependencies(
-            serviceManagementUseCase: TestServiceManagementUseCase(),
+            serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
             workspaceClient: WorkspaceClient(
                 open: { await requests.recordOpen($0) },
                 reveal: { await requests.recordReveal($0) },

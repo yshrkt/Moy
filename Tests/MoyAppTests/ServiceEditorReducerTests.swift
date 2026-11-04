@@ -65,7 +65,7 @@ struct ServiceEditorReducerTests {
     @Test
     func `save failure stays in the child and stale results leave the next session intact`() async throws {
         let reducer = ServicesReducer(dependencies: .init(
-            serviceManagementUseCase: TestServiceManagementUseCase(),
+            serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
         ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)

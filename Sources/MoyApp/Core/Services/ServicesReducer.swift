@@ -58,12 +58,18 @@ struct ServicesReducer: InjectableReducer {
             if let selectedIdentifier = state.selectedIdentifier,
                snapshot.services.contains(where: { $0.identifier == selectedIdentifier })
             {
-                return validationEffect
+                return .merge {
+                    validationEffect
+                    synchronizeMetrics(into: &state)
+                }
             }
             state.selectedIdentifier = snapshot.services.first?.identifier
             state.copyRequestID = nil
             state.copyToast = nil
-            return validationEffect
+            return .merge {
+                validationEffect
+                synchronizeMetrics(into: &state)
+            }
 
         case let .receiveServices(.failure(failure)):
             state.isLoading = false
@@ -76,7 +82,10 @@ struct ServicesReducer: InjectableReducer {
                 state.copyToast = nil
             }
             state.selectedIdentifier = identifier
-            return .none
+            return synchronizeMetrics(into: &state)
+
+        case let .metrics(action):
+            return reduceMetrics(into: &state, action: action)
 
         case .presentCreateService:
             guard state.canOpenEditor else { return .none }
@@ -144,10 +153,21 @@ struct ServicesReducer: InjectableReducer {
             return .none
 
         case let .operation(action):
-            return reduceOperation(into: &state, action: action)
+            let effect = reduceOperation(into: &state, action: action)
+            switch action {
+            case .receive: return effect
+            case .enable, .disable, .restart:
+                return .merge {
+                    effect
+                    synchronizeMetrics(into: &state)
+                }
+            }
 
         case let .deletion(action):
-            return reduceDeletion(into: &state, action: action)
+            return .merge {
+                reduceDeletion(into: &state, action: action)
+                synchronizeMetrics(into: &state)
+            }
 
         case let .openLog(path):
             let workspaceClient = dependencies.workspaceClient

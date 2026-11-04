@@ -55,6 +55,12 @@ public struct ServiceStatus: Codable, Equatable, Sendable {
     public let runtime: Runtime
     public let lastExitStatus: Int32?
 
+    /// 正常に登録され、実行中であるサービスの計測対象PID。
+    public var metricsPID: Int32? {
+        guard registration == .enabled, case let .running(pid) = runtime, pid > 0 else { return nil }
+        return pid
+    }
+
     public init(
         identifier: ServiceIdentifier,
         registration: Registration,

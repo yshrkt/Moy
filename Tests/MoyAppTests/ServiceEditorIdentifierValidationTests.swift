@@ -54,7 +54,7 @@ struct ServiceEditorIdentifierValidationTests {
     @Test
     func `cached list duplicates cannot emit a save request`() async throws {
         let useCase = TestServiceManagementUseCase()
-        let reducer = ServicesReducer(dependencies: .init(serviceManagementUseCase: useCase))
+        let reducer = ServicesReducer(dependencies: .init(serviceManagementUseCase: useCase, metricsClient: .idle))
         var state = ServicesState()
         state.services = try [service("worker")]
         _ = reducer.reduce(into: &state, action: .presentCreateService)
@@ -92,7 +92,10 @@ struct ServiceEditorIdentifierValidationTests {
 
     @Test
     func `parent list refresh schedules validation in the existing editor`() async throws {
-        let reducer = ServicesReducer(dependencies: .init(serviceManagementUseCase: TestServiceManagementUseCase()))
+        let reducer = ServicesReducer(dependencies: .init(
+            serviceManagementUseCase: TestServiceManagementUseCase(),
+            metricsClient: .idle,
+        ))
         var state = ServicesState()
         _ = reducer.reduce(into: &state, action: .presentCreateService)
         let input = reducer.reduce(into: &state, action: .editor(.updateField(.identifier("worker"))))

@@ -29,13 +29,14 @@ struct ServiceDetailRenderingTests {
         state.statuses[service.identifier] = ServiceStatus(
             identifier: service.identifier, registration: .enabled, runtime: .running(pid: 1952),
         )
+        populateMetrics(in: state)
         state.copyToast = CopyToast(
             id: UUID(), identifier: service.identifier, item: "ProgramArguments", succeeded: true,
         )
         let store = StoreBuilder.reducer(
             initialState: state,
             reducer: ServicesReducer(dependencies: ServicesDependencies(
-                serviceManagementUseCase: TestServiceManagementUseCase(),
+                serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
             )),
         )
         let output = URL(fileURLWithPath: #filePath)
@@ -59,6 +60,20 @@ struct ServiceDetailRenderingTests {
         }
 
         try renderToast(identifier: service.identifier, dark: dark, output: output)
+    }
+
+    private func populateMetrics(in state: ServicesState) {
+        state.metrics.physicalMemory = 32 * 1024 * 1024 * 1024
+        let end = Date()
+        for index in 0 ... 30 {
+            let sample = makeSample(
+                pid: 1952, cpu: .value(Double((index * 7) % 180)),
+                memory: .value(UInt64(128 * 1024 * 1024 + index * 100_000)),
+                timestamp: end.addingTimeInterval(Double(index - 30) * 2),
+            )
+            state.metrics.sample = sample
+            state.metrics.history.append(sample)
+        }
     }
 
     private func renderToast(identifier: ServiceIdentifier, dark: Bool, output: URL) throws {

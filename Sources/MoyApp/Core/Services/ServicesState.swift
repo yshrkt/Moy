@@ -18,6 +18,7 @@ final class ServicesState {
     var statuses: [ServiceIdentifier: ServiceStatus] = [:]
     var statusFailures: Set<ServiceIdentifier> = []
     var selectedIdentifier: ServiceIdentifier?
+    var metrics = ServicesMetricsState()
     var editor: ServiceEditorState?
     var transferOperation: ServiceTransferOperation?
 

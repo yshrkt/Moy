@@ -17,7 +17,7 @@ struct ServiceDescriptionEditorTests {
         let store = StoreBuilder.reducer(
             initialState: state,
             reducer: ServicesReducer(dependencies: ServicesDependencies(
-                serviceManagementUseCase: TestServiceManagementUseCase(),
+                serviceManagementUseCase: TestServiceManagementUseCase(), metricsClient: .idle,
             )),
         )
         let editor = try #require(state.editor)
