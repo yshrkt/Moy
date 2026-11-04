@@ -164,8 +164,12 @@ struct ServicesReducer: InjectableReducer {
             }
 
         case let .deletion(action):
+            let effect = reduceDeletion(into: &state, action: action)
+            if case .receive = action {
+                return effect
+            }
             return .merge {
-                reduceDeletion(into: &state, action: action)
+                effect
                 synchronizeMetrics(into: &state)
             }
 

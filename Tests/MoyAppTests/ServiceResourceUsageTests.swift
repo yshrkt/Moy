@@ -51,7 +51,7 @@ struct ServiceResourceUsageTests {
             let path = try #require(MoyResources.bundle.path(forResource: language, ofType: "lproj"))
             let bundle = try #require(Bundle(path: path))
             for suffix in ["cpu", "memory", "measuring", "unavailable", "cpuHelp", "memoryHelp",
-                           "memoryUsage", "historyRange"]
+                           "memoryUsage", "historyRange", "summary"]
             {
                 let key = "services.metrics.\(suffix)"
                 #expect(bundle.localizedString(forKey: key, value: nil, table: "Localizable") != key)

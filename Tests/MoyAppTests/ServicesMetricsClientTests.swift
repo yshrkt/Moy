@@ -1,5 +1,7 @@
 import Darwin
+import Foundation
 @testable import MoyApp
+import MoyMetrics
 import Testing
 
 @Suite("Live service metrics", .timeLimit(.minutes(1)))
@@ -33,6 +35,98 @@ struct ServicesMetricsClientTests {
             while await iterator.next() != nil {}
         }
         await consumer.value
+    }
+
+    @Test
+    func `subscribers to the same PID receive the same collected samples`() async {
+        let client = ServicesMetricsClient.live
+        let first = client.events(getpid())
+        let second = client.events(getpid())
+        async let firstTimes = sampleTimes(first)
+        async let secondTimes = sampleTimes(second)
+        let times = await (firstTimes, secondTimes)
+        #expect(times.0.count == 2)
+        #expect(times.1.count == 2)
+        #expect(!Set(times.0).isDisjoint(with: times.1))
+    }
+
+    @Test
+    func `rapid cancellation does not stop a later subscription`() async {
+        let client = ServicesMetricsClient.live
+        for _ in 0 ..< 10 {
+            let stream = client.events(getpid())
+            let task = Task { for await _ in stream {} }
+            task.cancel()
+            await task.value
+        }
+        let times = await sampleTimes(client.events(getpid()))
+        #expect(times.count == 2)
+    }
+
+    private func sampleTimes(_ stream: AsyncStream<ServicesMetricsEvent>) async -> [Date] {
+        let consumer = Task {
+            var dates: [Date] = []
+            for await event in stream {
+                if case let .sample(sample) = event {
+                    dates.append(sample.timestamp)
+                    if dates.count == 2 {
+                        withUnsafeCurrentTask { $0?.cancel() }
+                    }
+                }
+            }
+            return dates
+        }
+        return await consumer.value
+    }
+
+    @Test
+    func `adding and removing another PID preserves the original CPU baseline`() async throws {
+        let child = Process()
+        child.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        child.arguments = ["30"]
+        try child.run()
+        defer {
+            if child.isRunning {
+                child.terminate()
+            }
+            child.waitUntilExit()
+        }
+        let client = ServicesMetricsClient.live
+        let consumer = Task {
+            var iterator = client.events(getpid()).makeAsyncIterator()
+            _ = await iterator.next() // 搭載容量
+            guard case let .sample(first) = await iterator.next() else {
+                Issue.record("Expected initial sample")
+                return
+            }
+            #expect(first.cpuPercent == .waiting)
+            let childSample = await firstSample(client.events(child.processIdentifier))
+            #expect(childSample?.pid == child.processIdentifier)
+            // 別PIDの追加と解除を挟んでも、自分の計測基準を取り直しません。
+            for _ in 0 ..< 2 {
+                guard case let .sample(sample) = await iterator.next(), case .value = sample.cpuPercent else {
+                    Issue.record("CPU baseline was reset")
+                    break
+                }
+            }
+            withUnsafeCurrentTask { $0?.cancel() }
+            while await iterator.next() != nil {}
+        }
+        await consumer.value
+    }
+
+    private func firstSample(_ stream: AsyncStream<ServicesMetricsEvent>) async -> ProcessSample? {
+        let consumer = Task {
+            var sample: ProcessSample?
+            for await event in stream {
+                if case let .sample(value) = event {
+                    sample = value
+                    withUnsafeCurrentTask { $0?.cancel() }
+                }
+            }
+            return sample
+        }
+        return await consumer.value
     }
 
     @Test

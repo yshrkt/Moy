@@ -10,6 +10,7 @@ struct MenuBarServicesView: View {
         static let maximumVisibleServiceCount = 8
         static let sectionHeaderHeight: CGFloat = 22
         static let serviceRowHeight: CGFloat = 40
+        static let runningServiceRowHeight: CGFloat = 52
         static let actionButtonSize: CGFloat = 24
     }
 
@@ -32,14 +33,12 @@ struct MenuBarServicesView: View {
             footer
         }
         .frame(width: Layout.menuWidth)
-        .task {
-            store.send(.appear)
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(5))
-                guard !Task.isCancelled else { return }
-                store.send(.refreshServices)
+        .background {
+            WindowVisibilityObserver { visible in
+                store.send(.metrics(.setMenuVisibility(visible)))
             }
         }
+        .onDisappear { store.send(.metrics(.setMenuVisibility(false))) }
     }
 
     private var header: some View {
@@ -102,8 +101,10 @@ struct MenuBarServicesView: View {
 
         return HStack(spacing: 10) {
             ServiceStatusIndicator(presentation: presentation)
-            Text(service.name)
-                .lineLimit(1)
+            MenuBarServiceLabel(
+                state: store.state, name: service.name,
+                pid: presentation == .running ? status?.metricsPID : nil,
+            )
             Spacer()
             if isOperating {
                 ProgressView()
@@ -137,7 +138,7 @@ struct MenuBarServicesView: View {
             .accessibilityLabel(L10n.Common.actions)
         }
         .padding(.horizontal, 12)
-        .frame(maxWidth: .infinity, minHeight: Layout.serviceRowHeight, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: serviceRowHeight(service), alignment: .leading)
         .overlay(alignment: .bottom) {
             Divider()
                 .padding(.leading, 28)
@@ -191,8 +192,17 @@ struct MenuBarServicesView: View {
     }
 
     private var serviceListHeight: CGFloat {
-        CGFloat(min(store.state.services.count, Layout.maximumVisibleServiceCount)) * Layout.serviceRowHeight
+        store.state.serviceSections.flatMap(\.services).prefix(Layout.maximumVisibleServiceCount)
+            .reduce(0) { $0 + serviceRowHeight($1) }
             + CGFloat(store.state.serviceSections.count) * Layout.sectionHeaderHeight
+    }
+
+    private func serviceRowHeight(_ service: ServiceDefinition) -> CGFloat {
+        let presentation = ServiceStatusPresentation(
+            status: store.state.statuses[service.identifier],
+            hasError: store.state.statusFailures.contains(service.identifier),
+        )
+        return presentation == .running ? Layout.runningServiceRowHeight : Layout.serviceRowHeight
     }
 
     private func showDetails(for service: ServiceDefinition) {

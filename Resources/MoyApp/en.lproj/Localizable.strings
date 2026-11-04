@@ -57,6 +57,7 @@
 "services.metrics.memoryHelp" = "Memory footprint of this process and its last 60 seconds of history. The denominator is your Mac’s installed memory, not a limit for this service. Child processes are not included.";
 "services.metrics.memoryUsage" = "%1$@ / %2$@";
 "services.metrics.historyRange" = "Last 60 seconds: %1$@–%2$@";
+"services.metrics.summary" = "CPU %1$@ · Memory %2$@";
 "services.identifier" = "Identifier";
 "validation.identifier.empty" = "Enter an identifier.";
 "validation.identifier.tooLong" = "Use no more than 64 characters.";
