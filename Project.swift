@@ -94,6 +94,25 @@ let project = Project(
             buildableFolders: ["Sources/MoyKit"],
         ),
         .target(
+            name: "MoyMetrics",
+            destinations: .macOS,
+            product: .staticFramework,
+            bundleId: "com.sputnik-apps.MoyMetrics",
+            deploymentTargets: .macOS("26.0"),
+            infoPlist: .default,
+            buildableFolders: ["Sources/MoyMetrics"],
+        ),
+        .target(
+            name: "MoyMetricsTests",
+            destinations: .macOS,
+            product: .unitTests,
+            bundleId: "com.sputnik-apps.MoyMetricsTests",
+            deploymentTargets: .macOS("26.0"),
+            infoPlist: .default,
+            buildableFolders: ["Tests/MoyMetricsTests"],
+            dependencies: [.target(name: "MoyMetrics")],
+        ),
+        .target(
             name: "MoyAppTests",
             destinations: .macOS,
             product: .unitTests,
@@ -128,7 +147,7 @@ let project = Project(
         .scheme(
             name: "Moy",
             buildAction: .buildAction(targets: ["MoyApp"]),
-            testAction: .targets(["MoyAppTests", "MoyCLITests", "MoyKitTests"]),
+            testAction: .targets(["MoyAppTests", "MoyCLITests", "MoyKitTests", "MoyMetricsTests"]),
             runAction: .runAction(configuration: .debug, executable: "MoyApp"),
         ),
         .scheme(
@@ -136,6 +155,11 @@ let project = Project(
             buildAction: .buildAction(targets: ["MoyCLI"]),
             testAction: .targets(["MoyCLITests"]),
             runAction: .runAction(configuration: .debug, executable: "MoyCLI"),
+        ),
+        .scheme(
+            name: "MoyMetrics",
+            buildAction: .buildAction(targets: ["MoyMetrics"]),
+            testAction: .targets(["MoyMetricsTests"]),
         ),
         .scheme(
             name: "MoyKit",
