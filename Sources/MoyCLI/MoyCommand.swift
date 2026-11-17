@@ -5,7 +5,7 @@ struct MoyCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "moy",
         abstract: "Manage LaunchAgents and root LaunchDaemons created by Moy.",
-        version: "0.2.1",
+        version: "0.3.0",
         subcommands: [
             InternalDaemonCommand.self,
             InternalRotateLogsCommand.self,
