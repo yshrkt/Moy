@@ -86,7 +86,7 @@ enum ServiceStatusPresentation: Equatable {
     var color: Color {
         switch self {
         case .loading, .disabled: .secondary
-        case .running: .green
+        case .running: Color(.moyGreen)
         case .waiting: .yellow
         case .needsAttention, .error: .red
         }

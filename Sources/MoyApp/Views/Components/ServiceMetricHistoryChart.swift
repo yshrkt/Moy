@@ -8,6 +8,23 @@ struct ServiceMetricHistoryChart: View {
     var body: some View {
         Chart {
             ForEach(data.points) { point in
+                AreaMark(
+                    x: .value("timestamp", point.timestamp),
+                    yStart: .value("baseline", data.valueDomain.lowerBound),
+                    yEnd: .value("value", point.value),
+                    series: .value("segment", point.segment),
+                )
+                .interpolationMethod(.linear)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [color.opacity(0.4), color.opacity(0)],
+                        startPoint: .top,
+                        endPoint: .bottom,
+                    ),
+                )
+                .alignsMarkStylesWithPlotArea()
+            }
+            ForEach(data.points) { point in
                 LineMark(
                     x: .value("timestamp", point.timestamp),
                     y: .value("value", point.value),

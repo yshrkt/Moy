@@ -98,7 +98,7 @@ struct SettingsContentView: View {
             switch store.state.cliStatus {
             case .installed:
                 Label(L10n.Settings.cliInstalled, systemImage: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Color(.moyGreen))
                 Button(L10n.Settings.uninstallCLI) { store.send(.cli(.requestUninstallation)) }
             case .notInstalled:
                 Button(L10n.Settings.installCLI) { store.send(.cli(.install)) }
